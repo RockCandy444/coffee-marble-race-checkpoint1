@@ -81,22 +81,22 @@
       <div class="map-options" role="radiogroup" aria-label="경주 맵">
         <button class="map-card selected" data-map="pinball" role="radio" aria-checked="true" type="button">
           <span class="map-visual pinball-visual" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><b>●</b></span>
-          <span class="map-card-copy"><strong>핀볼</strong><small>링 범퍼·스윙 브리지 추가 · 6구간 · 3,600m</small></span>
+          <span class="map-card-copy"><strong>핀볼</strong><small>파워 범퍼와 촘촘한 핀 숲 · 6구간 · 7,200m</small></span>
           <span class="map-check" aria-hidden="true">✓</span>
         </button>
         <button class="map-card" data-map="spinner" role="radio" aria-checked="false" type="button">
           <span class="map-visual spinner-visual" aria-hidden="true"><i></i><i></i><i></i><b>●</b></span>
-          <span class="map-card-copy"><strong>회전 장애물</strong><small>슬라이딩 블록·삼중 회전문 추가 · 6구간 · 3,900m</small></span>
+          <span class="map-card-copy"><strong>회전 장애물</strong><small>굴곡진 벽과 회전문·이동 블록 · 6구간 · 7,800m</small></span>
           <span class="map-check" aria-hidden="true">✓</span>
         </button>
         <button class="map-card" data-map="fork" role="radio" aria-checked="false" type="button">
           <span class="map-visual fork-visual" aria-hidden="true"><i></i><i></i><b>●</b></span>
-          <span class="map-card-copy"><strong>갈림길</strong><small>다이아몬드·움직이는 징검다리 추가 · 6구간 · 4,200m</small></span>
+          <span class="map-card-copy"><strong>갈림길</strong><small>넓어지고 좁아지는 분기·다이아몬드 · 6구간 · 8,400m</small></span>
           <span class="map-check" aria-hidden="true">✓</span>
         </button>
       </div>
       <div class="form-footer map-footer">
-        <span class="field-note">마지막 골키퍼를 피해 구슬 지름의 2.5배인 출구를 통과하세요.</span>
+        <span class="field-note">골키퍼는 경기마다 4종 중 각각 25% 확률로 결정돼요. 출구는 구슬 지름의 2.5배!</span>
         <button id="startRace" class="button button-primary" type="button">경주 시작하기 <span aria-hidden="true">→</span></button>
       </div>
     </section>
@@ -129,6 +129,8 @@
             <canvas id="raceCanvas" width="1000" height="600" aria-label="구슬 경주 중계 화면. 카메라가 레이스 상황을 따라 움직입니다. 구슬을 누르면 해당 참가자를 추적합니다." role="img"></canvas>
             <canvas id="miniMap" width="70" height="210" aria-label="전체 코스와 카메라 위치 미니맵" role="img"></canvas>
             <div id="cameraBadge" class="camera-badge">AUTO · 자동 중계</div>
+            <div id="keeperLabel" class="keeper-label"></div>
+            <div class="hazard-key"><span>⚡ 파워 범퍼</span><span>Ⓜ 자석</span><span>↔ 바람</span><span>◆ 수비수</span></div>
           </div>
           <div class="track-legend">
             <span><i class="legend-start"></i> 출발</span>
@@ -178,6 +180,7 @@
 
     <footer class="page-footer">모든 순위는 실제 구슬이 결승선을 통과한 순서로 정해집니다. <span>· 이 기기에서만 실행돼요.</span></footer>
   </main>
+  <script src="course.js"></script>
   <script src="camera.js"></script>
   <script src="app.js"></script>
 </body>

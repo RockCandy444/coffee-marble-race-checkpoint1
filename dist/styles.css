@@ -35,6 +35,9 @@ body.race-active .live-order { flex: 1; min-height: 0; max-height: none; }
 body.race-active .race-bottom-actions { padding: 3px 2px 0; }
 body.race-active .recovery-controls { position: absolute; bottom: 55px; left: 10px; right: 10px; z-index: 3; max-height: 55%; overflow: auto; box-shadow: 0 6px 25px #55351b22; }
 button:focus-visible, select:focus-visible { outline: 3px solid #478879; outline-offset: 2px; }
+.keeper-label { position: absolute; top: 44px; left: 10px; max-width: calc(100% - 95px); padding: 5px 8px; border-radius: 7px; color: #9c4259; background: #fff3f5e8; font-size: 10px; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
+.hazard-key { position: absolute; bottom: 7px; left: 8px; display: flex; gap: 9px; padding: 5px 8px; background: #fffdf8ed; border-radius: 7px; font-size: 9px; color: #7b6859; pointer-events: none; line-height: 1.3; }
+.hazard-key span:nth-child(1) { color: #bc662b; }.hazard-key span:nth-child(2) { color: #8160b4; }.hazard-key span:nth-child(3) { color: #338c9f; }.hazard-key span:nth-child(4) { color: #42678f; }
 @media (max-width: 680px) {
   body.race-active .app-shell { width: calc(100% - 16px); padding: 5px 0; }
   body.race-active .local-badge { display: none; }
