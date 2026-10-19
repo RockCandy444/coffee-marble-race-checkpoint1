@@ -8,9 +8,9 @@
     finishLeft: 335, finishRight: 665, funnelY: 1120, funnelKnee: 1370
   };
   const MAPS = {
-    pinball: { title: '핀볼 코스', label: '핀볼', height: 2400, sections: [[180, '핀 숲'], [800, '범퍼 정원'], [1400, '지그재그 슬라이드'], [1970, '결승 스프린트']] },
-    spinner: { title: '회전 장애물 코스', label: '회전 장애물', height: 2600, sections: [[190, '회전 날개'], [850, '엇갈린 회전문'], [1550, '더블 게이트'], [2170, '결승 스프린트']] },
-    fork: { title: '갈림길 코스', label: '갈림길', height: 2800, sections: [[190, '첫 번째 갈림길'], [1050, '교차 합류'], [1650, '마지막 선택'], [2370, '결승 스프린트']] }
+    pinball: { title: '핀볼 코스', label: '핀볼', height: 3600, sections: [[180, '핀 숲'], [800, '범퍼 정원'], [1400, '지그재그 슬라이드'], [2050, '링 범퍼'], [2630, '스윙 브리지'], [3030, '골키퍼 게이트']] },
+    spinner: { title: '회전 장애물 코스', label: '회전 장애물', height: 3900, sections: [[190, '회전 날개'], [850, '엇갈린 회전문'], [1550, '더블 게이트'], [2150, '슬라이딩 블록'], [2800, '삼중 회전문'], [3330, '골키퍼 게이트']] },
+    fork: { title: '갈림길 코스', label: '갈림길', height: 4200, sections: [[190, '첫 번째 갈림길'], [1050, '교차 합류'], [1650, '마지막 선택'], [2350, '다이아몬드 미로'], [3000, '움직이는 징검다리'], [3630, '골키퍼 게이트']] }
   };
   const $ = (selector) => document.querySelector(selector);
   const setupView = $('#setupView');
@@ -127,8 +127,9 @@
   }
 
   function finishFunnelSegments() {
-    const leftGate = WORLD.finishLeft - 5;
-    const rightGate = WORLD.finishRight + 5;
+    // Segment radius is 4.5: the clear gap between inner faces is exactly 2.5 diameters.
+    const leftGate = WORLD.finishLeft - 4.5;
+    const rightGate = WORLD.finishRight + 4.5;
     return [
       { x1: WORLD.left, y1: WORLD.funnelY, x2: leftGate, y2: WORLD.funnelKnee, funnel: true },
       { x1: leftGate, y1: WORLD.funnelKnee, x2: leftGate, y2: WORLD.bottom, funnel: true },
@@ -145,19 +146,22 @@
         for (let col = 0; col < 12; col++) {
           const x = 64 + col * 76 + (row % 2) * 38;
           if (x > 950) continue;
-          pins.push({ x, y: 260 + row * 68, r: 9 });
+          pins.push({ x, y: 260 + row * 68, r: 6 + (row + col) % 4 * 2.5 });
         }
       }
       for (let row = 0; row < 4; row++) for (let col = 0; col < 5; col++) {
         pins.push({ x: 130 + col * 175 + (row % 2) * 45, y: 890 + row * 120, r: 23 + ((row + col) % 3) * 5, bumper: true });
       }
       segments.push(
-        { x1: 60, y1: 1490, x2: 650, y2: 1600 },
-        { x1: 940, y1: 1690, x2: 350, y2: 1800 },
-        { x1: 80, y1: 1850, x2: 630, y2: 1950 }
+        { x1: 60, y1: 1490, x2: 650, y2: 1600, radius: 5 },
+        { x1: 940, y1: 1690, x2: 350, y2: 1800, radius: 8 },
+        { x1: 80, y1: 1850, x2: 630, y2: 1950, radius: 11 }
       );
+      for (let row = 0; row < 3; row++) for (let col = 0; col < 4; col++) {
+        pins.push({ x: 155 + col * 215 + (row % 2) * 30, y: 2170 + row * 125, r: 20 + (row + col) % 4 * 9, bumper: true, ring: true });
+      }
     } else if (map === 'spinner') {
-      for (const y of [760, 1210, 2010]) for (const x of [100, 270, 730, 900]) pins.push({ x, y, r: 20, bumper: true });
+      for (const y of [760, 1210, 2010]) for (const x of [100, 270, 730, 900]) pins.push({ x, y, r: 13 + (x % 7) * 4, bumper: true });
     } else if (map === 'fork') {
       segments.push(
         { x1: 500, y1: 280, x2: 300, y2: 600 },
@@ -171,41 +175,79 @@
         { x1: 60, y1: 2160, x2: 330, y2: 2320 },
         { x1: 940, y1: 2160, x2: 670, y2: 2320 }
       );
-      for (const [x, y] of [[160, 720], [840, 720], [420, 1500], [580, 1560], [160, 1990], [840, 1990]]) pins.push({ x, y, r: 24, bumper: true });
+      [[160, 720], [840, 720], [420, 1500], [580, 1560], [160, 1990], [840, 1990]].forEach(([x, y], index) => pins.push({ x, y, r: 16 + index % 3 * 12, bumper: true }));
+      for (const [x, y, size] of [[260, 2500, 65], [740, 2540, 90], [470, 2780, 75]]) {
+        const points = [[x, y - size], [x + size, y], [x, y + size], [x - size, y]];
+        points.forEach(([x1, y1], i) => { const [x2, y2] = points[(i + 1) % 4]; segments.push({ x1, y1, x2, y2, radius: 5 + (size % 4), diamond: true }); });
+      }
     }
+    segments.forEach((segment, index) => { segment.radius ??= [4.5, 7, 9][index % 3]; });
     // 세 맵 모두 결승선은 한 곳뿐이며, 넓은 트랙을 하나의 결승 통로로 모읍니다.
     segments.push(...finishFunnelSegments());
     return { pins, segments };
   }
 
   function rotatingSegments(time) {
-    const bars = [
+    const bars = game.map === 'spinner' ? [
       { x: 340, y: 350, phase: 0.2, length: 390, speed: 0.8 },
       { x: 680, y: 630, phase: 2.0, length: 350, speed: -1.0 },
       { x: 420, y: 1030, phase: 4.1, length: 470, speed: 0.85 },
       { x: 620, y: 1370, phase: 1.1, length: 410, speed: -0.9 },
       { x: 280, y: 1730, phase: 0.5, length: 350, speed: 1.05 },
-      { x: 720, y: 1870, phase: 2.2, length: 350, speed: -1.05 }
-    ];
+      { x: 720, y: 1870, phase: 2.2, length: 350, speed: -1.05 },
+      { x: 230, y: 2920, phase: 0.5, length: 220, speed: 0.75 },
+      { x: 530, y: 3050, phase: 1.4, length: 320, speed: -0.85 },
+      { x: 800, y: 3200, phase: 2.5, length: 160, speed: 1.1 }
+    ] : game.map === 'pinball' ? [
+      { x: 330, y: 2730, phase: 0.2, length: 290, speed: 0.7 },
+      { x: 700, y: 2920, phase: 1.6, length: 200, speed: -0.9 }
+    ] : [];
     return bars.map((bar) => {
       const angle = time * bar.speed + bar.phase;
       const omega = bar.speed;
       const dx = Math.cos(angle) * bar.length / 2;
       const dy = Math.sin(angle) * bar.length / 2;
-      return { x1: bar.x - dx, y1: bar.y - dy, x2: bar.x + dx, y2: bar.y + dy, cx: bar.x, cy: bar.y, omega, rotating: true };
+      return { x1: bar.x - dx, y1: bar.y - dy, x2: bar.x + dx, y2: bar.y + dy, cx: bar.x, cy: bar.y, omega, radius: 4 + bar.length / 85, rotating: true };
     });
+  }
+
+  function movingPins(time) {
+    if (game.map !== 'fork') return [];
+    return [
+      { x: 240, y: 3160, r: 20, amplitude: 100, speed: 0.85, phase: 0 },
+      { x: 750, y: 3280, r: 38, amplitude: 110, speed: 0.7, phase: 2 },
+      { x: 430, y: 3470, r: 27, amplitude: 150, speed: 0.9, phase: 1 }
+    ].map(pin => ({ ...pin, x: pin.x + Math.sin(time * pin.speed + pin.phase) * pin.amplitude, vx: Math.cos(time * pin.speed + pin.phase) * pin.amplitude * pin.speed, moving: true, bumper: true }));
+  }
+
+  function movingSegments(time) {
+    const result = rotatingSegments(time);
+    if (game.map === 'spinner') {
+      for (const [y, center, length, radius, phase] of [[2280, 310, 190, 13, 0], [2530, 690, 290, 8, 1.8]]) {
+        const cx = center + Math.sin(time * 0.9 + phase) * 150;
+        result.push({ x1: cx - length / 2, y1: y, x2: cx + length / 2, y2: y, radius, vx: Math.cos(time * 0.9 + phase) * 135, sliding: true });
+      }
+    }
+    const diameter = game.balls[0].r * 2;
+    const amplitude = (WORLD.finishRight - WORLD.finishLeft) * 0.9;
+    const cx = WORLD.width / 2 + Math.sin(time * 1.65) * amplitude;
+    const y = WORLD.finishY - 45;
+    result.push({ x1: cx - diameter * 0.55, y1: y, x2: cx + diameter * 0.55, y2: y, radius: Math.max(2, diameter * 0.2), vx: Math.cos(time * 1.65) * amplitude * 1.65, goalkeeper: true });
+    return result;
   }
 
   function setUpRace() {
     WORLD.height = MAPS[selectedMap].height;
     WORLD.bottom = WORLD.height - 22;
-    WORLD.finishY = WORLD.height - 90;
-    WORLD.funnelY = WORLD.height - 400;
-    WORLD.funnelKnee = WORLD.height - 170;
+    WORLD.finishY = WORLD.height - 60;
+    WORLD.funnelY = WORLD.height - 560;
+    WORLD.funnelKnee = WORLD.height - 150;
     camera.reset();
     populateCamera();
     const n = participants.length;
     const radius = Math.max(5.2, Math.min(11.2, 12.5 - 0.72 * Math.sqrt(n)));
+    WORLD.finishLeft = WORLD.width / 2 - radius * 2.5;
+    WORLD.finishRight = WORLD.width / 2 + radius * 2.5;
     const columns = Math.min(n, 24, Math.max(1, Math.ceil(Math.sqrt(n * 4))));
     const rows = Math.ceil(n / columns);
     const xSpacing = columns === 1 ? 0 : Math.min(42, 840 / (columns - 1));
@@ -235,7 +277,7 @@
     $('#raceTitle').textContent = MAPS[selectedMap].title;
     $('#raceProgress').textContent = `0 / ${n} 도착`;
     $('#raceStatus').textContent = '구슬이 출발을 기다리고 있어요.';
-    $('#beadInfo').textContent = '구슬을 누르거나 터치하면 참가자 이름을 확인할 수 있어요.';
+    $('#beadInfo').textContent = '마우스 휠로 확대·축소 · 구슬을 누르면 참가자를 추적해요.';
     $('#liveOrder').replaceChildren();
     $('#liveFooter').textContent = '아직 결승선을 통과한 구슬이 없어요.';
     $('#recoveryControls').hidden = true;
@@ -317,8 +359,8 @@
   function physicsStep(dt) {
     game.time += dt;
     game.watchdogTime += dt;
-    const movingSegments = game.map === 'spinner' ? rotatingSegments(game.time) : [];
-    const allSegments = game.static.segments.concat(movingSegments);
+    const allSegments = game.static.segments.concat(movingSegments(game.time));
+    const allPins = game.static.pins.concat(movingPins(game.time));
     const active = game.balls.filter((ball) => !ball.finished);
 
     for (const ball of active) {
@@ -334,7 +376,7 @@
       ball.x += ball.vx * dt;
       ball.y += ball.vy * dt;
       resolveWalls(ball);
-      for (const pin of game.static.pins) resolvePin(ball, pin);
+      for (const pin of allPins) resolvePin(ball, pin);
       for (const segment of allSegments) resolveSegment(ball, segment);
     }
     resolveBallPairs(active);
@@ -342,6 +384,8 @@
     const crossed = [];
     for (const ball of active) {
       resolveWalls(ball);
+      // Pair separation must not push a ball through the narrow gate or keeper.
+      for (const segment of allSegments) if (segment.funnel || segment.goalkeeper) resolveSegment(ball, segment);
       if (ball.y > ball.maxY + 0.7) {
         ball.maxY = ball.y;
         ball.stallTime = 0;
@@ -355,7 +399,7 @@
         const travel = ball.y - ball.prevY;
         const fraction = travel > 0 ? Math.max(0, Math.min(1, (WORLD.finishY - ball.prevY) / travel)) : 1;
         const crossingX = ball.prevX + (ball.x - ball.prevX) * fraction;
-        if (crossingX >= WORLD.finishLeft && crossingX <= WORLD.finishRight) {
+        if (crossingX - ball.r >= WORLD.finishLeft - 0.01 && crossingX + ball.r <= WORLD.finishRight + 0.01) {
           crossed.push({ ball, fraction });
           continue;
         }
@@ -376,7 +420,7 @@
     }
 
     if (game.order.length === game.balls.length) { finishRace(); return; }
-    if (game.stuckCount >= 2 || game.watchdogTime > 120) {
+    if (game.stuckCount >= 2 || game.watchdogTime > 180) {
       game.paused = true;
       game.autoPaused = true;
       $('#pauseRace').textContent = '경주 멈춤';
@@ -416,7 +460,7 @@
     const overlap = min - distance;
     ball.x += nx * overlap;
     ball.y += ny * overlap;
-    const toward = ball.vx * nx + ball.vy * ny;
+    const toward = (ball.vx - (pin.vx || 0)) * nx + ball.vy * ny;
     if (toward < 0) { ball.vx -= 1.48 * toward * nx; ball.vy -= 1.48 * toward * ny; }
   }
   function resolveSegment(ball, segment) {
@@ -430,7 +474,7 @@
     let nx = ball.x - px;
     let ny = ball.y - py;
     const distance = Math.hypot(nx, ny);
-    const min = ball.r + (segment.rotating ? 5.5 : 4.5);
+    const min = ball.r + (segment.radius ?? (segment.rotating ? 5.5 : 4.5));
     if (distance >= min) return;
     if (distance < 0.001) {
       const length = Math.sqrt(length2);
@@ -438,8 +482,8 @@
     } else { nx /= distance; ny /= distance; }
     ball.x += nx * (min - distance);
     ball.y += ny * (min - distance);
-    const surfaceVx = segment.rotating ? -segment.omega * (py - segment.cy) : 0;
-    const surfaceVy = segment.rotating ? segment.omega * (px - segment.cx) : 0;
+    const surfaceVx = segment.rotating ? -segment.omega * (py - segment.cy) : (segment.vx || 0);
+    const surfaceVy = segment.rotating ? segment.omega * (px - segment.cx) : (segment.vy || 0);
     const toward = (ball.vx - surfaceVx) * nx + (ball.vy - surfaceVy) * ny;
     if (toward < 0) { ball.vx -= 1.5 * toward * nx; ball.vy -= 1.5 * toward * ny; }
   }
@@ -557,11 +601,17 @@
     game.selectedBall = camera.mode.startsWith('ball:') ? Number(camera.mode.slice(5)) : null;
   });
   function changeZoom(amount) {
-    camera.zoom = Math.max(0.8, Math.min(2.4, Math.round((camera.zoom + amount) * 10) / 10));
+    camera.zoom = Math.max(0.8, Math.min(4, camera.zoom + amount));
     if (camera.mode === 'overview') { camera.mode = 'auto'; cameraSelect.value = 'auto'; }
   }
   $('#cameraZoomOut').addEventListener('click', () => changeZoom(-0.2));
   $('#cameraZoomIn').addEventListener('click', () => changeZoom(0.2));
+  canvas.addEventListener('wheel', event => {
+    if (stage !== 'race' || !game || event.deltaY === 0) return;
+    event.preventDefault();
+    const pixels = event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? canvas.clientHeight : 1);
+    changeZoom(-Math.max(-240, Math.min(240, pixels)) * 0.002);
+  }, { passive: false });
   $('#cameraReset').addEventListener('click', () => { camera.mode = 'auto'; camera.zoom = 1; cameraSelect.value = 'auto'; game.selectedBall = null; });
 
   function resizeCanvas() {
@@ -607,7 +657,7 @@
     ctx.fillStyle = bg; ctx.fillRect(0, 0, WORLD.width, WORLD.height);
     ctx.fillStyle = '#fffdf8'; ctx.fillRect(16, 17, 968, WORLD.height - 32);
     MAPS[game.map].sections.forEach(([y, label], index) => {
-      ctx.fillStyle = ['#edf7ef', '#fff0dc', '#eef1fb', '#fff1e8'][index];
+      ctx.fillStyle = ['#edf7ef', '#fff0dc', '#eef1fb', '#f9edfa', '#e6f4f3', '#fff1e8'][index];
       ctx.fillRect(22, y, 956, (MAPS[game.map].sections[index + 1]?.[0] ?? WORLD.bottom) - y);
       ctx.fillStyle = '#9a8065'; ctx.font = '700 16px sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
       ctx.fillText('0' + (index + 1) + '  ' + label, 50, y + 15);
@@ -640,29 +690,33 @@
     ctx.closePath(); ctx.fill();
 
     ctx.fillStyle = '#749bca';
-    ctx.fillRect(WORLD.finishLeft - 5, WORLD.finishY, WORLD.finishRight - WORLD.finishLeft + 10, 8);
+    ctx.fillRect(WORLD.finishLeft, WORLD.finishY, WORLD.finishRight - WORLD.finishLeft, 6);
     for (let i = 0; i < 12; i++) {
       ctx.fillStyle = i % 2 ? '#fff' : '#e98654';
-      ctx.fillRect(WORLD.finishLeft - 5 + i * ((WORLD.finishRight - WORLD.finishLeft + 10) / 12), WORLD.finishY, (WORLD.finishRight - WORLD.finishLeft + 10) / 12, 8);
+      ctx.fillRect(WORLD.finishLeft + i * ((WORLD.finishRight - WORLD.finishLeft) / 12), WORLD.finishY, (WORLD.finishRight - WORLD.finishLeft) / 12, 6);
     }
     ctx.fillStyle = '#5d9865'; ctx.font = '700 11px sans-serif'; ctx.fillText('START', 28, 39);
     ctx.fillStyle = '#d97945'; ctx.fillText('FINISH', WORLD.finishLeft - 5, WORLD.finishY - 8);
+    ctx.textAlign = 'left'; ctx.fillStyle = '#a44950'; ctx.font = '700 13px sans-serif';
+    ctx.fillText('GOAL KEEPER', WORLD.width / 2 + 65, WORLD.finishY - 48);
+    ctx.fillText('출구 = 구슬 지름 × 2.5', WORLD.width / 2 + 65, WORLD.finishY - 28);
 
     {
-      for (const pin of game.static.pins) {
+      for (const pin of game.static.pins.concat(movingPins(game.time))) {
         if (pin.y + pin.r < camera.top || pin.y - pin.r > camera.top + camera.visibleHeight) continue;
         ctx.beginPath(); ctx.arc(pin.x + 1, pin.y + 2, pin.r + 1.2, 0, Math.PI * 2); ctx.fillStyle = 'rgba(96,65,36,.12)'; ctx.fill();
         ctx.beginPath(); ctx.arc(pin.x, pin.y, pin.r, 0, Math.PI * 2);
         const grad = ctx.createRadialGradient(pin.x - 2, pin.y - 2, 1, pin.x, pin.y, pin.r);
         grad.addColorStop(0, pin.bumper ? '#b8e6db' : '#ffe6aa'); grad.addColorStop(1, pin.bumper ? '#4f9483' : '#bc8450'); ctx.fillStyle = grad; ctx.fill();
+        if (pin.ring || pin.moving) { ctx.strokeStyle = pin.moving ? '#4d6fa4' : '#a976b3'; ctx.lineWidth = 4; ctx.stroke(); }
       }
     }
-    const segments = game.static.segments.concat(game.map === 'spinner' ? rotatingSegments(game.time) : []);
+    const segments = game.static.segments.concat(movingSegments(game.time));
     for (const segment of segments) {
-      ctx.lineCap = 'round'; ctx.lineWidth = segment.rotating ? 11 : 8;
-      ctx.strokeStyle = segment.rotating ? '#bf7545' : (segment.funnel ? '#c58b58' : '#ba946c');
+      ctx.lineCap = 'round'; ctx.lineWidth = (segment.radius ?? 4.5) * 2;
+      ctx.strokeStyle = segment.goalkeeper ? '#c64e63' : segment.sliding ? '#557faf' : segment.diamond ? '#9573a9' : segment.rotating ? '#bf7545' : (segment.funnel ? '#c58b58' : '#ba946c');
       ctx.beginPath(); ctx.moveTo(segment.x1, segment.y1); ctx.lineTo(segment.x2, segment.y2); ctx.stroke();
-      ctx.lineWidth = 3; ctx.strokeStyle = segment.rotating ? '#f1bb79' : '#e0c09a'; ctx.stroke();
+      ctx.lineWidth = Math.min(3, (segment.radius ?? 4.5) * 0.65); ctx.strokeStyle = segment.goalkeeper ? '#ffbec9' : segment.sliding ? '#b1d2f2' : segment.diamond ? '#dfc4ec' : segment.rotating ? '#f1bb79' : '#e0c09a'; ctx.stroke();
       if (segment.rotating) for (const [x, y] of [[segment.x1, segment.y1], [segment.x2, segment.y2]]) {
         ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2); ctx.fillStyle = '#8b5437'; ctx.fill();
       }
@@ -691,7 +745,7 @@
     const mini = $('#miniMap'); const m = mini.getContext('2d');
     const w = mini.width, h = mini.height, sx = (w - 12) / WORLD.width, sy = (h - 16) / WORLD.height;
     m.clearRect(0, 0, w, h); m.fillStyle = 'rgba(255,253,248,.95)'; m.fillRect(0, 0, w, h);
-    MAPS[game.map].sections.forEach(([y], index) => { m.fillStyle = ['#d9eddf', '#f7dfb9', '#dde3f4', '#f6d6c6'][index]; m.fillRect(6, 8 + y * sy, w - 12, 4); });
+    MAPS[game.map].sections.forEach(([y], index) => { m.fillStyle = ['#d9eddf', '#f7dfb9', '#dde3f4', '#e6cbe8', '#b9dfdb', '#f6d6c6'][index]; m.fillRect(6, 8 + y * sy, w - 12, 4); });
     m.fillStyle = '#e77b48'; m.fillRect(6, 8 + WORLD.finishY * sy, w - 12, 2);
     for (const ball of game.balls) if (!ball.finished) { m.fillStyle = ball.color; m.beginPath(); m.arc(6 + ball.x * sx, 8 + ball.y * sy, ball.id === game.selectedBall ? 3 : 1.8, 0, Math.PI * 2); m.fill(); }
     const top = Math.max(0, camera.top), bottom = Math.min(WORLD.height, camera.top + camera.visibleHeight);
