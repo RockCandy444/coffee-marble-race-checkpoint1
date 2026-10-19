@@ -278,7 +278,7 @@
     $('#raceTitle').textContent = MAPS[selectedMap].title;
     $('#raceProgress').textContent = `0 / ${n} 도착`;
     $('#raceStatus').textContent = '구슬이 출발을 기다리고 있어요.';
-    $('#beadInfo').textContent = '마우스 휠로 확대·축소 · 구슬을 누르면 참가자를 추적해요.';
+    $('#beadInfo').textContent = '휠로 확대·축소 · 드래그로 이동 · 미니맵으로 구간 선택';
     $('#liveOrder').replaceChildren();
     $('#liveFooter').textContent = '아직 결승선을 통과한 구슬이 없어요.';
     $('#recoveryControls').hidden = true;
@@ -317,10 +317,7 @@
   $('#nudgeBalls').addEventListener('click', () => {
     if (!game) return;
     game.balls.filter((ball) => !ball.finished).forEach((ball) => {
-      ball.vy += 100 + Math.random() * 40;
-      ball.vx += (Math.random() - 0.5) * 110;
-      ball.stallTime = 0;
-      ball.rescueCount = 0;
+      Course.rescue(ball, game.time);
     });
     game.stuckCount = 0;
     game.watchdogTime = 0;
@@ -328,7 +325,7 @@
     game.paused = false;
     $('#recoveryControls').hidden = true;
     $('#pauseRace').textContent = '일시 정지';
-    $('#raceStatus').textContent = '멈춘 구슬에 힘을 보냈어요. 계속 달립니다!';
+    $('#raceStatus').textContent = '구슬을 강하게 튀겼어요. 계속 달립니다!';
     previousFrame = 0;
   });
 
@@ -368,6 +365,7 @@
       ball.prevX = ball.x;
       ball.prevY = ball.y;
       const fields = game.collisionBuckets.get(Math.floor(ball.y / 160))?.fields ?? [];
+      ball.magnetGrace = Math.max(0, (ball.magnetGrace ?? 0) - dt);
       for (const source of fields) Course.field(ball, source, dt);
       ball.vy += 178 * dt;
       ball.vx += Math.sin(game.time * 1.2 + ball.id * 2.1) * 3.5 * dt;
@@ -591,7 +589,7 @@
 
   function populateCamera() {
     cameraSelect.replaceChildren();
-    for (const [value, label] of [['auto', '자동 중계'], ['leader', '선두 따라가기'], ['pack', '중간 그룹'], ['tail', '후미 따라가기'], ['overview', '전체 코스']]) {
+    for (const [value, label] of [['auto', '자동 중계'], ['leader', '선두 따라가기'], ['pack', '중간 그룹'], ['tail', '후미 따라가기'], ['overview', '전체 코스'], ['manual', '수동 보기']]) {
       const option = document.createElement('option'); option.value = value; option.textContent = label; cameraSelect.append(option);
     }
     const group = document.createElement('optgroup'); group.label = '참가자 추적';
@@ -603,6 +601,8 @@
   cameraSelect.addEventListener('change', () => {
     camera.mode = cameraSelect.value;
     game.selectedBall = camera.mode.startsWith('ball:') ? Number(camera.mode.slice(5)) : null;
+    if (camera.mode === 'manual') manualView();
+    else $('#beadInfo').textContent = '휠로 확대·축소 · 드래그로 이동 · 미니맵으로 구간 선택';
   });
   function changeZoom(amount) {
     camera.zoom = Math.max(0.8, Math.min(4, camera.zoom + amount));
@@ -616,7 +616,10 @@
     const pixels = event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? canvas.clientHeight : 1);
     changeZoom(-Math.max(-240, Math.min(240, pixels)) * 0.002);
   }, { passive: false });
-  $('#cameraReset').addEventListener('click', () => { camera.mode = 'auto'; camera.zoom = 1; cameraSelect.value = 'auto'; game.selectedBall = null; });
+  $('#cameraReset').addEventListener('click', () => {
+    camera.mode = 'auto'; camera.zoom = 1; cameraSelect.value = 'auto'; game.selectedBall = null;
+    $('#beadInfo').textContent = '휠로 확대·축소 · 드래그로 이동 · 미니맵으로 구간 선택';
+  });
 
   function resizeCanvas() {
     if (!canvas || stage !== 'race') return;
@@ -631,7 +634,7 @@
   const observer = new ResizeObserver(resizeCanvas);
   observer.observe(canvas);
   window.addEventListener('resize', resizeCanvas);
-  canvas.addEventListener('pointerdown', (event) => {
+  function selectBall(event) {
     if (!game) return;
     const rect = canvas.getBoundingClientRect();
     const { x, y } = camera.toWorld(event.clientX - rect.left, event.clientY - rect.top);
@@ -648,6 +651,50 @@
       cameraSelect.value = camera.mode;
       $('#beadInfo').textContent = `구슬 #${closest.id} · ${closest.name} — 달리는 중`;
     }
+  }
+  let cameraDrag = null;
+  function manualView() {
+    cameraSelect.value = 'manual'; game.selectedBall = null;
+    $('#beadInfo').textContent = '수동 보기 · 드래그로 이동 · 미니맵으로 구간 선택 · 자동 중계 버튼으로 복귀';
+  }
+  canvas.addEventListener('pointerdown', event => {
+    if (!game || event.button !== 0 || cameraDrag) return;
+    cameraDrag = { id: event.pointerId, startX: event.clientX, startY: event.clientY, x: event.clientX, y: event.clientY, moved: false };
+    canvas.setPointerCapture(event.pointerId);
+  });
+  canvas.addEventListener('pointermove', event => {
+    if (!cameraDrag || cameraDrag.id !== event.pointerId) return;
+    if (!cameraDrag.moved && Math.hypot(event.clientX - cameraDrag.startX, event.clientY - cameraDrag.startY) < 5) return;
+    if (camera.mode === 'overview') {
+      const point = camera.toWorld(event.clientX - canvas.getBoundingClientRect().left, event.clientY - canvas.getBoundingClientRect().top);
+      camera.zoom = 1; camera.moveTo(point.x, point.y); resizeCanvas();
+    }
+    camera.pan(event.clientX - cameraDrag.x, event.clientY - cameraDrag.y);
+    cameraDrag.moved = true; cameraDrag.x = event.clientX; cameraDrag.y = event.clientY;
+    manualView(); canvas.classList.add('is-dragging'); resizeCanvas();
+  });
+  function endCameraDrag(event) {
+    if (!cameraDrag || cameraDrag.id !== event.pointerId) return;
+    const clicked = !cameraDrag.moved && event.type === 'pointerup';
+    cameraDrag = null; canvas.classList.remove('is-dragging');
+    if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
+    if (clicked) selectBall(event);
+  }
+  for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) canvas.addEventListener(type, endCameraDrag);
+  const miniMap = $('#miniMap');
+  miniMap.addEventListener('click', event => {
+    if (!game) return;
+    const rect = miniMap.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) * miniMap.width / rect.width - 6) / (miniMap.width - 12) * WORLD.width;
+    const y = ((event.clientY - rect.top) * miniMap.height / rect.height - 8) / (miniMap.height - 16) * WORLD.height;
+    if (camera.mode === 'overview') camera.zoom = 1;
+    camera.moveTo(x, y); manualView(); resizeCanvas();
+  });
+  miniMap.addEventListener('keydown', event => {
+    if (!game || !['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Enter',' '].includes(event.key)) return;
+    event.preventDefault();
+    camera.moveTo(camera.x + (event.key === 'ArrowRight' ? 100 : event.key === 'ArrowLeft' ? -100 : 0), camera.y + (event.key === 'ArrowDown' ? 400 : event.key === 'ArrowUp' ? -400 : 0));
+    manualView(); resizeCanvas();
   });
 
   function drawTrack() {
@@ -769,7 +816,8 @@
     m.fillStyle = '#e77b48'; m.fillRect(6, 8 + WORLD.finishY * sy, w - 12, 2);
     for (const ball of game.balls) if (!ball.finished) { m.fillStyle = ball.color; m.beginPath(); m.arc(6 + ball.x * sx, 8 + ball.y * sy, ball.id === game.selectedBall ? 3 : 1.8, 0, Math.PI * 2); m.fill(); }
     const top = Math.max(0, camera.top), bottom = Math.min(WORLD.height, camera.top + camera.visibleHeight);
-    m.strokeStyle = '#326f69'; m.lineWidth = 1.5; m.strokeRect(3, 8 + top * sy, w - 6, Math.max(3, (bottom - top) * sy));
+    const left = Math.max(0, camera.left), right = Math.min(WORLD.width, camera.left + camera.visibleWidth);
+    m.strokeStyle = '#326f69'; m.lineWidth = 1.5; m.strokeRect(6 + left * sx, 8 + top * sy, Math.max(3, (right - left) * sx), Math.max(3, (bottom - top) * sy));
   }
   function lighten(color, amount) {
     const match = color.match(/hsl\(([^ ]+)\s+([^ ]+)\s+([^%]+)%\)/);

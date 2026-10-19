@@ -64,3 +64,8 @@ button:focus-visible, select:focus-visible { outline: 3px solid #478879; outline
   .camera-toolbar { padding-bottom: 4px; }
   #miniMap { height: 110px; width: 37px; }
 }
+
+#miniMap { pointer-events: auto; cursor: pointer; touch-action: manipulation; }
+#miniMap:focus-visible { outline: 3px solid #e78642; outline-offset: 2px; }
+#raceCanvas { cursor: grab; touch-action: none; }
+#raceCanvas.is-dragging { cursor: grabbing; }

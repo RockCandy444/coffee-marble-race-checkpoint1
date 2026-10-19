@@ -76,7 +76,9 @@
           const y = baseY + offset, b = bounds(y, world);
           for (let attempt = 0; attempt < 9; attempt++) {
             const fraction = 0.13 + ((k * 3 + attempt * 2 + section) % 9) / 8 * 0.74;
-            const x = b.left + (b.right - b.left) * fraction;
+            // Keep the right middle-gate magnet clear of the slider's full sweep (395..985).
+            const x = map === 'spinner' && section === 3 && k === 4
+              ? 342 : b.left + (b.right - b.left) * fraction;
             if (!clear(x, y, r)) continue;
             pins.push({ x, y, r, kind, bumper: true, section, kick: kind === 'power' ? 220 + k % 3 * 25 : 0,
               range: kind === 'power' ? 0 : 120, strength: kind === 'magnet' ? 150 : 230, direction: (k + section) % 2 ? 1 : -1, defender: section === sections.length - 1 });
@@ -125,6 +127,7 @@
     return result;
   }
   function field(ball, source, dt) {
+    if (source.kind === 'magnet' && ball.magnetGrace > 0) return;
     const dx = source.x - ball.x, dy = source.y - ball.y, distance = Math.hypot(dx, dy);
     if (!distance || distance >= source.range) return;
     const force = source.strength * (1 - distance / source.range);
@@ -138,6 +141,14 @@
     ball.bumperHits[pin.id] = time;
     ball.vx += nx * pin.kick; ball.vy += ny * pin.kick;
     ball.boostUntil = time + 0.4; pin.flashUntil = time + 0.18;
+  }
+  function rescue(ball, time, random = Math.random) {
+    const direction = random() < 0.5 ? -1 : 1;
+    ball.vx = direction * (280 + random() * 80);
+    ball.vy = -(320 + random() * 80);
+    ball.boostUntil = time + 1.4;
+    ball.magnetGrace = 1.4;
+    ball.stallTime = 0; ball.rescueCount = 0;
   }
   function goalkeeper(type, time, diameter, world) {
     const mid = world.width / 2, gap = world.finishRight - world.finishLeft, y = world.finishY - 45;
@@ -189,5 +200,5 @@
       ctx.restore();
     } else if (pin.defender) { ctx.strokeStyle = '#426a91'; ctx.lineWidth = 2.5; ctx.stroke(); }
   }
-  window.MarbleCourse = { keepers, chooseKeeper, configure, bounds, contain, enrich, buckets, field, kick, goalkeeper, defenders, drawField, drawPinSymbol };
+  window.MarbleCourse = { keepers, chooseKeeper, configure, bounds, contain, enrich, buckets, field, kick, rescue, goalkeeper, defenders, drawField, drawPinSymbol };
 })();

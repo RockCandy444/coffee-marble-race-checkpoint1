@@ -33,6 +33,52 @@ const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8').replace(/\}\)\(\)
 vm.runInContext(app, context);
 const simulation = sandbox.window.simulationTest;
 const course = sandbox.window.MarbleCourse;
+// Manual camera movement must hold its position as the race advances, including paused frames.
+const camera = new sandbox.window.RaceCamera();
+const cameraGame = { balls: [{id:1,x:700,y:800}], order: [], time: 0 };
+const cameraWorld = {width:1000,height:7800,finishY:7740};
+camera.zoom = 3;
+camera.update(cameraGame, cameraWorld, 600, 400, 1);
+camera.moveTo(650, 5053);
+camera.update(cameraGame, cameraWorld, 600, 400, 1/120);
+assert.equal(camera.mode, 'manual'); assert.equal(camera.y, 5053);
+const heldX = camera.x;
+camera.pan(100, -50);
+camera.update(cameraGame, cameraWorld, 600, 400, 1/120);
+assert.ok(camera.x < heldX && camera.y > 5053);
+const heldY = camera.y;
+cameraGame.time = 40; cameraGame.balls[0].y = 6000;
+camera.update(cameraGame, cameraWorld, 600, 400, 1);
+assert.equal(camera.y, heldY);
+const center = camera.toWorld(300,200);
+assert.ok(Math.abs(center.x-camera.x)<1e-8 && Math.abs(center.y-camera.y)<1e-8);
+camera.moveTo(-10000,10000); camera.update(cameraGame,cameraWorld,600,400,1);
+assert.ok(camera.left >= -15 && camera.top + camera.visibleHeight <= 7815);
+camera.mode='auto'; camera.update(cameraGame,cameraWorld,600,400,1);
+assert.ok(camera.y < 7000, 'automatic tracking resumes');
+// Reproduce the reported slider pocket with both marble sizes and impulses in both directions.
+for (const n of [2,100]) for (const random of [() => 0.1, () => 0.9]) {
+  seed = 123; simulation.reset('spinner', n, 0);
+  const {game} = simulation.state();
+  const magnet = game.static.pins.find(p=>p.kind==='magnet' && p.section===3 && p.y>4900);
+  assert.equal(magnet.x,342);
+  const distance = Math.hypot(395-magnet.x, 5060-magnet.y);
+  assert.ok(distance > magnet.r + 8 + 2*11.2, 'full slider sweep leaves a maximum-marble passage');
+  const ball = game.balls[0];
+  game.balls = [ball];
+  Object.assign(ball,{x:655.98,y:5060-8-ball.r-0.1,vx:0,vy:0,maxY:5060,stallTime:20,rescueCount:4});
+  const initialY = ball.y;
+  course.rescue(ball,game.time,random);
+  assert.ok(ball.vy<=-320 && Math.abs(ball.vx)>=280 && Math.hypot(ball.vx,ball.vy)>420);
+  const before = ball.vx;
+  course.field(ball,{x:ball.x+50,y:ball.y,kind:'magnet',range:120,strength:150},0.1);
+  assert.equal(ball.vx,before,'brief grace prevents immediate reattachment to magnet');
+  for (let i=0;i<120*35 && ball.y<initialY+150;i++) simulation.step(1/120);
+  assert.ok(ball.y>initialY+150,'rescued marble must pass the reported gate with production collisions');
+  while (game.time < 1.5) simulation.step(1/120);
+  assert.equal(ball.magnetGrace,0,'magnet grace expires normally');
+}
+console.log('Camera hold/pan/bounds/return, slider clearance and four trapped-marble rescue cases passed');
 const distribution = [0, 0, 0, 0];
 for (let i = 0; i < 10000; i++) distribution[course.keepers.indexOf(course.chooseKeeper(() => (i + 0.5) / 10000))]++;
 assert.deepEqual(distribution, [2500, 2500, 2500, 2500]);
