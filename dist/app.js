@@ -1,16 +1,16 @@
 (() => {
   'use strict';
 
-  // 길게 뻗은 코스와 하나의 좁은 결승 게이트를 공유합니다.
+  // Physical course dimensions are independent of the camera viewport.
   const WORLD = {
     width: 1000, height: 1600, finishY: 1510,
     left: 20, right: 980, top: 18, bottom: 1578,
     finishLeft: 335, finishRight: 665, funnelY: 1120, funnelKnee: 1370
   };
   const MAPS = {
-    pinball: { title: '핀볼 코스', label: '핀볼' },
-    spinner: { title: '회전 장애물 코스', label: '회전 장애물' },
-    fork: { title: '갈림길 코스', label: '갈림길' }
+    pinball: { title: '핀볼 코스', label: '핀볼', height: 2400, sections: [[180, '핀 숲'], [800, '범퍼 정원'], [1400, '지그재그 슬라이드'], [1970, '결승 스프린트']] },
+    spinner: { title: '회전 장애물 코스', label: '회전 장애물', height: 2600, sections: [[190, '회전 날개'], [850, '엇갈린 회전문'], [1550, '더블 게이트'], [2170, '결승 스프린트']] },
+    fork: { title: '갈림길 코스', label: '갈림길', height: 2800, sections: [[190, '첫 번째 갈림길'], [1050, '교차 합류'], [1650, '마지막 선택'], [2370, '결승 스프린트']] }
   };
   const $ = (selector) => document.querySelector(selector);
   const setupView = $('#setupView');
@@ -30,8 +30,9 @@
   let frameId = 0;
   let previousFrame = 0;
   let accumulator = 0;
-  let canvasScaleX = 1;
-  let canvasScaleY = 1;
+  const camera = new window.RaceCamera();
+  let canvasDpr = 1;
+  const cameraSelect = $('#cameraSelect');
 
   namesInput.value = participants.join('\n');
 
@@ -41,6 +42,7 @@
     mapView.hidden = next !== 'map';
     raceView.hidden = next !== 'race';
     resultsView.hidden = next !== 'results';
+    document.body.classList.toggle('race-active', next === 'race');
     const order = ['setup', 'map', 'race', 'results'];
     document.querySelectorAll('.step').forEach((step) => {
       const index = order.indexOf(step.dataset.step);
@@ -48,7 +50,7 @@
       step.classList.toggle('done', index < order.indexOf(next));
     });
     if (next === 'race') resizeCanvas();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: 'instant' });
   }
 
   function updateCountBadge(count) {
@@ -139,26 +141,37 @@
     const pins = [];
     const segments = [];
     if (map === 'pinball') {
-      // 짧은 한 구간에 몰지 않고, 긴 코스에 핀을 여러 구간으로 분산합니다.
-      for (let row = 0; row < 18; row++) {
-        for (let col = 0; col < 16; col++) {
-          const x = 64 + col * 58 + (row % 2) * 29;
+      for (let row = 0; row < 7; row++) {
+        for (let col = 0; col < 12; col++) {
+          const x = 64 + col * 76 + (row % 2) * 38;
           if (x > 950) continue;
-          pins.push({ x, y: 180 + row * 52, r: 7.2 });
+          pins.push({ x, y: 260 + row * 68, r: 9 });
         }
       }
-    } else if (map === 'fork') {
-      // 갈림길은 충분한 폭을 확보하고, 아래쪽에서 부드럽게 합류시킵니다.
+      for (let row = 0; row < 4; row++) for (let col = 0; col < 5; col++) {
+        pins.push({ x: 130 + col * 175 + (row % 2) * 45, y: 890 + row * 120, r: 23 + ((row + col) % 3) * 5, bumper: true });
+      }
       segments.push(
-        { x1: 65, y1: 155, x2: 235, y2: 335 },
-        { x1: 235, y1: 335, x2: 235, y2: 740 },
-        { x1: 500, y1: 155, x2: 420, y2: 335 },
-        { x1: 420, y1: 335, x2: 420, y2: 740 },
-        { x1: 500, y1: 155, x2: 580, y2: 335 },
-        { x1: 580, y1: 335, x2: 580, y2: 740 },
-        { x1: 935, y1: 155, x2: 765, y2: 335 },
-        { x1: 765, y1: 335, x2: 765, y2: 740 }
+        { x1: 60, y1: 1490, x2: 650, y2: 1600 },
+        { x1: 940, y1: 1690, x2: 350, y2: 1800 },
+        { x1: 80, y1: 1850, x2: 630, y2: 1950 }
       );
+    } else if (map === 'spinner') {
+      for (const y of [760, 1210, 2010]) for (const x of [100, 270, 730, 900]) pins.push({ x, y, r: 20, bumper: true });
+    } else if (map === 'fork') {
+      segments.push(
+        { x1: 500, y1: 280, x2: 300, y2: 600 },
+        { x1: 500, y1: 280, x2: 700, y2: 600 },
+        { x1: 300, y1: 600, x2: 300, y2: 900 },
+        { x1: 700, y1: 600, x2: 700, y2: 900 },
+        { x1: 50, y1: 1080, x2: 390, y2: 1400 },
+        { x1: 950, y1: 1080, x2: 610, y2: 1400 },
+        { x1: 500, y1: 1730, x2: 320, y2: 2030 },
+        { x1: 500, y1: 1730, x2: 680, y2: 2030 },
+        { x1: 60, y1: 2160, x2: 330, y2: 2320 },
+        { x1: 940, y1: 2160, x2: 670, y2: 2320 }
+      );
+      for (const [x, y] of [[160, 720], [840, 720], [420, 1500], [580, 1560], [160, 1990], [840, 1990]]) pins.push({ x, y, r: 24, bumper: true });
     }
     // 세 맵 모두 결승선은 한 곳뿐이며, 넓은 트랙을 하나의 결승 통로로 모읍니다.
     segments.push(...finishFunnelSegments());
@@ -167,22 +180,30 @@
 
   function rotatingSegments(time) {
     const bars = [
-      { y: 285, phase: 0.2, length: 430 },
-      { y: 555, phase: 2.0, length: 470 },
-      { y: 825, phase: 4.1, length: 440 },
-      { y: 1080, phase: 1.1, length: 400 }
+      { x: 340, y: 350, phase: 0.2, length: 390, speed: 0.8 },
+      { x: 680, y: 630, phase: 2.0, length: 350, speed: -1.0 },
+      { x: 420, y: 1030, phase: 4.1, length: 470, speed: 0.85 },
+      { x: 620, y: 1370, phase: 1.1, length: 410, speed: -0.9 },
+      { x: 280, y: 1730, phase: 0.5, length: 350, speed: 1.05 },
+      { x: 720, y: 1870, phase: 2.2, length: 350, speed: -1.05 }
     ];
     return bars.map((bar) => {
-      const phase = time * 1.2 + bar.phase;
-      const angle = Math.sin(phase) * 0.68;
-      const omega = Math.cos(phase) * 0.82;
+      const angle = time * bar.speed + bar.phase;
+      const omega = bar.speed;
       const dx = Math.cos(angle) * bar.length / 2;
       const dy = Math.sin(angle) * bar.length / 2;
-      return { x1: 500 - dx, y1: bar.y - dy, x2: 500 + dx, y2: bar.y + dy, cx: 500, cy: bar.y, omega, rotating: true };
+      return { x1: bar.x - dx, y1: bar.y - dy, x2: bar.x + dx, y2: bar.y + dy, cx: bar.x, cy: bar.y, omega, rotating: true };
     });
   }
 
   function setUpRace() {
+    WORLD.height = MAPS[selectedMap].height;
+    WORLD.bottom = WORLD.height - 22;
+    WORLD.finishY = WORLD.height - 90;
+    WORLD.funnelY = WORLD.height - 400;
+    WORLD.funnelKnee = WORLD.height - 170;
+    camera.reset();
+    populateCamera();
     const n = participants.length;
     const radius = Math.max(5.2, Math.min(11.2, 12.5 - 0.72 * Math.sqrt(n)));
     const columns = Math.min(n, 24, Math.max(1, Math.ceil(Math.sqrt(n * 4))));
@@ -283,6 +304,8 @@
         iterations++;
       }
     }
+    if (stage !== 'race') return;
+    camera.update(game, WORLD, canvas.width / canvasDpr, canvas.height / canvasDpr, elapsed);
     drawTrack();
     if (timestamp - game.lastUiUpdate > 180) {
       updateLiveUI();
@@ -353,7 +376,7 @@
     }
 
     if (game.order.length === game.balls.length) { finishRace(); return; }
-    if (game.stuckCount >= 2 || game.watchdogTime > 90) {
+    if (game.stuckCount >= 2 || game.watchdogTime > 120) {
       game.paused = true;
       game.autoPaused = true;
       $('#pauseRace').textContent = '경주 멈춤';
@@ -496,7 +519,10 @@
     const list = $('#liveOrder');
     list.replaceChildren();
     const fragment = document.createDocumentFragment();
-    game.order.forEach((ball, index) => {
+    const running = game.balls.filter(ball => !ball.finished).sort((a, b) => b.y - a.y);
+    $('#liveTitle').textContent = game.order.length ? '결승 도착 순서' : '현재 선두 그룹';
+    const displayed = game.order.length ? game.order : running.slice(0, 12);
+    displayed.forEach((ball, index) => {
       const li = document.createElement('li');
       const rank = document.createElement('span'); rank.className = 'rank-number'; rank.textContent = String(index + 1);
       const bead = document.createElement('i'); bead.className = 'mini-bead'; bead.style.background = ball.color;
@@ -504,22 +530,48 @@
       li.append(rank, bead, name); fragment.append(li);
     });
     list.append(fragment);
-    $('#liveFooter').textContent = game.order.length === 0 ? '아직 결승선을 통과한 구슬이 없어요.' : `${game.order.length}명이 완주 · ${remaining}명 경주 중`;
+    $('#liveFooter').textContent = game.order.length === 0 ? '현재 위치 기준 · 결승 통과 시 순위 확정' : `${game.order.length}명이 완주 · ${remaining}명 경주 중`;
+    const section = MAPS[game.map].sections.filter(([y]) => y <= camera.y).at(-1);
+    $('#cameraStatus').textContent = camera.label + (section ? ' · ' + section[1] : ' · 출발 구간');
+    $('#cameraBadge').textContent = camera.label;
+    $('#cameraZoomLabel').textContent = camera.mode === 'overview' ? '전체' : camera.zoom.toFixed(1) + '×';
     if (game.selectedBall) {
       const ball = game.balls.find((item) => item.id === game.selectedBall);
       if (ball) $('#beadInfo').textContent = `구슬 #${ball.id} · ${ball.name}${ball.finished ? ' — 결승선 통과!' : ' — 달리는 중'}`;
     }
   }
 
+  function populateCamera() {
+    cameraSelect.replaceChildren();
+    for (const [value, label] of [['auto', '자동 중계'], ['leader', '선두 따라가기'], ['pack', '중간 그룹'], ['tail', '후미 따라가기'], ['overview', '전체 코스']]) {
+      const option = document.createElement('option'); option.value = value; option.textContent = label; cameraSelect.append(option);
+    }
+    const group = document.createElement('optgroup'); group.label = '참가자 추적';
+    participants.forEach((name, index) => {
+      const option = document.createElement('option'); option.value = 'ball:' + (index + 1); option.textContent = '#' + (index + 1) + ' ' + name; group.append(option);
+    });
+    cameraSelect.append(group); cameraSelect.value = 'auto';
+  }
+  cameraSelect.addEventListener('change', () => {
+    camera.mode = cameraSelect.value;
+    game.selectedBall = camera.mode.startsWith('ball:') ? Number(camera.mode.slice(5)) : null;
+  });
+  function changeZoom(amount) {
+    camera.zoom = Math.max(0.8, Math.min(2.4, Math.round((camera.zoom + amount) * 10) / 10));
+    if (camera.mode === 'overview') { camera.mode = 'auto'; cameraSelect.value = 'auto'; }
+  }
+  $('#cameraZoomOut').addEventListener('click', () => changeZoom(-0.2));
+  $('#cameraZoomIn').addEventListener('click', () => changeZoom(0.2));
+  $('#cameraReset').addEventListener('click', () => { camera.mode = 'auto'; camera.zoom = 1; cameraSelect.value = 'auto'; game.selectedBall = null; });
+
   function resizeCanvas() {
     if (!canvas || stage !== 'race') return;
     const rect = canvas.getBoundingClientRect();
     if (!rect.width) return;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = Math.round(rect.width * dpr);
-    canvas.height = Math.round(rect.height * dpr);
-    canvasScaleX = canvas.width / WORLD.width;
-    canvasScaleY = canvas.height / WORLD.height;
+    canvasDpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(rect.width * canvasDpr);
+    canvas.height = Math.round(rect.height * canvasDpr);
+    if (game) camera.update(game, WORLD, rect.width, rect.height, 1);
     drawTrack();
   }
   const observer = new ResizeObserver(resizeCanvas);
@@ -528,10 +580,9 @@
   canvas.addEventListener('pointerdown', (event) => {
     if (!game) return;
     const rect = canvas.getBoundingClientRect();
-    const x = (event.clientX - rect.left) * WORLD.width / rect.width;
-    const y = (event.clientY - rect.top) * WORLD.height / rect.height;
+    const { x, y } = camera.toWorld(event.clientX - rect.left, event.clientY - rect.top);
     let closest = null;
-    let minDistance = 30;
+    let minDistance = Math.max(25, 18 / camera.scale);
     for (const ball of game.balls) {
       if (ball.finished) continue;
       const distance = Math.hypot(ball.x - x, ball.y - y);
@@ -539,21 +590,28 @@
     }
     if (closest) {
       game.selectedBall = closest.id;
+      camera.mode = 'ball:' + closest.id;
+      cameraSelect.value = camera.mode;
       $('#beadInfo').textContent = `구슬 #${closest.id} · ${closest.name} — 달리는 중`;
-    } else {
-      game.selectedBall = null;
-      $('#beadInfo').textContent = '구슬을 누르거나 터치하면 참가자 이름을 확인할 수 있어요.';
     }
   });
 
   function drawTrack() {
     if (!ctx || !canvas.width || !game) return;
-    ctx.setTransform(canvasScaleX, 0, 0, canvasScaleY, 0, 0);
-    ctx.clearRect(0, 0, WORLD.width, WORLD.height);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#f5ead7'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    camera.apply(ctx, canvasDpr);
     const bg = ctx.createLinearGradient(0, 0, 0, WORLD.height);
     bg.addColorStop(0, '#fff7e7'); bg.addColorStop(1, '#ffedca');
     ctx.fillStyle = bg; ctx.fillRect(0, 0, WORLD.width, WORLD.height);
     ctx.fillStyle = '#fffdf8'; ctx.fillRect(16, 17, 968, WORLD.height - 32);
+    MAPS[game.map].sections.forEach(([y, label], index) => {
+      ctx.fillStyle = ['#edf7ef', '#fff0dc', '#eef1fb', '#fff1e8'][index];
+      ctx.fillRect(22, y, 956, (MAPS[game.map].sections[index + 1]?.[0] ?? WORLD.bottom) - y);
+      ctx.fillStyle = '#9a8065'; ctx.font = '700 16px sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+      ctx.fillText('0' + (index + 1) + '  ' + label, 50, y + 15);
+    });
     ctx.strokeStyle = '#dfc9a8'; ctx.lineWidth = 3;
     ctx.beginPath(); ctx.moveTo(18, 20); ctx.lineTo(982, 20); ctx.moveTo(18, WORLD.bottom); ctx.lineTo(982, WORLD.bottom); ctx.stroke();
     ctx.fillStyle = '#6caa72'; ctx.fillRect(22, 45, 956, 4);
@@ -590,22 +648,14 @@
     ctx.fillStyle = '#5d9865'; ctx.font = '700 11px sans-serif'; ctx.fillText('START', 28, 39);
     ctx.fillStyle = '#d97945'; ctx.fillText('FINISH', WORLD.finishLeft - 5, WORLD.finishY - 8);
 
-    if (game.map === 'pinball') {
+    {
       for (const pin of game.static.pins) {
+        if (pin.y + pin.r < camera.top || pin.y - pin.r > camera.top + camera.visibleHeight) continue;
         ctx.beginPath(); ctx.arc(pin.x + 1, pin.y + 2, pin.r + 1.2, 0, Math.PI * 2); ctx.fillStyle = 'rgba(96,65,36,.12)'; ctx.fill();
         ctx.beginPath(); ctx.arc(pin.x, pin.y, pin.r, 0, Math.PI * 2);
         const grad = ctx.createRadialGradient(pin.x - 2, pin.y - 2, 1, pin.x, pin.y, pin.r);
-        grad.addColorStop(0, '#ffe6aa'); grad.addColorStop(1, '#bc8450'); ctx.fillStyle = grad; ctx.fill();
+        grad.addColorStop(0, pin.bumper ? '#b8e6db' : '#ffe6aa'); grad.addColorStop(1, pin.bumper ? '#4f9483' : '#bc8450'); ctx.fillStyle = grad; ctx.fill();
       }
-    }
-    if (game.map === 'fork') {
-      ctx.fillStyle = 'rgba(252,218,158,.23)';
-      ctx.beginPath();
-      ctx.moveTo(65, 155); ctx.lineTo(500, 155); ctx.lineTo(420, 335); ctx.lineTo(420, 740); ctx.lineTo(500, 865);
-      ctx.lineTo(285, 865); ctx.lineTo(235, 740); ctx.lineTo(235, 335); ctx.closePath(); ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(935, 155); ctx.lineTo(500, 155); ctx.lineTo(580, 335); ctx.lineTo(580, 740); ctx.lineTo(500, 865);
-      ctx.lineTo(715, 865); ctx.lineTo(765, 740); ctx.lineTo(765, 335); ctx.closePath(); ctx.fill();
     }
     const segments = game.static.segments.concat(game.map === 'spinner' ? rotatingSegments(game.time) : []);
     for (const segment of segments) {
@@ -619,6 +669,7 @@
     }
     for (const ball of game.balls) {
       if (ball.finished) continue;
+      if (ball.y + ball.r < camera.top || ball.y - ball.r > camera.top + camera.visibleHeight) continue;
       const r = ball.r;
       ctx.beginPath(); ctx.arc(ball.x + 1.5, ball.y + 2, r + 1, 0, Math.PI * 2); ctx.fillStyle = 'rgba(60,41,25,.19)'; ctx.fill();
       ctx.beginPath(); ctx.arc(ball.x, ball.y, r, 0, Math.PI * 2);
@@ -633,6 +684,18 @@
       ctx.fillText(String(ball.id), ball.x, ball.y + .3, r * 1.65);
     }
     if (game.paused) { ctx.fillStyle = 'rgba(255,251,242,.24)'; ctx.fillRect(0, 0, WORLD.width, WORLD.height); }
+    drawMiniMap();
+  }
+
+  function drawMiniMap() {
+    const mini = $('#miniMap'); const m = mini.getContext('2d');
+    const w = mini.width, h = mini.height, sx = (w - 12) / WORLD.width, sy = (h - 16) / WORLD.height;
+    m.clearRect(0, 0, w, h); m.fillStyle = 'rgba(255,253,248,.95)'; m.fillRect(0, 0, w, h);
+    MAPS[game.map].sections.forEach(([y], index) => { m.fillStyle = ['#d9eddf', '#f7dfb9', '#dde3f4', '#f6d6c6'][index]; m.fillRect(6, 8 + y * sy, w - 12, 4); });
+    m.fillStyle = '#e77b48'; m.fillRect(6, 8 + WORLD.finishY * sy, w - 12, 2);
+    for (const ball of game.balls) if (!ball.finished) { m.fillStyle = ball.color; m.beginPath(); m.arc(6 + ball.x * sx, 8 + ball.y * sy, ball.id === game.selectedBall ? 3 : 1.8, 0, Math.PI * 2); m.fill(); }
+    const top = Math.max(0, camera.top), bottom = Math.min(WORLD.height, camera.top + camera.visibleHeight);
+    m.strokeStyle = '#326f69'; m.lineWidth = 1.5; m.strokeRect(3, 8 + top * sy, w - 6, Math.max(3, (bottom - top) * sy));
   }
   function lighten(color, amount) {
     const match = color.match(/hsl\(([^ ]+)\s+([^ ]+)\s+([^%]+)%\)/);
