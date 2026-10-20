@@ -1,6 +1,14 @@
 (() => {
   'use strict';
   const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+  const wallRadius = 4.5;
+  function wallPath(world, side, radius = wallRadius) {
+    const offset = side === 'left' ? -radius : radius;
+    const gate = side === 'left' ? world.finishLeft : world.finishRight;
+    return [...world.sideProfile.map(point => ({ x: point[side] + offset, y: point.y })),
+      { x: gate + offset, y: world.funnelKnee }, { x: gate + offset, y: world.bottom }];
+  }
+  function outline(world) { return [...wallPath(world, 'left', 0), ...wallPath(world, 'right', 0).reverse()]; }
   const keepers = [
     { id: 'slider', name: '슬라이딩 골키퍼' },
     { id: 'rotor', name: '회전 방패' },
@@ -109,7 +117,7 @@
       pin.section ??= Math.max(0, sections.findLastIndex(([y]) => pin.y >= y));
     });
     world.sideProfile.slice(1).forEach((b, i) => {
-      const a = world.sideProfile[i], radius = map === 'pinball' ? 4.5 : 5 + i % 3 * 3;
+      const a = world.sideProfile[i], radius = wallRadius;
       segments.push({ x1: a.left - radius, y1: a.y, x2: b.left - radius, y2: b.y, radius, sideWall: true });
       segments.push({ x1: a.right + radius, y1: a.y, x2: b.right + radius, y2: b.y, radius, sideWall: true });
     });
@@ -200,5 +208,5 @@
       ctx.restore();
     } else if (pin.defender) { ctx.strokeStyle = '#426a91'; ctx.lineWidth = 2.5; ctx.stroke(); }
   }
-  window.MarbleCourse = { keepers, chooseKeeper, configure, bounds, contain, enrich, buckets, field, kick, rescue, goalkeeper, defenders, drawField, drawPinSymbol };
+  window.MarbleCourse = { wallRadius, wallPath, outline, keepers, chooseKeeper, configure, bounds, contain, enrich, buckets, field, kick, rescue, goalkeeper, defenders, drawField, drawPinSymbol };
 })();

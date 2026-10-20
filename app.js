@@ -206,7 +206,8 @@
         points.forEach(([x1, y1], i) => { const [x2, y2] = points[(i + 1) % 4]; segments.push({ x1, y1, x2, y2, radius: 5 + (size % 4), diamond: true }); });
       }
     }
-    segments.forEach((segment, index) => { segment.radius ??= [4.5, 7, 9][index % 3]; });
+    // Fixed partition boards share the outer walls' thickness; moving hazards keep their own sizes.
+    segments.forEach(segment => { segment.radius = Course.wallRadius; });
     Course.enrich(pins, segments, map, WORLD, MAPS[map].sections);
     // 세 맵 모두 결승선은 한 곳뿐이며, 넓은 트랙을 하나의 결승 통로로 모읍니다.
     segments.push(...finishFunnelSegments());
@@ -720,6 +721,17 @@
     manualView(); resizeCanvas();
   });
 
+  function drawOuterWalls() {
+    ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    for (const side of ['left', 'right']) {
+      const points = Course.wallPath(WORLD, side);
+      ctx.beginPath(); ctx.moveTo(points[0].x, points[0].y);
+      points.slice(1).forEach(point => ctx.lineTo(point.x, point.y));
+      ctx.strokeStyle = '#ba946c'; ctx.lineWidth = Course.wallRadius * 2; ctx.stroke();
+      ctx.strokeStyle = '#e0c09a'; ctx.lineWidth = 2.5; ctx.stroke();
+    }
+    ctx.restore();
+  }
   function drawTrack() {
     if (!ctx || !canvas.width || !game) return;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -778,6 +790,13 @@
     }
     ctx.fillStyle = '#5d9865'; ctx.font = '700 11px sans-serif'; ctx.fillText('START', 28, 39);
 
+    // Clip every obstacle, field and marble to the same inner boundary used by containment.
+    // Draw the continuous outer walls afterwards so branches meet them cleanly.
+    ctx.save();
+    const outline = Course.outline(WORLD);
+    ctx.beginPath(); ctx.moveTo(outline[0].x, outline[0].y);
+    outline.slice(1).forEach(point => ctx.lineTo(point.x, point.y));
+    ctx.closePath(); ctx.clip();
     {
       for (const pin of game.static.pins.concat(movingPins(game.time))) {
         if (pin.y + pin.r < camera.top || pin.y - pin.r > camera.top + camera.visibleHeight) continue;
@@ -793,6 +812,7 @@
     }
     const segments = game.static.segments.concat(movingSegments(game.time));
     for (const segment of segments) {
+      if (segment.sideWall || segment.funnel) continue;
       if (Math.max(segment.y1, segment.y2) + segment.radius < camera.top || Math.min(segment.y1, segment.y2) - segment.radius > camera.top + camera.visibleHeight) continue;
       if (segment.circle) {
         ctx.strokeStyle = '#aa6a75'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(500, WORLD.finishY - 120); ctx.lineTo(segment.x1, segment.y1); ctx.stroke();
@@ -830,6 +850,8 @@
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText(String(ball.id), ball.x, ball.y + .3, r * 1.65);
     }
+    ctx.restore();
+    drawOuterWalls();
     if (game.paused) { ctx.fillStyle = 'rgba(255,251,242,.24)'; ctx.fillRect(0, 0, WORLD.width, WORLD.height); }
     drawMiniMap();
   }

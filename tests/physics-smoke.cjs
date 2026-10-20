@@ -110,6 +110,17 @@ for (const map of ['pinball', 'spinner', 'fork'].filter(m => !process.env.MARBLE
     for (const kind of ['power', 'magnet', 'wind']) assert.ok(state.game.static.pins.some(p => p.section === section && p.kind === kind), map + ' section ' + section + ' missing ' + kind);
   }
   if (map !== 'pinball') assert.ok(new Set(state.world.sideProfile.map(p=>p.left.toFixed(2))).size > 5);
+  const walls = state.game.static.segments.filter(s=>s.sideWall);
+  assert.ok(walls.every(s=>s.radius===course.wallRadius), 'outer walls have one constant thickness');
+  assert.ok(state.game.static.segments.every(s=>(s.radius ?? 4.5)===course.wallRadius), 'fixed partitions match the outer wall thickness');
+  for (const side of ['left','right']) {
+    const wall = course.wallPath(state.world,side);
+    assert.equal(wall.length,state.world.sideProfile.length+2);
+    assert.equal(wall.at(-1).y,state.world.bottom);
+    const offset = side==='left' ? -course.wallRadius : course.wallRadius;
+    state.world.sideProfile.forEach((p,i)=>assert.equal(wall[i].x,p[side]+offset));
+  }
+  assert.ok(course.outline(state.world).every(p=>Number.isFinite(p.x)&&Number.isFinite(p.y)));
   const obstacleCount = state.game.static.pins.length;
   let steps = 0;
   while (state.game.order.length !== n && !state.game.paused && steps < 360 * 120 + 1) {
