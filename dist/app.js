@@ -297,7 +297,7 @@
       keeper: Course.chooseKeeper(), static: makeStaticObstacles(selectedMap), lastUiUpdate: 0, stuckCount: 0, selectedBall: null
     };
     game.collisionBuckets = Course.buckets(game.static);
-    $('#keeperLabel').textContent = '이번 골키퍼 · ' + game.keeper.name + ' (25%)';
+    $('#keeperLabel').textContent = '이번 골키퍼 · ' + game.keeper.name;
     $('#raceTitle').textContent = MAPS[selectedMap].title;
     $('#raceProgress').textContent = `0 / ${n} 도착`;
     $('#raceStatus').textContent = '구슬이 출발을 기다리고 있어요.';
@@ -777,10 +777,6 @@
       ctx.fillRect(WORLD.finishLeft + i * ((WORLD.finishRight - WORLD.finishLeft) / 12), WORLD.finishY, (WORLD.finishRight - WORLD.finishLeft) / 12, 6);
     }
     ctx.fillStyle = '#5d9865'; ctx.font = '700 11px sans-serif'; ctx.fillText('START', 28, 39);
-    ctx.fillStyle = '#d97945'; ctx.fillText('FINISH', WORLD.finishLeft - 5, WORLD.finishY - 8);
-    ctx.textAlign = 'left'; ctx.fillStyle = '#a44950'; ctx.font = '700 13px sans-serif';
-    ctx.fillText(game.keeper.name, WORLD.width / 2 + 65, WORLD.finishY - 48);
-    ctx.fillText('출구 = 구슬 지름 × 2.5', WORLD.width / 2 + 65, WORLD.finishY - 28);
 
     {
       for (const pin of game.static.pins.concat(movingPins(game.time))) {
