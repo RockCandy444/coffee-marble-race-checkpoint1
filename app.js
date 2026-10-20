@@ -753,13 +753,13 @@
       WORLD.sideProfile.forEach(point => ctx.lineTo(point[side], point.y));
       ctx.lineTo(edge, WORLD.funnelY); ctx.closePath(); ctx.fill();
     }
-    // Place labels after the banks, inside both the course and the visible horizontal view.
+    // Keep each label at a fixed course position, inside the walls and above the banks.
     ctx.save(); ctx.font = '700 16px sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
     MAPS[game.map].sections.forEach(([y, label], index) => {
       if (y + 42 < camera.top || y + 12 > camera.top + camera.visibleHeight) return;
       const top = Course.bounds(y + 12, WORLD), bottom = Course.bounds(y + 42, WORLD);
-      const left = Math.max(top.left, bottom.left, camera.left) + 20;
-      const right = Math.min(top.right, bottom.right, camera.left + camera.visibleWidth) - 20;
+      const left = Math.max(top.left, bottom.left) + 20;
+      const right = Math.min(top.right, bottom.right) - 20;
       if (right <= left) return;
       const text = '0' + (index + 1) + '  ' + label;
       const width = Math.min(ctx.measureText(text).width, right - left);
