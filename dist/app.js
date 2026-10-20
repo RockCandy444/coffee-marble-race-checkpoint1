@@ -745,8 +745,6 @@
     MAPS[game.map].sections.forEach(([y, label], index) => {
       ctx.fillStyle = ['#edf7ef', '#fff0dc', '#eef1fb', '#f9edfa', '#e6f4f3', '#fff1e8'][index];
       ctx.fillRect(22, y, 956, (MAPS[game.map].sections[index + 1]?.[0] ?? WORLD.bottom) - y);
-      ctx.fillStyle = '#9a8065'; ctx.font = '700 16px sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
-      ctx.fillText('0' + (index + 1) + '  ' + label, 50, y + 15);
     });
     ctx.fillStyle = '#ecdfca';
     for (const side of ['left', 'right']) {
@@ -755,6 +753,20 @@
       WORLD.sideProfile.forEach(point => ctx.lineTo(point[side], point.y));
       ctx.lineTo(edge, WORLD.funnelY); ctx.closePath(); ctx.fill();
     }
+    // Place labels after the banks, inside both the course and the visible horizontal view.
+    ctx.save(); ctx.font = '700 16px sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    MAPS[game.map].sections.forEach(([y, label], index) => {
+      if (y + 42 < camera.top || y + 12 > camera.top + camera.visibleHeight) return;
+      const top = Course.bounds(y + 12, WORLD), bottom = Course.bounds(y + 42, WORLD);
+      const left = Math.max(top.left, bottom.left, camera.left) + 20;
+      const right = Math.min(top.right, bottom.right, camera.left + camera.visibleWidth) - 20;
+      if (right <= left) return;
+      const text = '0' + (index + 1) + '  ' + label;
+      const width = Math.min(ctx.measureText(text).width, right - left);
+      ctx.fillStyle = 'rgba(255,253,248,.88)'; ctx.fillRect(left - 8, y + 12, width + 16, 28);
+      ctx.fillStyle = '#8b7258'; ctx.fillText(text, left, y + 26, right - left);
+    });
+    ctx.restore();
     ctx.strokeStyle = '#dfc9a8'; ctx.lineWidth = 3;
     ctx.beginPath(); ctx.moveTo(18, 20); ctx.lineTo(982, 20); ctx.moveTo(18, WORLD.bottom); ctx.lineTo(982, WORLD.bottom); ctx.stroke();
     ctx.fillStyle = '#6caa72'; ctx.fillRect(22, 45, 956, 4);
