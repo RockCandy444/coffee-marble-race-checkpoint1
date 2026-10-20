@@ -135,6 +135,7 @@
     return result;
   }
   function field(ball, source, dt) {
+    if (ball.immuneFields && (source.kind === 'magnet' || source.kind === 'wind')) return;
     if (source.kind === 'magnet' && ball.magnetGrace > 0) return;
     const dx = source.x - ball.x, dy = source.y - ball.y, distance = Math.hypot(dx, dy);
     if (!distance || distance >= source.range) return;

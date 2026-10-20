@@ -1,0 +1,20 @@
+const fs=require('node:fs'),path=require('node:path');
+const harness=fs.readFileSync(path.join(__dirname,'physics-smoke.cjs'),'utf8').split('// Manual camera movement')[0];
+new Function('require','__dirname',harness+`
+golden.choose=balls=>({ballId:balls[0].id,abilityId:'heavy'});
+simulation.reset('pinball',2,0);
+const {game}=simulation.state();
+simulation.frame(1000);simulation.frame(1080);
+assert.equal(game.time,0);assert.ok(game.introRemaining>0);
+const left=game.introRemaining;game.paused=true;
+for(let timestamp=1160;timestamp<=5000;timestamp+=80) simulation.frame(timestamp);
+assert.equal(game.introRemaining,left,'pausing freezes the reveal');assert.equal(game.time,0);
+game.paused=false;
+for(let timestamp=5080;timestamp<=9000;timestamp+=80) simulation.frame(timestamp);
+assert.equal(game.introRemaining,0);assert.ok(game.time>0);
+assert.equal(elements.get('#goldenReveal').hidden,true);
+assert.equal(elements.get('#cameraSelect').value,'auto');
+golden.choose=()=>null;simulation.reset('pinball',2,0);
+assert.equal(simulation.state().game.introRemaining,0);assert.equal(elements.get('#goldenReveal').hidden,true);
+console.log('Golden reveal: no early physics, pause/resume, auto-camera return and normal-race reset passed');
+`)(require,__dirname);

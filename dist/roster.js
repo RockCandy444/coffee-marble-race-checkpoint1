@@ -40,6 +40,7 @@
   function styleBead(element, ball) {
     element.style.backgroundColor = ball.color;
     element.dataset.pattern = ball.pattern;
+    element.dataset.golden = ball.golden ? 'true' : 'false';
     element.setAttribute('aria-hidden', 'true');
   }
   window.MarbleRoster = { parse, entries, styleBead };

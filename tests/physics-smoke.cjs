@@ -24,11 +24,18 @@ const context = vm.createContext(sandbox);
 vm.runInContext(fs.readFileSync(path.join(root, 'camera.js'), 'utf8'), context);
 vm.runInContext(fs.readFileSync(path.join(root, 'course.js'), 'utf8'), context);
 vm.runInContext(fs.readFileSync(path.join(root, 'roster.js'), 'utf8'), context);
+vm.runInContext(fs.readFileSync(path.join(root, 'golden.js'), 'utf8'), context);
+const golden = sandbox.window.GoldenMarble;
+// The baseline matrix deliberately exercises the ordinary race branch.
+golden.choose = () => null;
 const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8').replace(/\}\)\(\);\s*$/, `
   window.simulationTest = {
     reset(map, n, keeperIndex) { selectedMap = map; participants = Array.from({length:n}, (_,i) => 'P' + (i+1)); setUpRace(); if (keeperIndex !== undefined) game.keeper = Course.keepers[keeperIndex]; },
     resetNames(map, names) { selectedMap = map; participants = names; setUpRace(); },
     step: physicsStep,
+    collide: collideBalls,
+    dynamics() { return {pins:movingPins(0),segments:movingSegments(0)}; },
+    frame(timestamp) { const render=drawTrack; drawTrack=()=>{}; canvas.width=600; canvas.height=400; animationFrame(timestamp); drawTrack=render; },
     state() { return { game, world: WORLD, maps: MAPS, keeper: movingSegments(game.time).find(s => s.goalkeeper) }; }
   };
 })();`);

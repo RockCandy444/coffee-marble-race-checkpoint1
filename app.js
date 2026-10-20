@@ -14,6 +14,7 @@
   };
   const Course = window.MarbleCourse;
   const Roster = window.MarbleRoster;
+  const Golden = window.GoldenMarble;
   Object.values(MAPS).forEach(map => { map.height *= 2; map.sections = map.sections.map(([y, name]) => [y * 2, name]); });
   const $ = (selector) => document.querySelector(selector);
   const setupView = $('#setupView');
@@ -266,7 +267,6 @@
     WORLD.finishY = WORLD.height - 60;
     Course.configure(WORLD, selectedMap);
     camera.reset();
-    populateCamera();
     const n = participants.length;
     const radius = Math.max(5.2, Math.min(11.2, 12.5 - 0.72 * Math.sqrt(n)));
     WORLD.finishLeft = WORLD.width / 2 - radius * 2.5;
@@ -298,6 +298,22 @@
       keeper: Course.chooseKeeper(), static: makeStaticObstacles(selectedMap), lastUiUpdate: 0, stuckCount: 0, selectedBall: null
     };
     game.collisionBuckets = Course.buckets(game.static);
+    game.golden = Golden.activate(Golden.choose(balls), game, WORLD, MAPS[game.map].sections, {pins:movingPins(0),segments:movingSegments(0)});
+    game.introRemaining = game.golden ? 2.8 : 0;
+    populateCamera(balls);
+    const golden = game.golden;
+    $('#goldenBadge').hidden = !golden; $('#goldenReveal').hidden = !golden;
+    if (golden) {
+      const owner = '#' + golden.ball.id + ' ' + golden.ball.originalLabel;
+      $('#goldenOwner').textContent = owner;
+      $('#goldenOrb').textContent = String(golden.ball.id);
+      $('#goldenAbility').textContent = golden.ability.name;
+      $('#goldenDescription').textContent = golden.ability.description;
+      $('#goldenBadge').textContent = '★ ' + golden.ability.name + ' · ' + owner;
+      $('#goldenBadge').title = owner + ' · ' + golden.ability.description;
+      camera.mode = 'ball:' + golden.ball.id; cameraSelect.value = camera.mode;
+      game.selectedBall = golden.ball.id;
+    }
     $('#keeperLabel').textContent = '이번 골키퍼 · ' + game.keeper.name;
     $('#raceTitle').textContent = MAPS[selectedMap].title;
     $('#raceProgress').textContent = `0 / ${n} 도착`;
@@ -359,7 +375,15 @@
     if (!previousFrame) previousFrame = timestamp;
     const elapsed = Math.min((timestamp - previousFrame) / 1000, 0.08);
     previousFrame = timestamp;
-    if (!game.paused) {
+    if (!game.paused && game.introRemaining > 0) {
+      game.introRemaining = Math.max(0, game.introRemaining - elapsed);
+      if (game.introRemaining === 0) {
+        $('#goldenReveal').hidden = true;
+        if (camera.mode === 'ball:' + game.golden.ball.id) {
+          camera.mode = 'auto'; cameraSelect.value = 'auto'; game.selectedBall = null;
+        }
+      }
+    } else if (!game.paused) {
       accumulator += elapsed;
       let iterations = 0;
       while (accumulator >= FIXED_DT && iterations < 10 && !game.paused) {
@@ -391,13 +415,13 @@
       const fields = game.collisionBuckets.get(Math.floor(ball.y / 160))?.fields ?? [];
       ball.magnetGrace = Math.max(0, (ball.magnetGrace ?? 0) - dt);
       for (const source of fields) Course.field(ball, source, dt);
-      ball.vy += 178 * dt;
+      ball.vy += 178 * (ball.gravityScale ?? 1) * dt;
       ball.vx += Math.sin(game.time * 1.2 + ball.id * 2.1) * 3.5 * dt;
       const drag = Math.pow(0.999, dt * 60);
       ball.vx *= drag;
       ball.vy *= drag;
       const speed = Math.hypot(ball.vx, ball.vy);
-      const maxSpeed = (ball.boostUntil ?? 0) > game.time ? 520 : 340;
+      const maxSpeed = (ball.boostUntil ?? 0) > game.time ? 520 : (ball.speedLimit ?? 340);
       if (speed > maxSpeed) { ball.vx *= maxSpeed / speed; ball.vy *= maxSpeed / speed; }
       ball.x += ball.vx * dt;
       ball.y += ball.vy * dt;
@@ -544,13 +568,14 @@
     const nx = dx / distance;
     const ny = dy / distance;
     const overlap = min - distance;
-    a.x -= nx * overlap * 0.5; a.y -= ny * overlap * 0.5;
-    b.x += nx * overlap * 0.5; b.y += ny * overlap * 0.5;
+    const inverseA = 1 / (a.mass ?? 1), inverseB = 1 / (b.mass ?? 1), inverseTotal = inverseA + inverseB;
+    a.x -= nx * overlap * inverseA / inverseTotal; a.y -= ny * overlap * inverseA / inverseTotal;
+    b.x += nx * overlap * inverseB / inverseTotal; b.y += ny * overlap * inverseB / inverseTotal;
     const relative = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
     if (relative < 0) {
-      const impulse = -(1 + 0.38) * relative * 0.5;
-      a.vx -= impulse * nx; a.vy -= impulse * ny;
-      b.vx += impulse * nx; b.vy += impulse * ny;
+      const impulse = -(1 + 0.38) * relative / inverseTotal;
+      a.vx -= impulse * nx * inverseA; a.vy -= impulse * ny * inverseA;
+      b.vx += impulse * nx * inverseB; b.vy += impulse * ny * inverseB;
     }
   }
 
@@ -563,6 +588,8 @@
     $('#coffeeWinner').textContent = `#${loser.id} ${loser.label}`;
     $('#resultSubtitle').textContent = `${new Set(game.balls.map(ball => ball.name)).size}명 · 구슬 ${game.order.length}개 모두 완주한 ${MAPS[game.map].label} 경기 · ${game.keeper.name}의 마지막 통과자예요.`;
     $('#resultMapLabel').textContent = MAPS[game.map].label;
+    $('#goldenResult').hidden = !game.golden;
+    if (game.golden) $('#goldenResult').textContent = '★ 이번 황금구슬 · #' + game.golden.ball.id + ' ' + game.golden.ball.originalLabel + ' · ' + game.golden.ability.name;
     const list = $('#finalRanking');
     list.replaceChildren();
     game.order.forEach((ball, index) => {
@@ -584,7 +611,8 @@
     if (!game) return;
     const remaining = game.balls.length - game.order.length;
     $('#raceProgress').textContent = `${game.order.length} / ${game.balls.length} 도착`;
-    if (!game.paused && game.order.length === 0) $('#raceStatus').textContent = '구슬들이 장애물 사이를 달리는 중이에요!';
+    if (game.introRemaining > 0) $('#raceStatus').textContent = game.paused ? '황금구슬 공개를 잠시 멈췄어요.' : '황금구슬이 선택됐어요. 잠시 후 출발합니다!';
+    else if (!game.paused && game.order.length === 0) $('#raceStatus').textContent = '구슬들이 장애물 사이를 달리는 중이에요!';
     else if (!game.paused && remaining > 0) $('#raceStatus').textContent = `${remaining}개의 구슬이 아직 달리는 중이에요.`;
     const list = $('#liveOrder');
     list.replaceChildren();
@@ -607,17 +635,17 @@
     $('#cameraZoomLabel').textContent = camera.mode === 'overview' ? '전체' : camera.zoom.toFixed(1) + '×';
     if (game.selectedBall) {
       const ball = game.balls.find((item) => item.id === game.selectedBall);
-      if (ball) $('#beadInfo').textContent = `구슬 #${ball.id} · ${ball.label}${ball.finished ? ' — 결승선 통과!' : ' — 달리는 중'}`;
+      if (ball) $('#beadInfo').textContent = `구슬 #${ball.id} · ${ball.label}${ball.finished ? ' — 결승선 통과!' : game.introRemaining > 0 ? ' — 출발 준비' : ' — 달리는 중'}`;
     }
   }
 
-  function populateCamera() {
+  function populateCamera(balls = Roster.entries(participants)) {
     cameraSelect.replaceChildren();
     for (const [value, label] of [['auto', '자동 중계'], ['leader', '선두 따라가기'], ['pack', '중간 그룹'], ['tail', '후미 따라가기'], ['overview', '전체 코스'], ['manual', '수동 보기']]) {
       const option = document.createElement('option'); option.value = value; option.textContent = label; cameraSelect.append(option);
     }
     const group = document.createElement('optgroup'); group.label = '참가자 추적';
-    Roster.entries(participants).forEach(ball => {
+    balls.forEach(ball => {
       const option = document.createElement('option'); option.value = 'ball:' + ball.id; option.textContent = '#' + ball.id + ' ' + ball.label; group.append(option);
     });
     cameraSelect.append(group); cameraSelect.value = 'auto';
@@ -842,6 +870,14 @@
       if (ball.finished) continue;
       if (ball.y + ball.r < camera.top || ball.y - ball.r > camera.top + camera.visibleHeight) continue;
       const r = ball.r;
+      if (ball.golden) {
+        ctx.save(); ctx.strokeStyle = '#e5a900'; ctx.lineWidth = 2.5;
+        ctx.shadowColor = '#f5bd24'; ctx.shadowBlur = 14;
+        ctx.beginPath(); ctx.arc(ball.x,ball.y,r+4,0,Math.PI*2); ctx.stroke();
+        ctx.fillStyle = '#ffe395';
+        for (let i=0;i<3;i++) { const angle=(game.time+2.8-game.introRemaining)*1.4+i*Math.PI*2/3; const x=ball.x+Math.cos(angle)*(r+9), y=ball.y+Math.sin(angle)*(r+9); ctx.fillRect(x-1.5,y-1.5,3,3); }
+        ctx.restore();
+      }
       if ((ball.boostUntil ?? 0) > game.time) { ctx.save(); ctx.globalAlpha = 0.45; ctx.lineWidth = r; ctx.strokeStyle = ball.color; ctx.beginPath(); ctx.moveTo(ball.x - ball.vx * 0.035, ball.y - ball.vy * 0.035); ctx.lineTo(ball.x, ball.y); ctx.stroke(); ctx.restore(); }
       ctx.beginPath(); ctx.arc(ball.x + 1.5, ball.y + 2, r + 1, 0, Math.PI * 2); ctx.fillStyle = 'rgba(60,41,25,.19)'; ctx.fill();
       ctx.beginPath(); ctx.arc(ball.x, ball.y, r, 0, Math.PI * 2);
@@ -874,7 +910,7 @@
     m.clearRect(0, 0, w, h); m.fillStyle = 'rgba(255,253,248,.95)'; m.fillRect(0, 0, w, h);
     MAPS[game.map].sections.forEach(([y], index) => { m.fillStyle = ['#d9eddf', '#f7dfb9', '#dde3f4', '#e6cbe8', '#b9dfdb', '#f6d6c6'][index]; m.fillRect(6, 8 + y * sy, w - 12, 4); });
     m.fillStyle = '#e77b48'; m.fillRect(6, 8 + WORLD.finishY * sy, w - 12, 2);
-    for (const ball of game.balls) if (!ball.finished) { m.fillStyle = ball.color; m.beginPath(); m.arc(6 + ball.x * sx, 8 + ball.y * sy, ball.id === game.selectedBall ? 3 : 1.8, 0, Math.PI * 2); m.fill(); }
+    for (const ball of game.balls) if (!ball.finished) { m.fillStyle = ball.color; m.beginPath(); m.arc(6 + ball.x * sx, 8 + ball.y * sy, ball.golden || ball.id === game.selectedBall ? 3 : 1.8, 0, Math.PI * 2); m.fill(); if (ball.golden) {m.strokeStyle='#956700';m.lineWidth=1;m.stroke();} }
     const top = Math.max(0, camera.top), bottom = Math.min(WORLD.height, camera.top + camera.visibleHeight);
     const left = Math.max(0, camera.left), right = Math.min(WORLD.width, camera.left + camera.visibleWidth);
     m.strokeStyle = '#326f69'; m.lineWidth = 1.5; m.strokeRect(6 + left * sx, 8 + top * sy, Math.max(3, (right - left) * sx), Math.max(3, (bottom - top) * sy));

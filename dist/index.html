@@ -140,6 +140,15 @@
             <canvas id="miniMap" width="70" height="210" aria-label="미니맵: 클릭하여 카메라 이동, 방향키로 조정" role="button" tabindex="0"></canvas>
             <div id="cameraBadge" class="camera-badge">AUTO · 자동 중계</div>
             <div id="keeperLabel" class="keeper-label"></div>
+            <div id="goldenBadge" class="golden-badge" hidden></div>
+            <div id="goldenReveal" class="golden-reveal" role="status" aria-live="polite" hidden>
+              <div class="golden-orb" id="goldenOrb" aria-hidden="true"></div>
+              <strong>황금구슬 등장!</strong>
+              <span id="goldenOwner"></span>
+              <b id="goldenAbility"></b>
+              <p id="goldenDescription"></p>
+              <small>잠시 후 레이스가 시작돼요</small>
+            </div>
             <div class="hazard-key"><span>⚡ 파워 범퍼</span><span>Ⓜ 자석</span><span>↔ 바람</span><span>◆ 수비수</span></div>
           </div>
           <div class="track-legend">
@@ -174,6 +183,7 @@
         <h2>오늘의 커피 당첨자는…</h2>
         <div class="coffee-winner" id="coffeeWinner"></div>
         <p class="result-subtitle" id="resultSubtitle"></p>
+        <p class="golden-result" id="goldenResult" hidden></p>
       </div>
       <div class="card ranking-card">
         <div class="section-heading ranking-heading">
@@ -193,6 +203,7 @@
   <script src="course.js"></script>
   <script src="camera.js"></script>
   <script src="roster.js"></script>
+  <script src="golden.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
