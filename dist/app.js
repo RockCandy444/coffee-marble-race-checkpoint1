@@ -13,6 +13,7 @@
     fork: { title: '갈림길 코스', label: '갈림길', height: 4200, sections: [[190, '첫 번째 갈림길'], [1050, '교차 합류'], [1650, '마지막 선택'], [2350, '다이아몬드 미로'], [3000, '움직이는 징검다리'], [3630, '골키퍼 게이트']] }
   };
   const Course = window.MarbleCourse;
+  const Roster = window.MarbleRoster;
   Object.values(MAPS).forEach(map => { map.height *= 2; map.sections = map.sections.map(([y, name]) => [y * 2, name]); });
   const $ = (selector) => document.querySelector(selector);
   const setupView = $('#setupView');
@@ -55,12 +56,24 @@
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
 
-  function updateCountBadge(count) {
-    $('#participantCount').textContent = `${count}명`;
-    $('#mapParticipantSummary').textContent = `${count}명`;
+  function updateCountBadge(names) {
+    const entries = Roster.entries(names);
+    const groups = entries.filter(ball => ball.copy === 1);
+    const summary = `${groups.length}명 · 구슬 ${names.length}개`;
+    $('#participantCount').textContent = summary;
+    $('#mapParticipantSummary').textContent = summary;
+    $('#rosterSummary').textContent = names.length ? `${summary} 준비됐어요` : '명단을 입력하면 이름별 구슬 수를 확인할 수 있어요.';
+    $('#rosterPreview').replaceChildren();
+    groups.forEach(ball => {
+      const item = document.createElement('li');
+      const bead = document.createElement('i'); bead.className = 'roster-bead'; Roster.styleBead(bead, ball);
+      const label = document.createElement('span'); label.textContent = ball.name;
+      const count = document.createElement('strong'); count.textContent = `× ${ball.total}`;
+      item.append(bead, label, count); $('#rosterPreview').append(item);
+    });
   }
   function parsedNames() {
-    return namesInput.value.split(/\r?\n/).map((name) => name.trim()).filter(Boolean);
+    return Roster.parse(namesInput.value);
   }
   function generateNames() {
     let count = Number.parseInt(countInput.value, 10);
@@ -70,7 +83,7 @@
     namesInput.value = Array.from({ length: count }, (_, i) => `참가자 ${i + 1}`).join('\n');
     customNamesEdited = false;
     setupError.textContent = '';
-    updateCountBadge(count);
+    updateCountBadge(parsedNames().names);
   }
   $('#generateNames').addEventListener('click', generateNames);
   $('#countDown').addEventListener('click', () => {
@@ -83,8 +96,10 @@
   });
   namesInput.addEventListener('input', () => {
     customNamesEdited = true;
-    updateCountBadge(parsedNames().length);
-    setupError.textContent = '';
+    const parsed = parsedNames();
+    updateCountBadge(parsed.names);
+    setupError.textContent = parsed.error;
+    if (parsed.error) $('#rosterSummary').textContent = '입력한 이름과 구슬 수를 확인해 주세요.';
   });
   countInput.addEventListener('change', () => {
     const n = Number.parseInt(countInput.value, 10);
@@ -94,14 +109,15 @@
     }
   });
   $('#confirmParticipants').addEventListener('click', () => {
-    const names = parsedNames();
+    const {names, error} = parsedNames();
+    if (error) { setupError.textContent = error; return; }
     if (names.length < 2 || names.length > 100) {
-      setupError.textContent = '참가자는 2명 이상 100명 이하로 입력해 주세요.';
+      setupError.textContent = '전체 구슬이 2개 이상 100개 이하가 되도록 입력해 주세요.';
       return;
     }
     participants = names;
     countInput.value = String(names.length);
-    updateCountBadge(names.length);
+    updateCountBadge(names);
     setupError.textContent = '';
     setStage('map');
   });
@@ -116,9 +132,6 @@
       card.classList.toggle('selected', selected);
       card.setAttribute('aria-checked', String(selected));
     });
-  }
-  function colorFor(index) {
-    return `hsl(${((index * 137.508 + 16) % 360).toFixed(1)} 78% 53%)`;
   }
   function shuffle(list) {
     for (let i = list.length - 1; i > 0; i--) {
@@ -260,10 +273,10 @@
       slots.push({ x: xStart + col * xSpacing, y: 52 + row * ySpacing });
     }
     shuffle(slots);
-    const balls = participants.map((name, index) => {
+    const balls = Roster.entries(participants).map((entry, index) => {
       const slot = slots[index];
       return {
-        id: index + 1, name, color: colorFor(index), r: radius,
+        ...entry, r: radius,
         x: slot.x + (Math.random() - 0.5) * 1.2, y: slot.y + (Math.random() - 0.5) * 1.2,
         vx: (Math.random() - 0.5) * 10, vy: Math.random() * 3,
         finished: false, finishTime: null, maxY: slot.y, stallTime: 0, rescueCount: 0, prevX: slot.x, prevY: slot.y
@@ -536,8 +549,8 @@
     $('#raceProgress').textContent = `${game.order.length} / ${game.balls.length} 도착`;
     $('#raceStatus').textContent = '모든 구슬이 결승선을 통과했어요!';
     const loser = game.order[game.order.length - 1];
-    $('#coffeeWinner').textContent = `#${loser.id} ${loser.name}`;
-    $('#resultSubtitle').textContent = `${game.order.length}명이 모두 완주한 ${MAPS[game.map].label} 경기 · ${game.keeper.name}의 마지막 통과자예요.`;
+    $('#coffeeWinner').textContent = `#${loser.id} ${loser.label}`;
+    $('#resultSubtitle').textContent = `${new Set(game.balls.map(ball => ball.name)).size}명 · 구슬 ${game.order.length}개 모두 완주한 ${MAPS[game.map].label} 경기 · ${game.keeper.name}의 마지막 통과자예요.`;
     $('#resultMapLabel').textContent = MAPS[game.map].label;
     const list = $('#finalRanking');
     list.replaceChildren();
@@ -545,8 +558,8 @@
       const item = document.createElement('li');
       if (index === game.order.length - 1) item.classList.add('last-place');
       const rank = document.createElement('span'); rank.className = 'rank-badge'; rank.textContent = String(index + 1);
-      const bead = document.createElement('i'); bead.className = 'ranking-bead'; bead.style.background = ball.color;
-      const name = document.createElement('span'); name.className = 'rank-name'; name.textContent = `#${ball.id} ${ball.name}`;
+      const bead = document.createElement('i'); bead.className = 'ranking-bead'; Roster.styleBead(bead, ball);
+      const name = document.createElement('span'); name.className = 'rank-name'; name.textContent = `#${ball.id} ${ball.label}`; name.title = name.textContent;
       item.append(rank, bead, name);
       if (index === game.order.length - 1) {
         const note = document.createElement('span'); note.className = 'rank-note'; note.textContent = '☕ 커피 당첨'; item.append(note);
@@ -571,19 +584,19 @@
     displayed.forEach((ball, index) => {
       const li = document.createElement('li');
       const rank = document.createElement('span'); rank.className = 'rank-number'; rank.textContent = String(index + 1);
-      const bead = document.createElement('i'); bead.className = 'mini-bead'; bead.style.background = ball.color;
-      const name = document.createElement('span'); name.className = 'order-name'; name.textContent = `#${ball.id} ${ball.name}`;
+      const bead = document.createElement('i'); bead.className = 'mini-bead'; Roster.styleBead(bead, ball);
+      const name = document.createElement('span'); name.className = 'order-name'; name.textContent = `#${ball.id} ${ball.label}`; name.title = name.textContent;
       li.append(rank, bead, name); fragment.append(li);
     });
     list.append(fragment);
-    $('#liveFooter').textContent = game.order.length === 0 ? '현재 위치 기준 · 결승 통과 시 순위 확정' : `${game.order.length}명이 완주 · ${remaining}명 경주 중`;
+    $('#liveFooter').textContent = game.order.length === 0 ? '현재 위치 기준 · 결승 통과 시 순위 확정' : `구슬 ${game.order.length}개 완주 · ${remaining}개 경주 중`;
     const section = MAPS[game.map].sections.filter(([y]) => y <= camera.y).at(-1);
     $('#cameraStatus').textContent = camera.label + (section ? ' · ' + section[1] : ' · 출발 구간');
     $('#cameraBadge').textContent = camera.label;
     $('#cameraZoomLabel').textContent = camera.mode === 'overview' ? '전체' : camera.zoom.toFixed(1) + '×';
     if (game.selectedBall) {
       const ball = game.balls.find((item) => item.id === game.selectedBall);
-      if (ball) $('#beadInfo').textContent = `구슬 #${ball.id} · ${ball.name}${ball.finished ? ' — 결승선 통과!' : ' — 달리는 중'}`;
+      if (ball) $('#beadInfo').textContent = `구슬 #${ball.id} · ${ball.label}${ball.finished ? ' — 결승선 통과!' : ' — 달리는 중'}`;
     }
   }
 
@@ -593,8 +606,8 @@
       const option = document.createElement('option'); option.value = value; option.textContent = label; cameraSelect.append(option);
     }
     const group = document.createElement('optgroup'); group.label = '참가자 추적';
-    participants.forEach((name, index) => {
-      const option = document.createElement('option'); option.value = 'ball:' + (index + 1); option.textContent = '#' + (index + 1) + ' ' + name; group.append(option);
+    Roster.entries(participants).forEach(ball => {
+      const option = document.createElement('option'); option.value = 'ball:' + ball.id; option.textContent = '#' + ball.id + ' ' + ball.label; group.append(option);
     });
     cameraSelect.append(group); cameraSelect.value = 'auto';
   }
@@ -649,7 +662,7 @@
       game.selectedBall = closest.id;
       camera.mode = 'ball:' + closest.id;
       cameraSelect.value = camera.mode;
-      $('#beadInfo').textContent = `구슬 #${closest.id} · ${closest.name} — 달리는 중`;
+      $('#beadInfo').textContent = `구슬 #${closest.id} · ${closest.label} — 달리는 중`;
     }
   }
   let cameraDrag = null;
@@ -797,6 +810,13 @@
       const grad = ctx.createRadialGradient(ball.x - r * .33, ball.y - r * .38, r * .12, ball.x, ball.y, r * 1.08);
       grad.addColorStop(0, 'rgba(255,255,255,.92)'); grad.addColorStop(.2, lighten(ball.color, .25)); grad.addColorStop(1, ball.color);
       ctx.fillStyle = grad; ctx.fill();
+      // Each person's marbles share one circular silhouette, colour and decorative pattern.
+      ctx.save(); ctx.clip(); ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.fillStyle = 'rgba(255,255,255,.75)'; ctx.lineWidth = r * .25;
+      if (ball.pattern === 'stripe') { ctx.beginPath(); ctx.moveTo(ball.x-r,ball.y+r*.6); ctx.lineTo(ball.x+r,ball.y-r*.6); ctx.stroke(); }
+      else if (ball.pattern === 'ring') { ctx.beginPath(); ctx.arc(ball.x,ball.y,r*.6,0,Math.PI*2); ctx.stroke(); }
+      else if (ball.pattern === 'dots') for (const [dx,dy] of [[-.5,-.4],[.5,-.4],[0,.6]]) { ctx.beginPath(); ctx.arc(ball.x+dx*r,ball.y+dy*r,r*.19,0,Math.PI*2); ctx.fill(); }
+      ctx.restore();
+      ctx.beginPath(); ctx.arc(ball.x, ball.y, r, 0, Math.PI * 2);
       ctx.strokeStyle = game.selectedBall === ball.id ? '#30271f' : 'rgba(255,255,255,.8)';
       ctx.lineWidth = game.selectedBall === ball.id ? 2 : 1; ctx.stroke();
       ctx.fillStyle = '#2b2520';
@@ -824,6 +844,6 @@
     return match ? `hsl(${match[1]} ${match[2]} ${Math.min(88, Number(match[3]) + amount * 30)}%)` : color;
   }
 
-  updateCountBadge(2);
+  updateCountBadge(participants);
   selectMap(selectedMap);
 })();

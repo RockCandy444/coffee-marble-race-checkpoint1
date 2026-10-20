@@ -46,15 +46,20 @@
       </div>
       <div class="setup-grid">
         <div class="name-entry">
-          <label for="namesInput">이름을 한 줄에 한 명씩 입력해 주세요</label>
-          <textarea id="namesInput" rows="8" spellcheck="false" placeholder="예:&#10;민지&#10;준호&#10;서연"></textarea>
-          <div class="field-note">같은 이름도 각각 다른 구슬로 참가해요. 최대 100명까지!</div>
+          <label for="namesInput">명단을 한 번에 붙여넣어 주세요</label>
+          <textarea id="namesInput" rows="6" spellcheck="false" aria-describedby="nameHelp" placeholder="홍길동 * 5, 김민지, 이준호 * 2"></textarea>
+          <div id="nameHelp" class="field-note">줄바꿈·쉼표·탭으로 구분해요. 엑셀 이름 열도 그대로 붙여넣을 수 있어요.<br><strong>홍길동 * 5</strong> → 같은 색·무늬의 구슬 5개. 전체 구슬은 2~100개까지!</div>
+          <div class="roster-preview" aria-label="입력 명단 미리보기">
+            <div id="rosterSummary" class="roster-summary" aria-live="polite"></div>
+            <ul id="rosterPreview" class="roster-list"></ul>
+          </div>
+          <p class="field-note handicap-note">같은 이름은 같은 사람으로 묶어요. 마지막으로 도착한 구슬의 주인이 커피 당첨자예요.</p>
         </div>
         <aside class="quick-entry">
           <div class="quick-icon" aria-hidden="true">✦</div>
           <h3>이름 없이 빠르게 시작</h3>
           <p>인원수만 정하면 참가자 1, 참가자 2… 이름을 자동으로 만들어요.</p>
-          <label for="countInput">참가 인원</label>
+          <label for="countInput">기본 이름으로 만들 구슬 수</label>
           <div class="count-control">
             <button id="countDown" class="stepper" type="button" aria-label="인원 한 명 줄이기">−</button>
             <input id="countInput" type="number" min="2" max="100" value="2" inputmode="numeric">
@@ -77,7 +82,7 @@
         </div>
         <button id="editParticipants" class="text-button" type="button">← 참가자 수정</button>
       </div>
-      <p class="subheading"><strong id="mapParticipantSummary">2명</strong>이 각자의 구슬을 타고 달려요. 경주마다 출발 배치는 새로 섞입니다.</p>
+      <p class="subheading"><strong id="mapParticipantSummary">2명 · 구슬 2개</strong>가 함께 달려요. 같은 이름은 같은 색·무늬로, 출발 배치는 매번 새롭게!</p>
       <div class="map-options" role="radiogroup" aria-label="경주 맵">
         <button class="map-card selected" data-map="pinball" role="radio" aria-checked="true" type="button">
           <span class="map-visual pinball-visual" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><b>●</b></span>
@@ -182,6 +187,7 @@
   </main>
   <script src="course.js"></script>
   <script src="camera.js"></script>
+  <script src="roster.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

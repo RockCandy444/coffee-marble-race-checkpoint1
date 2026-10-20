@@ -40,7 +40,7 @@
       this.left = this.x - this.visibleWidth / 2;
       this.top = this.y - this.visibleHeight / 2;
       const names = { leader: '선두', pack: '중간 그룹', tail: '후미', overview: '전체 코스', manual: '수동 보기' };
-      this.label = names[mode] || (target ? '#' + target.id + ' ' + target.name + (target.finished ? ' · 완주' : '') : '결승선');
+      this.label = names[mode] || (target ? '#' + target.id + ' ' + (target.label ?? target.name) + (target.finished ? ' · 완주' : '') : '결승선');
       if (this.mode === 'auto') this.label = '자동 중계 · ' + this.label;
       this.target = target;
     }

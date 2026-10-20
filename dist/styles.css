@@ -69,3 +69,15 @@ button:focus-visible, select:focus-visible { outline: 3px solid #478879; outline
 #miniMap:focus-visible { outline: 3px solid #e78642; outline-offset: 2px; }
 #raceCanvas { cursor: grab; touch-action: none; }
 #raceCanvas.is-dragging { cursor: grabbing; }
+.roster-preview { margin-top: 14px; padding: 12px; background: #fff9ef; border: 1px solid #eee2cd; border-radius: 10px; }
+.roster-summary { font-size: 12px; font-weight: 800; color: #8b6037; line-height: 1.5; }
+.roster-list { display: flex; flex-wrap: wrap; gap: 6px; max-height: 138px; overflow: auto; padding: 0; margin: 8px 0 0; list-style: none; }
+.roster-list:empty { display: none; }
+.roster-list li { display: flex; align-items: center; gap: 6px; max-width: 100%; padding: 5px 8px; border: 1px solid #eadcc4; border-radius: 20px; background: #fffefa; font-size: 11px; }
+.roster-list li span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.roster-list strong { flex: none; color: #a16837; font-size: 10px; }
+.roster-bead { width: 13px; height: 13px; border-radius: 50%; flex: none; box-shadow: inset -2px -2px 3px #0003; }
+.handicap-note { margin-bottom: 0; }
+[data-pattern="stripe"] { background-image: linear-gradient(145deg,transparent 35%,#ffffffbc 36% 53%,transparent 54%); }
+[data-pattern="ring"] { background-image: radial-gradient(circle,transparent 31%,#ffffffbc 33% 52%,transparent 54%); }
+[data-pattern="dots"] { background-image: radial-gradient(circle at 28% 30%,#ffffffbc 0 12%,transparent 14%),radial-gradient(circle at 72% 30%,#ffffffbc 0 12%,transparent 14%),radial-gradient(circle at 50% 76%,#ffffffbc 0 12%,transparent 14%); }
