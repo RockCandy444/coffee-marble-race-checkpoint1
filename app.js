@@ -24,8 +24,10 @@
   const ctx = canvas.getContext('2d');
   const namesInput = $('#namesInput');
   const countInput = $('#countInput');
+  const ballsPerPersonInput = $('#ballsPerPerson');
   const setupError = $('#setupError');
-  let participants = ['참가자 1', '참가자 2'];
+  const defaultNames = '참가자 1 * 5\n참가자 2 * 5\n참가자 3 * 5';
+  let participants = Roster.parse(defaultNames).names;
   let selectedMap = 'pinball';
   let customNamesEdited = false;
   let stage = 'setup';
@@ -37,7 +39,9 @@
   let canvasDpr = 1;
   const cameraSelect = $('#cameraSelect');
 
-  namesInput.value = participants.join('\n');
+  namesInput.value = defaultNames;
+  countInput.value = '3';
+  ballsPerPersonInput.value = '5';
 
   function setStage(next) {
     stage = next;
@@ -76,38 +80,45 @@
     return Roster.parse(namesInput.value);
   }
   function generateNames() {
-    let count = Number.parseInt(countInput.value, 10);
-    if (!Number.isFinite(count)) count = 2;
-    count = Math.min(100, Math.max(2, count));
-    countInput.value = String(count);
-    namesInput.value = Array.from({ length: count }, (_, i) => `참가자 ${i + 1}`).join('\n');
+    const count = Number(countInput.value), copies = Number(ballsPerPersonInput.value);
+    if (![count, copies].every(n => Number.isInteger(n) && n >= 1 && n <= 100)) {
+      setupError.textContent = '참가 인원과 1인당 구슬 수는 1~100의 정수로 입력해 주세요.';
+      $('#confirmParticipants').disabled = true;
+      return;
+    }
+    const total = count * copies;
+    if (total < 2 || total > 100) {
+      setupError.textContent = `${count}명 × ${copies}개는 구슬 ${total}개예요. 전체 구슬이 2~100개가 되도록 조절해 주세요.`;
+      $('#confirmParticipants').disabled = true;
+      return;
+    }
+    namesInput.value = Array.from({ length: count }, (_, i) => `참가자 ${i + 1} * ${copies}`).join('\n');
     customNamesEdited = false;
+    $('#confirmParticipants').disabled = false;
     setupError.textContent = '';
     updateCountBadge(parsedNames().names);
   }
   $('#generateNames').addEventListener('click', generateNames);
   $('#countDown').addEventListener('click', () => {
-    countInput.value = String(Math.max(2, (Number.parseInt(countInput.value, 10) || 2) - 1));
+    countInput.value = String(Math.max(1, (Number.parseInt(countInput.value, 10) || 3) - 1));
     if (!customNamesEdited) generateNames();
   });
   $('#countUp').addEventListener('click', () => {
-    countInput.value = String(Math.min(100, (Number.parseInt(countInput.value, 10) || 2) + 1));
+    countInput.value = String(Math.min(100, (Number.parseInt(countInput.value, 10) || 3) + 1));
     if (!customNamesEdited) generateNames();
   });
   namesInput.addEventListener('input', () => {
     customNamesEdited = true;
+    $('#confirmParticipants').disabled = false;
     const parsed = parsedNames();
     updateCountBadge(parsed.names);
     setupError.textContent = parsed.error;
     if (parsed.error) $('#rosterSummary').textContent = '입력한 이름과 구슬 수를 확인해 주세요.';
   });
   countInput.addEventListener('change', () => {
-    const n = Number.parseInt(countInput.value, 10);
-    if (Number.isFinite(n)) {
-      countInput.value = String(Math.min(100, Math.max(2, n)));
-      if (!customNamesEdited) generateNames();
-    }
+    if (!customNamesEdited) generateNames();
   });
+  ballsPerPersonInput.addEventListener('change', () => { if (!customNamesEdited) generateNames(); });
   $('#confirmParticipants').addEventListener('click', () => {
     const {names, error} = parsedNames();
     if (error) { setupError.textContent = error; return; }
@@ -116,7 +127,6 @@
       return;
     }
     participants = names;
-    countInput.value = String(names.length);
     updateCountBadge(names);
     setupError.textContent = '';
     setStage('map');

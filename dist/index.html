@@ -42,7 +42,7 @@
           <p class="eyebrow">STEP 1 · 참가자 설정</p>
           <h2>오늘 함께 달릴 사람은?</h2>
         </div>
-        <span class="count-pill" id="participantCount">2명</span>
+        <span class="count-pill" id="participantCount">3명 · 구슬 15개</span>
       </div>
       <div class="setup-grid">
         <div class="name-entry">
@@ -58,13 +58,18 @@
         <aside class="quick-entry">
           <div class="quick-icon" aria-hidden="true">✦</div>
           <h3>이름 없이 빠르게 시작</h3>
-          <p>인원수만 정하면 참가자 1, 참가자 2… 이름을 자동으로 만들어요.</p>
-          <label for="countInput">기본 이름으로 만들 구슬 수</label>
+          <p>참가자 1, 참가자 2… 이름으로 만들어요.<br>기본은 3명, 한 사람당 구슬 5개예요.</p>
+          <label for="countInput">참가 인원</label>
           <div class="count-control">
             <button id="countDown" class="stepper" type="button" aria-label="인원 한 명 줄이기">−</button>
-            <input id="countInput" type="number" min="2" max="100" value="2" inputmode="numeric">
+            <input id="countInput" type="number" min="1" max="100" value="3" inputmode="numeric">
             <button id="countUp" class="stepper" type="button" aria-label="인원 한 명 늘리기">＋</button>
           </div>
+          <label for="ballsPerPerson">1인당 구슬 수</label>
+          <div class="count-control">
+            <input id="ballsPerPerson" type="number" min="1" max="100" value="5" inputmode="numeric" aria-describedby="defaultNamesHelp">
+          </div>
+          <p id="defaultNamesHelp" class="field-note">인원 × 구슬 수는 2~100개까지 가능해요.</p>
           <button id="generateNames" class="button button-soft" type="button">기본 이름으로 채우기</button>
         </aside>
       </div>
@@ -82,7 +87,7 @@
         </div>
         <button id="editParticipants" class="text-button" type="button">← 참가자 수정</button>
       </div>
-      <p class="subheading"><strong id="mapParticipantSummary">2명 · 구슬 2개</strong>가 함께 달려요. 같은 이름은 같은 색·무늬로, 출발 배치는 매번 새롭게!</p>
+      <p class="subheading"><strong id="mapParticipantSummary">3명 · 구슬 15개</strong>가 함께 달려요. 같은 이름은 같은 색·무늬로, 출발 배치는 매번 새롭게!</p>
       <div class="map-options" role="radiogroup" aria-label="경주 맵">
         <button class="map-card selected" data-map="pinball" role="radio" aria-checked="true" type="button">
           <span class="map-visual pinball-visual" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><b>●</b></span>

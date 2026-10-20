@@ -1,0 +1,26 @@
+const fs = require('node:fs');
+const path = require('node:path');
+let harness = fs.readFileSync(path.join(__dirname,'physics-smoke.cjs'),'utf8').split('// Manual camera movement')[0];
+harness = harness.replace('addEventListener() {}', 'addEventListener(type, callback) { (this.handlers ??= {})[type] = callback; }');
+const checks = `
+const input=elements.get('#namesInput'), count=elements.get('#countInput'), copies=elements.get('#ballsPerPerson');
+const button=elements.get('#generateNames'), confirm=elements.get('#confirmParticipants');
+const expected='참가자 1 * 5\\n참가자 2 * 5\\n참가자 3 * 5';
+assert.equal(input.value,expected); assert.equal(count.value,'3'); assert.equal(copies.value,'5');
+assert.equal(elements.get('#participantCount').textContent,'3명 · 구슬 15개');
+input.value='홍길동*5,김민지'; input.handlers.input();
+button.handlers.click(); assert.equal(input.value,expected,'fill button restores three default names with five marbles each');
+confirm.handlers.click(); assert.equal(count.value,'3','confirmation must not replace people count with marble total');
+count.value='100'; copies.value='1'; button.handlers.click();
+assert.equal(sandbox.window.MarbleRoster.parse(input.value).names.length,100);
+assert.ok(input.value.endsWith('참가자 100 * 1'));
+const previous=input.value;
+copies.value='5'; button.handlers.click();
+assert.ok(elements.get('#setupError').textContent.includes('500개'));
+assert.equal(input.value,previous,'over-limit fill must not overwrite the roster'); assert.equal(confirm.disabled,true);
+count.value='3'; button.handlers.click();assert.equal(input.value,expected);assert.equal(confirm.disabled,false);
+count.value='1'; copies.value='1';button.handlers.click();assert.equal(confirm.disabled,true);
+input.value='민지*2';input.handlers.input();assert.equal(confirm.disabled,false,'manual correction restores next button');
+console.log('Default fill: three people x five marbles, 100 numbered names, invalid totals, manual correction and confirmation round-trip passed');
+`;
+new Function('require','__dirname',harness+checks)(require,__dirname);
