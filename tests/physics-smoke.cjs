@@ -97,11 +97,11 @@ course.kick(kicked, { id: 'test', kick: 250 }, 1, 0, 1);
 assert.equal(kicked.vx, 250);
 course.kick(kicked, { id: 'test', kick: 250 }, 1, 0, 1.1);
 assert.equal(kicked.vx, 250, 'bumper cooldown must prevent repeated impulses in one contact');
-const attracted = { x: 400, y: 400, vx: 0, vy: 0 };
-course.field(attracted, { x: 450, y: 400, kind: 'magnet', range: 120, strength: 150 }, 0.1);
+const attracted = { x: 400, y: 400, r: 10, vx: 0, vy: 0 };
+course.field(attracted, { x: 450, y: 400, r: 14, kind: 'magnet', range: 120, strength: 175 }, 0.1);
 assert.ok(attracted.vx > 0);
 const blown = { x: 400, y: 400, vx: 0, vy: 0 };
-course.field(blown, { x: 450, y: 400, kind: 'wind', range: 120, strength: 230, direction: -1 }, 0.1);
+course.field(blown, { x: 450, y: 400, kind: 'wind', range: 120, strength: 270, direction: -1 }, 0.1);
 assert.ok(blown.vx < 0);
 const outcomes = [];
 for (const map of ['pinball', 'spinner', 'fork'].filter(m => !process.env.MARBLE_TEST_MAP || m === process.env.MARBLE_TEST_MAP)) for (const n of [2, 100].filter(n => !process.env.MARBLE_TEST_COUNT || n === Number(process.env.MARBLE_TEST_COUNT))) for (const keeperIndex of [0, 1, 2, 3]) {

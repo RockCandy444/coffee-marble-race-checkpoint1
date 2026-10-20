@@ -871,11 +871,22 @@
       if (ball.y + ball.r < camera.top || ball.y - ball.r > camera.top + camera.visibleHeight) continue;
       const r = ball.r;
       if (ball.golden) {
-        ctx.save(); ctx.strokeStyle = '#e5a900'; ctx.lineWidth = 2.5;
-        ctx.shadowColor = '#f5bd24'; ctx.shadowBlur = 14;
-        ctx.beginPath(); ctx.arc(ball.x,ball.y,r+4,0,Math.PI*2); ctx.stroke();
-        ctx.fillStyle = '#ffe395';
-        for (let i=0;i<3;i++) { const angle=(game.time+2.8-game.introRemaining)*1.4+i*Math.PI*2/3; const x=ball.x+Math.cos(angle)*(r+9), y=ball.y+Math.sin(angle)*(r+9); ctx.fillRect(x-1.5,y-1.5,3,3); }
+        ctx.save();
+        const shimmer = game.time + 2.8 - game.introRemaining;
+        const halo = ctx.createRadialGradient(ball.x, ball.y, r * .8, ball.x, ball.y, r + 10);
+        halo.addColorStop(0, 'rgba(255,206,70,.19)'); halo.addColorStop(1, 'rgba(255,206,70,0)');
+        ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(ball.x, ball.y, r + 10, 0, Math.PI * 2); ctx.fill();
+        ctx.shadowColor = '#ffd45c'; ctx.shadowBlur = 5;
+        for (let i = 0; i < 3; i++) {
+          const angle = shimmer * .9 + i * Math.PI * 2 / 3;
+          const x = ball.x + Math.cos(angle) * (r + 7 + i * 2), y = ball.y + Math.sin(angle) * (r + 7 + i * 2);
+          const pulse = (1 + Math.sin(shimmer * 4 + i * 2.1)) / 2, size = 1.3 + pulse * 1.2;
+          ctx.globalAlpha = .45 + pulse * .55; ctx.fillStyle = i === 1 ? '#fff9df' : '#f3bc35';
+          ctx.beginPath(); ctx.moveTo(x, y - size); ctx.lineTo(x + size * .35, y - size * .35);
+          ctx.lineTo(x + size, y); ctx.lineTo(x + size * .35, y + size * .35);
+          ctx.lineTo(x, y + size); ctx.lineTo(x - size * .35, y + size * .35);
+          ctx.lineTo(x - size, y); ctx.lineTo(x - size * .35, y - size * .35); ctx.closePath(); ctx.fill();
+        }
         ctx.restore();
       }
       if ((ball.boostUntil ?? 0) > game.time) { ctx.save(); ctx.globalAlpha = 0.45; ctx.lineWidth = r; ctx.strokeStyle = ball.color; ctx.beginPath(); ctx.moveTo(ball.x - ball.vx * 0.035, ball.y - ball.vy * 0.035); ctx.lineTo(ball.x, ball.y); ctx.stroke(); ctx.restore(); }

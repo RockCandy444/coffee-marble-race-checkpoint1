@@ -89,7 +89,7 @@
               ? 342 : b.left + (b.right - b.left) * fraction;
             if (!clear(x, y, r)) continue;
             pins.push({ x, y, r, kind, bumper: true, section, kick: kind === 'power' ? 220 + k % 3 * 25 : 0,
-              range: kind === 'power' ? 0 : 120, strength: kind === 'magnet' ? 150 : 230, direction: (k + section) % 2 ? 1 : -1, defender: section === sections.length - 1 });
+              range: kind === 'power' ? 0 : 120, strength: kind === 'magnet' ? 175 : 270, direction: (k + section) % 2 ? 1 : -1, defender: section === sections.length - 1 });
             placed = true; break;
           }
           if (placed) break;
@@ -140,7 +140,12 @@
     const dx = source.x - ball.x, dy = source.y - ball.y, distance = Math.hypot(dx, dy);
     if (!distance || distance >= source.range) return;
     const force = source.strength * (1 - distance / source.range);
-    if (source.kind === 'magnet') { ball.vx += dx / distance * force * dt; ball.vy += (dy / distance * force * 0.2 + 25) * dt; }
+    if (source.kind === 'magnet') {
+      // Fade attraction over the last 18 units before contact so a stronger field lets marbles slide past its surface.
+      const attraction = force * clamp((distance - ball.r - (source.r ?? 0)) / 18, 0, 1);
+      ball.vx += dx / distance * attraction * dt;
+      ball.vy += (dy / distance * attraction * 0.2 + 25) * dt;
+    }
     else { ball.vx += source.direction * force * dt; ball.vy += 40 * dt; }
   }
   function kick(ball, pin, nx, ny, time) {
