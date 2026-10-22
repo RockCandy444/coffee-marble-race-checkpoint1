@@ -10,7 +10,7 @@ const left=game.introRemaining;game.paused=true;
 for(let timestamp=1160;timestamp<=5000;timestamp+=80) simulation.frame(timestamp);
 assert.equal(game.introRemaining,left,'pausing freezes the reveal');assert.equal(game.time,0);
 game.paused=false;
-for(let timestamp=5080;timestamp<=9000;timestamp+=80) simulation.frame(timestamp);
+for(let timestamp=5080;timestamp<=12000;timestamp+=80) simulation.frame(timestamp);
 assert.equal(game.introRemaining,0);assert.ok(game.time>0);
 assert.equal(elements.get('#goldenReveal').hidden,true);
 assert.equal(elements.get('#cameraSelect').value,'auto');

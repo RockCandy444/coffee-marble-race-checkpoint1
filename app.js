@@ -31,6 +31,9 @@
   let participants = Roster.parse(defaultNames).names;
   let selectedMap = 'pinball';
   let customNamesEdited = false;
+  let lastGeneratedNames = defaultNames;
+  let displayedRosterValue = null;
+  let setupFrameId = 0;
   let stage = 'setup';
   let game = null;
   let frameId = 0;
@@ -58,6 +61,8 @@
       step.classList.toggle('done', index < order.indexOf(next));
     });
     if (next === 'race') resizeCanvas();
+    if (next === 'setup') queueSetupSync();
+    else { cancelAnimationFrame(setupFrameId); setupFrameId = 0; }
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
 
@@ -80,6 +85,33 @@
   function parsedNames() {
     return Roster.parse(namesInput.value);
   }
+  function syncSetupRoster() {
+    if (displayedRosterValue === namesInput.value) return;
+    displayedRosterValue = namesInput.value;
+    customNamesEdited = namesInput.value !== lastGeneratedNames;
+    const parsed = parsedNames();
+    updateCountBadge(parsed.names);
+    setupError.textContent = parsed.error || (parsed.names.length < 2 ? '전체 구슬이 2개 이상이 되도록 입력해 주세요.' : '');
+    $('#confirmParticipants').disabled = !!setupError.textContent;
+    if (parsed.error) $('#rosterSummary').textContent = '입력한 이름과 구슬 수를 확인해 주세요.';
+  }
+  function watchSetupRoster() {
+    setupFrameId = 0;
+    if (stage !== 'setup') return;
+    // Browser form restoration can change .value without firing input/change.
+    // Only re-parse when the text changes; keep checking while setup is visible.
+    syncSetupRoster();
+    setupFrameId = requestAnimationFrame(watchSetupRoster);
+  }
+  function queueSetupSync() {
+    if (stage !== 'setup') return;
+    cancelAnimationFrame(setupFrameId);
+    syncSetupRoster();
+    setupFrameId = requestAnimationFrame(watchSetupRoster);
+  }
+  window.addEventListener('pageshow', queueSetupSync);
+  window.addEventListener('focus', queueSetupSync);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) queueSetupSync(); });
   function generateNames() {
     const count = Number(countInput.value), copies = Number(ballsPerPersonInput.value);
     if (![count, copies].every(n => Number.isInteger(n) && n >= 1 && n <= 100)) {
@@ -94,10 +126,9 @@
       return;
     }
     namesInput.value = Array.from({ length: count }, (_, i) => `참가자 ${i + 1} * ${copies}`).join('\n');
-    customNamesEdited = false;
-    $('#confirmParticipants').disabled = false;
-    setupError.textContent = '';
-    updateCountBadge(parsedNames().names);
+    lastGeneratedNames = namesInput.value;
+    displayedRosterValue = null;
+    syncSetupRoster();
   }
   $('#generateNames').addEventListener('click', generateNames);
   $('#countDown').addEventListener('click', () => {
@@ -108,18 +139,16 @@
     countInput.value = String(Math.min(100, (Number.parseInt(countInput.value, 10) || 3) + 1));
     if (!customNamesEdited) generateNames();
   });
-  namesInput.addEventListener('input', () => {
-    customNamesEdited = true;
-    $('#confirmParticipants').disabled = false;
-    const parsed = parsedNames();
-    updateCountBadge(parsed.names);
-    setupError.textContent = parsed.error;
-    if (parsed.error) $('#rosterSummary').textContent = '입력한 이름과 구슬 수를 확인해 주세요.';
-  });
-  countInput.addEventListener('change', () => {
+  namesInput.addEventListener('input', syncSetupRoster);
+  namesInput.addEventListener('change', syncSetupRoster);
+  function quickSettingsChanged() {
+    syncSetupRoster();
     if (!customNamesEdited) generateNames();
-  });
-  ballsPerPersonInput.addEventListener('change', () => { if (!customNamesEdited) generateNames(); });
+  }
+  for (const type of ['input', 'change']) {
+    countInput.addEventListener(type, quickSettingsChanged);
+    ballsPerPersonInput.addEventListener(type, quickSettingsChanged);
+  }
   $('#confirmParticipants').addEventListener('click', () => {
     const {names, error} = parsedNames();
     if (error) { setupError.textContent = error; return; }
@@ -298,8 +327,12 @@
       keeper: Course.chooseKeeper(), static: makeStaticObstacles(selectedMap), lastUiUpdate: 0, stuckCount: 0, selectedBall: null
     };
     game.collisionBuckets = Course.buckets(game.static);
-    game.golden = Golden.activate(Golden.choose(balls), game, WORLD, MAPS[game.map].sections, {pins:movingPins(0),segments:movingSegments(0)});
+    game.goldenEnabled = $('#goldenEnabled').checked;
+    game.golden = game.goldenEnabled ? Golden.activate(Golden.choose(balls), game, WORLD, MAPS[game.map].sections, {pins:movingPins(0),segments:movingSegments(0)}) : null;
     game.introRemaining = game.golden ? 2.8 : 0;
+    game.countdownRemaining = 3;
+    game.goRemaining = 0;
+    updateStartCountdown();
     populateCamera(balls);
     const golden = game.golden;
     $('#goldenBadge').hidden = !golden; $('#goldenReveal').hidden = !golden;
@@ -370,6 +403,14 @@
   });
 
   const FIXED_DT = 1 / 120;
+  function updateStartCountdown() {
+    const overlay = $('#startCountdown');
+    overlay.hidden = game.introRemaining > 0 || (game.countdownRemaining === 0 && game.goRemaining === 0);
+    const label = game.countdownRemaining > 0 ? String(Math.ceil(game.countdownRemaining)) : '출발!';
+    if ($('#countdownNumber').textContent !== label) $('#countdownNumber').textContent = label;
+    const help = game.paused ? '잠시 멈췄어요' : game.countdownRemaining > 0 ? '준비하세요' : '레이스 시작';
+    if ($('#countdownHelp').textContent !== help) $('#countdownHelp').textContent = help;
+  }
   function animationFrame(timestamp) {
     if (stage !== 'race' || !game) return;
     if (!previousFrame) previousFrame = timestamp;
@@ -381,9 +422,14 @@
         $('#goldenReveal').hidden = true;
         if (camera.mode === 'ball:' + game.golden.ball.id) {
           camera.mode = 'auto'; cameraSelect.value = 'auto'; game.selectedBall = null;
+          $('#beadInfo').textContent = '휠로 확대·축소 · 드래그로 이동 · 미니맵으로 구간 선택';
         }
       }
+    } else if (!game.paused && game.countdownRemaining > 0) {
+      game.countdownRemaining = Math.max(0, game.countdownRemaining - elapsed);
+      if (game.countdownRemaining === 0) game.goRemaining = 0.6;
     } else if (!game.paused) {
+      game.goRemaining = Math.max(0, game.goRemaining - elapsed);
       accumulator += elapsed;
       let iterations = 0;
       while (accumulator >= FIXED_DT && iterations < 10 && !game.paused) {
@@ -393,6 +439,7 @@
       }
     }
     if (stage !== 'race') return;
+    updateStartCountdown();
     camera.update(game, WORLD, canvas.width / canvasDpr, canvas.height / canvasDpr, elapsed);
     drawTrack();
     if (timestamp - game.lastUiUpdate > 180) {
@@ -612,6 +659,7 @@
     const remaining = game.balls.length - game.order.length;
     $('#raceProgress').textContent = `${game.order.length} / ${game.balls.length} 도착`;
     if (game.introRemaining > 0) $('#raceStatus').textContent = game.paused ? '황금구슬 공개를 잠시 멈췄어요.' : '황금구슬이 선택됐어요. 잠시 후 출발합니다!';
+    else if (game.countdownRemaining > 0) $('#raceStatus').textContent = game.paused ? '출발 준비를 잠시 멈췄어요.' : `${Math.ceil(game.countdownRemaining)}초 후 출발해요!`;
     else if (!game.paused && game.order.length === 0) $('#raceStatus').textContent = '구슬들이 장애물 사이를 달리는 중이에요!';
     else if (!game.paused && remaining > 0) $('#raceStatus').textContent = `${remaining}개의 구슬이 아직 달리는 중이에요.`;
     const list = $('#liveOrder');
@@ -635,7 +683,7 @@
     $('#cameraZoomLabel').textContent = camera.mode === 'overview' ? '전체' : camera.zoom.toFixed(1) + '×';
     if (game.selectedBall) {
       const ball = game.balls.find((item) => item.id === game.selectedBall);
-      if (ball) $('#beadInfo').textContent = `구슬 #${ball.id} · ${ball.label}${ball.finished ? ' — 결승선 통과!' : game.introRemaining > 0 ? ' — 출발 준비' : ' — 달리는 중'}`;
+      if (ball) $('#beadInfo').textContent = `구슬 #${ball.id} · ${ball.label}${ball.finished ? ' — 결승선 통과!' : game.introRemaining > 0 || game.countdownRemaining > 0 ? ' — 출발 준비' : ' — 달리는 중'}`;
     }
   }
 
@@ -931,6 +979,6 @@
     return match ? `hsl(${match[1]} ${match[2]} ${Math.min(88, Number(match[3]) + amount * 30)}%)` : color;
   }
 
-  updateCountBadge(participants);
+  queueSetupSync();
   selectMap(selectedMap);
 })();

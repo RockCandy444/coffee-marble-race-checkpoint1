@@ -105,6 +105,12 @@
           <span class="map-check" aria-hidden="true">✓</span>
         </button>
       </div>
+      <div class="event-option">
+        <label class="event-toggle" for="goldenEnabled">
+          <input id="goldenEnabled" type="checkbox" checked aria-describedby="goldenOptionHelp">
+          <span><strong>황금구슬 이벤트</strong><small id="goldenOptionHelp">켜면 가끔 특별한 능력의 구슬이 등장해요. 끄면 모두 일반 구슬로 출발해요.</small></span>
+        </label>
+      </div>
       <div class="form-footer map-footer">
         <span class="field-note">골키퍼는 경기마다 무작위로 바뀌어요.</span>
         <button id="startRace" class="button button-primary" type="button">경주 시작하기 <span aria-hidden="true">→</span></button>
@@ -141,6 +147,10 @@
             <div id="cameraBadge" class="camera-badge">AUTO · 자동 중계</div>
             <div id="keeperLabel" class="keeper-label"></div>
             <div id="goldenBadge" class="golden-badge" hidden></div>
+            <div id="startCountdown" class="start-countdown" role="status" aria-live="polite" aria-atomic="true" hidden>
+              <small id="countdownHelp">준비하세요</small>
+              <strong id="countdownNumber">3</strong>
+            </div>
             <div id="goldenReveal" class="golden-reveal" role="status" aria-live="polite" hidden>
               <div class="golden-orb" id="goldenOrb" aria-hidden="true"></div>
               <strong>황금구슬 등장!</strong>

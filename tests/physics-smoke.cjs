@@ -6,7 +6,7 @@ const assert = require('node:assert/strict');
 const root = path.resolve(__dirname, '..');
 const elements = new Map();
 function element() {
-  return { value: '', hidden: false, textContent: '', children: [], dataset: {}, style: {},
+  return { value: '', checked: true, hidden: false, textContent: '', children: [], dataset: {}, style: {},
     classList: { add() {}, remove() {}, toggle() {} },
     addEventListener() {}, setAttribute() {}, getContext: () => ({}),
     getBoundingClientRect: () => ({ width: 0, height: 0 }),
@@ -14,7 +14,7 @@ function element() {
     append(...children) { this.children.push(...children); }
   };
 }
-const document = { body: element(), querySelector(selector) { if (!elements.has(selector)) elements.set(selector, element()); return elements.get(selector); }, querySelectorAll: () => [], createElement: element, createDocumentFragment: element };
+const document = { body: element(), addEventListener() {}, querySelector(selector) { if (!elements.has(selector)) elements.set(selector, element()); return elements.get(selector); }, querySelectorAll: () => [], createElement: element, createDocumentFragment: element };
 let seed = 1;
 const math = Object.create(Math);
 math.random = () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; };
