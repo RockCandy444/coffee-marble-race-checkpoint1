@@ -42,12 +42,14 @@
   const camera = new window.RaceCamera();
   let canvasDpr = 1;
   const cameraSelect = $('#cameraSelect');
+  const cameraHint = '두 손가락·휠로 확대·축소 · 드래그로 이동 · 미니맵으로 구간 선택';
 
   namesInput.value = defaultNames;
   countInput.value = '3';
   ballsPerPersonInput.value = '5';
 
   function setStage(next) {
+    if (next !== 'race') clearCameraGesture();
     stage = next;
     setupView.hidden = next !== 'setup';
     mapView.hidden = next !== 'map';
@@ -291,6 +293,7 @@
   }
 
   function setUpRace() {
+    clearCameraGesture();
     WORLD.height = MAPS[selectedMap].height;
     WORLD.bottom = WORLD.height - 22;
     WORLD.finishY = WORLD.height - 60;
@@ -351,7 +354,7 @@
     $('#raceTitle').textContent = MAPS[selectedMap].title;
     $('#raceProgress').textContent = `0 / ${n} 도착`;
     $('#raceStatus').textContent = '구슬이 출발을 기다리고 있어요.';
-    $('#beadInfo').textContent = '휠로 확대·축소 · 드래그로 이동 · 미니맵으로 구간 선택';
+    $('#beadInfo').textContent = cameraHint;
     $('#liveOrder').replaceChildren();
     $('#liveFooter').textContent = '아직 결승선을 통과한 구슬이 없어요.';
     $('#recoveryControls').hidden = true;
@@ -422,7 +425,7 @@
         $('#goldenReveal').hidden = true;
         if (camera.mode === 'ball:' + game.golden.ball.id) {
           camera.mode = 'auto'; cameraSelect.value = 'auto'; game.selectedBall = null;
-          $('#beadInfo').textContent = '휠로 확대·축소 · 드래그로 이동 · 미니맵으로 구간 선택';
+          $('#beadInfo').textContent = cameraHint;
         }
       }
     } else if (!game.paused && game.countdownRemaining > 0) {
@@ -702,7 +705,7 @@
     camera.mode = cameraSelect.value;
     game.selectedBall = camera.mode.startsWith('ball:') ? Number(camera.mode.slice(5)) : null;
     if (camera.mode === 'manual') manualView();
-    else $('#beadInfo').textContent = '휠로 확대·축소 · 드래그로 이동 · 미니맵으로 구간 선택';
+    else $('#beadInfo').textContent = cameraHint;
   });
   function changeZoom(amount) {
     camera.zoom = Math.max(0.8, Math.min(4, camera.zoom + amount));
@@ -717,8 +720,9 @@
     changeZoom(-Math.max(-240, Math.min(240, pixels)) * 0.002);
   }, { passive: false });
   $('#cameraReset').addEventListener('click', () => {
+    clearCameraGesture();
     camera.mode = 'auto'; camera.zoom = 1; cameraSelect.value = 'auto'; game.selectedBall = null;
-    $('#beadInfo').textContent = '휠로 확대·축소 · 드래그로 이동 · 미니맵으로 구간 선택';
+    $('#beadInfo').textContent = cameraHint;
   });
 
   function resizeCanvas() {
@@ -753,16 +757,56 @@
     }
   }
   let cameraDrag = null;
+  let cameraPinch = null;
+  const cameraPointers = new Map();
+  function clearCameraGesture() {
+    const ids = [...cameraPointers.keys()];
+    cameraPointers.clear(); cameraDrag = null; cameraPinch = null;
+    canvas.classList.remove('is-dragging');
+    for (const id of ids) if (canvas.hasPointerCapture(id)) canvas.releasePointerCapture(id);
+  }
+  function pinchGeometry() {
+    const [a, b] = [...cameraPointers.values()];
+    return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, distance: Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)) };
+  }
+  function positionPinch(anchor, focus, zoom, rect) {
+    if (rect.width <= 0 || rect.height <= 0) return;
+    camera.zoom = Math.max(0.8, Math.min(4, zoom));
+    const scale = rect.width * camera.zoom / 1080;
+    camera.moveTo(anchor.x + (rect.width / 2 - focus.x + rect.left) / scale,
+      anchor.y + (rect.height / 2 - focus.y + rect.top) / scale);
+    manualView(); resizeCanvas();
+  }
   function manualView() {
     cameraSelect.value = 'manual'; game.selectedBall = null;
-    $('#beadInfo').textContent = '수동 보기 · 드래그로 이동 · 미니맵으로 구간 선택 · 자동 중계 버튼으로 복귀';
+    $('#beadInfo').textContent = '수동 보기 · 드래그로 이동 · 두 손가락 확대·축소 · 미니맵 이동 · 자동 버튼으로 복귀';
   }
   canvas.addEventListener('pointerdown', event => {
-    if (!game || event.button !== 0 || cameraDrag) return;
-    cameraDrag = { id: event.pointerId, startX: event.clientX, startY: event.clientY, x: event.clientX, y: event.clientY, moved: false };
+    if (stage !== 'race' || !game || event.button !== 0 || cameraPointers.size >= 2) return;
+    event.preventDefault();
+    cameraPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
     canvas.setPointerCapture(event.pointerId);
+    if (cameraPointers.size === 1) {
+      cameraDrag = { id: event.pointerId, startX: event.clientX, startY: event.clientY, x: event.clientX, y: event.clientY, moved: false };
+    } else {
+      cameraDrag = null; cameraPinch = pinchGeometry();
+      const rect = canvas.getBoundingClientRect();
+      const anchor = camera.toWorld(cameraPinch.x - rect.left, cameraPinch.y - rect.top);
+      positionPinch(anchor, cameraPinch, camera.mode === 'overview' ? 0.8 : camera.zoom, rect);
+      canvas.classList.add('is-dragging');
+    }
   });
   canvas.addEventListener('pointermove', event => {
+    if (!cameraPointers.has(event.pointerId)) return;
+    event.preventDefault();
+    cameraPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (cameraPinch && cameraPointers.size === 2) {
+      const next = pinchGeometry(), rect = canvas.getBoundingClientRect();
+      const anchor = camera.toWorld(cameraPinch.x - rect.left, cameraPinch.y - rect.top);
+      positionPinch(anchor, next, camera.zoom * next.distance / cameraPinch.distance, rect);
+      cameraPinch = next;
+      return;
+    }
     if (!cameraDrag || cameraDrag.id !== event.pointerId) return;
     if (!cameraDrag.moved && Math.hypot(event.clientX - cameraDrag.startX, event.clientY - cameraDrag.startY) < 5) return;
     if (camera.mode === 'overview') {
@@ -774,9 +818,14 @@
     manualView(); canvas.classList.add('is-dragging'); resizeCanvas();
   });
   function endCameraDrag(event) {
-    if (!cameraDrag || cameraDrag.id !== event.pointerId) return;
-    const clicked = !cameraDrag.moved && event.type === 'pointerup';
-    cameraDrag = null; canvas.classList.remove('is-dragging');
+    if (!cameraPointers.has(event.pointerId)) return;
+    const clicked = !cameraPinch && cameraDrag && !cameraDrag.moved && event.type === 'pointerup';
+    cameraPointers.delete(event.pointerId);
+    cameraPinch = null;
+    const remaining = [...cameraPointers.entries()][0];
+    cameraDrag = remaining ? { id: remaining[0], startX: remaining[1].x, startY: remaining[1].y,
+      x: remaining[1].x, y: remaining[1].y, moved: true } : null;
+    if (!remaining) canvas.classList.remove('is-dragging');
     if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
     if (clicked) selectBall(event);
   }

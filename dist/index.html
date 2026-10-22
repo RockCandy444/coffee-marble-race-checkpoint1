@@ -142,7 +142,7 @@
       <div class="race-layout card">
         <div class="track-column">
           <div class="canvas-wrap">
-            <canvas id="raceCanvas" width="1000" height="600" aria-label="구슬 경주 중계 화면. 카메라가 레이스 상황을 따라 움직입니다. 구슬을 누르면 해당 참가자를 추적합니다." role="img"></canvas>
+            <canvas id="raceCanvas" width="1000" height="600" aria-label="구슬 경주 중계 화면. 구슬을 누르면 추적하고, 한 손가락으로 이동하며 두 손가락으로 확대·축소합니다." role="img"></canvas>
             <canvas id="miniMap" width="70" height="210" aria-label="미니맵: 클릭하여 카메라 이동, 방향키로 조정" role="button" tabindex="0"></canvas>
             <div id="cameraBadge" class="camera-badge">AUTO · 자동 중계</div>
             <div id="keeperLabel" class="keeper-label"></div>
@@ -166,7 +166,7 @@
             <span><i class="legend-finish"></i> 결승선</span>
             <span id="raceStatus" aria-live="polite">구슬이 출발을 기다리고 있어요.</span>
           </div>
-            <div id="beadInfo" class="bead-info" aria-live="polite">휠로 확대·축소 · 드래그로 이동 · 미니맵으로 구간 선택</div>
+            <div id="beadInfo" class="bead-info" aria-live="polite">두 손가락·휠로 확대·축소 · 드래그로 이동 · 미니맵으로 구간 선택</div>
           <div id="recoveryControls" class="recovery-controls" hidden>
             <p id="recoveryMessage">일부 구슬이 오래 움직이지 않아 경주를 잠시 멈췄어요. 미완주 구슬을 임의로 꼴찌 처리하지 않습니다.</p>
             <button id="nudgeBalls" class="button button-soft" type="button">멈춘 구슬 흔들어 계속하기</button>

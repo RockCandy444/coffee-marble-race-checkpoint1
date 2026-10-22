@@ -102,3 +102,15 @@ button:focus-visible, select:focus-visible { outline: 3px solid #478879; outline
 [data-pattern="stripe"] { background-image: linear-gradient(145deg,transparent 35%,#ffffffbc 36% 53%,transparent 54%); }
 [data-pattern="ring"] { background-image: radial-gradient(circle,transparent 31%,#ffffffbc 33% 52%,transparent 54%); }
 [data-pattern="dots"] { background-image: radial-gradient(circle at 28% 30%,#ffffffbc 0 12%,transparent 14%),radial-gradient(circle at 72% 30%,#ffffffbc 0 12%,transparent 14%),radial-gradient(circle at 50% 76%,#ffffffbc 0 12%,transparent 14%); }
+@media (max-width: 600px) {
+  .quick-entry { display: flex; flex-direction: column; align-items: stretch; gap: 0; padding: 16px; }
+  .quick-entry .quick-icon { align-self: flex-start; }
+  .quick-entry h3 { margin: 10px 0 4px; align-self: auto; }
+  .quick-entry > p { margin: 0; font-size: 11px; }
+  .quick-entry label { margin: 14px 0 7px; }
+  .quick-entry .count-control { margin: 0; min-height: 44px; }
+  .quick-entry .count-control input { flex: 1; width: 100%; min-width: 0; max-width: none; height: 44px; font-size: 16px; }
+  .quick-entry .stepper { flex: none; width: 44px; height: 44px; }
+  .quick-entry #defaultNamesHelp { margin-top: 10px; }
+  .quick-entry .button { width: 100%; min-height: 44px; margin: 14px 0 0; padding: 10px 12px; font-size: 12px; }
+}
