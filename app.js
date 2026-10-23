@@ -61,7 +61,7 @@
     const card = document.createElement('div');card.className='ability-card';
     const title=document.createElement('strong');title.textContent=a.icon+' '+a.name;
     const text=document.createElement('p');text.textContent=a.description;
-    const meta=document.createElement('small');meta.textContent=a.group+' · '+(a.cooldown?a.cooldown+'초 간격':'조건에 따라 자동 적용');
+    const meta=document.createElement('small');meta.textContent=a.group+' · '+(a.id==='shortcut'?'출발할 때 한 번':a.cooldown?a.cooldown+'초 간격':'조건에 따라 자동 적용');
     card.append(title,text,meta);$('#abilityCatalog').append(card);
   }
   let abilityDialogGame = null, abilityDialogPaused = false;
@@ -81,8 +81,8 @@
   const ballLabel = ball => ball.battle ? Battle.label(ball) : ball.label;
   function fillRaceName(node,ball) {
     node.textContent='#'+ball.id+' '+ball.label;
-    node.title=ball.battle?Battle.describe(ball,game.time):node.textContent;
-    if(!ball.battle)return;
+    node.title=ball.battle?.id?Battle.describe(ball,game.time):node.textContent;
+    if(!ball.battle?.id)return;
     node.classList.add('battle-name');node.textContent='';
     const owner=document.createElement('span');owner.className='battle-owner';owner.textContent='#'+ball.id+' '+ball.label;
     const skill=document.createElement('small');skill.className='battle-chip';skill.textContent=Battle.caption(ball);
@@ -256,9 +256,9 @@
         pins.push({ x: 130 + col * 175 + (row % 2) * 45, y: 890 + row * 120, r: 23 + ((row + col) % 3) * 5, bumper: true });
       }
       segments.push(
-        { x1: 60, y1: 1490, x2: 650, y2: 1600, radius: 5 },
-        { x1: 940, y1: 1690, x2: 350, y2: 1800, radius: 8 },
-        { x1: 80, y1: 1850, x2: 630, y2: 1950, radius: 11 }
+        { x1: 20, y1: 1490, x2: 650, y2: 1600, radius: 5, edgeShelf: true, section: 2 },
+        { x1: 980, y1: 1690, x2: 350, y2: 1800, radius: 8, edgeShelf: true, section: 2 },
+        { x1: 59.5, y1: 1850, x2: 630, y2: 1950, radius: 11, edgeShelf: true, section: 2 }
       );
       for (let row = 0; row < 3; row++) for (let col = 0; col < 4; col++) {
         pins.push({ x: 155 + col * 215 + (row % 2) * 30, y: 2170 + row * 125, r: 20 + (row + col) % 4 * 9, bumper: true, ring: true });
@@ -379,7 +379,10 @@
     };
     game.collisionBuckets = Course.buckets(game.static);
     game.mode = $('#raceMode').value === 'battle' ? 'battle' : 'normal';
-    if(game.mode==='battle')Battle.init(game,WORLD,MAPS[game.map].sections);
+    if(game.mode==='battle') {
+      Battle.init(game,WORLD,MAPS[game.map].sections);
+      Battle.placeShortcuts(game,{pins:movingPins(0),segments:movingSegments(0)});
+    }
     game.goldenEnabled = game.mode==='normal' && $('#goldenEnabled').checked;
     game.golden = game.goldenEnabled ? Golden.activate(Golden.choose(balls), game, WORLD, MAPS[game.map].sections, {pins:movingPins(0),segments:movingSegments(0)}) : null;
     game.introRemaining = game.golden ? 2.8 : 0;
@@ -401,9 +404,9 @@
       game.selectedBall = golden.ball.id;
     }
     $('#keeperLabel').textContent = '이번 골키퍼 · ' + game.keeper.name;
-    $('#raceTitle').textContent = MAPS[selectedMap].title+(game.battle?' · 능력 배틀':'');
+    $('#raceTitle').textContent = MAPS[selectedMap].title+(game.mode==='battle'?' · 능력 배틀':'');
     $('#openBattleAbilities').hidden=!game.battle;$('#battleFeed').hidden=!game.battle;
-    $('#battleFeed').textContent=game.battle?'⚔ 능력 배틀 · 구슬을 눌러 능력 확인':'';
+    $('#battleFeed').textContent=game.battle?(game.mode==='battle'?'⚔ 능력 배틀':'★ 황금구슬 능력')+' · 구슬을 눌러 능력 확인':'';
     $('#raceProgress').textContent = `0 / ${n} 도착`;
     $('#raceStatus').textContent = '구슬이 출발을 기다리고 있어요.';
     $('#beadInfo').textContent = cameraHint;
@@ -699,7 +702,7 @@
     $('#raceStatus').textContent = '모든 구슬이 결승선을 통과했어요!';
     const loser = game.order[game.order.length - 1];
     $('#coffeeWinner').textContent = `#${loser.id} ${loser.label}`;
-    $('#resultSubtitle').textContent = `${new Set(game.balls.map(ball => ball.name)).size}명 · 구슬 ${game.order.length}개 모두 완주한 ${MAPS[game.map].label}${game.battle?' 능력 배틀':''} 경기 · ${game.keeper.name}의 마지막 통과자예요.`;
+    $('#resultSubtitle').textContent = `${new Set(game.balls.map(ball => ball.name)).size}명 · 구슬 ${game.order.length}개 모두 완주한 ${MAPS[game.map].label}${game.mode==='battle'?' 능력 배틀':''} 경기 · ${game.keeper.name}의 마지막 통과자예요.`;
     $('#resultMapLabel').textContent = MAPS[game.map].label;
     $('#goldenResult').hidden = !game.golden;
     if (game.golden) $('#goldenResult').textContent = '★ 이번 황금구슬 · #' + game.golden.ball.id + ' ' + game.golden.ball.originalLabel + ' · ' + game.golden.ability.name;
@@ -748,7 +751,7 @@
     $('#cameraBadge').textContent = camera.label;
     $('#cameraZoomLabel').textContent = camera.mode === 'overview' ? '전체' : camera.zoom.toFixed(1) + '×';
     if(game.battle) {
-      const log=game.battle.logs.at(-1);$('#battleFeed').textContent=log&&game.time-log.time<3?log.text:'⚔ 능력 배틀 · 내 구슬 능력 버튼으로 확인';
+      const log=game.battle.logs.at(-1);$('#battleFeed').textContent=log&&game.time-log.time<3?log.text:(game.mode==='battle'?'⚔ 능력 배틀':'★ 황금구슬 능력')+' · 내 구슬 능력 버튼으로 확인';
       for(const ball of game.balls) {const label='#'+ball.id+' '+ballLabel(ball);if(ball.battle.optionText!==label){$('#cameraSelect option[value="ball:'+ball.id+'"]').textContent=label;ball.battle.optionText=label;}}
     }
     if (game.selectedBall) {

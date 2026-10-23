@@ -4,7 +4,7 @@ const checks=`
 const battle=sandbox.window.MarbleBattle;elements.get('#raceMode').value='battle';let passed=0;
 for(const [index,ability] of battle.abilities.entries()) {
   seed=11+index*19;simulation.reset('spinner',2,index%4);const {game,world}=simulation.state();
-  game.balls.forEach(ball=>battle.assign(game,ball,ability.id));let steps=0;
+  game.balls.forEach(ball=>battle.assign(game,ball,ability.id));battle.placeShortcuts(game,simulation.dynamics());let steps=0;
   while(game.order.length<2&&!game.paused&&steps++<360*120)simulation.step(1/120);
   console.log(JSON.stringify({power:ability.id,finished:game.order.length,seconds:+game.time.toFixed(2),paused:game.autoPaused}));
   assert.equal(game.order.length,2,'two '+ability.id+' marbles finish');

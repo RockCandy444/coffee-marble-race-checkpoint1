@@ -26,12 +26,12 @@ for(const abilityId of [null,'heavy','immune']) {
   game.balls=[ball];game.static={pins:[],segments:[]};game.collisionBuckets=new Map();
   Object.assign(ball,{x:500,y:1000,vx:0,vy:0,maxY:1000});simulation.step(.1);velocities.push(ball.vy);
 }
-assert.ok(velocities[1]>velocities[0]*1.2);assert.equal(velocities[2],velocities[0]);
+assert.ok(velocities[1]>velocities[0]*1.19);assert.equal(velocities[2],velocities[0]);
 let total=0;
 for(const map of ['pinball','spinner','fork']) for(const count of [2,100]) for(const [index,ability] of golden.abilities.entries()) {
   seed=11+index*19;
   golden.choose=balls=>({ballId:balls.at(-1).id,abilityId:ability.id});
-  simulation.reset(map,count,index);
+  simulation.reset(map,count,index%4);
   const {game,world,maps}=simulation.state(),ball=game.golden?.ball;
   assert.ok(ball && ball.id===count && ball.ability===ability.id);
   assert.equal(game.balls.filter(b=>b.golden).length,1);assert.equal(game.introRemaining,2.8);
@@ -39,7 +39,9 @@ for(const map of ['pinball','spinner','fork']) for(const count of [2,100]) for(c
   assert.ok(ball.label.includes(ball.originalLabel));assert.equal(ball.r,game.balls[0].r);
   assert.equal(ball.pattern,sandbox.window.MarbleRoster.entries(Array.from({length:count},(_,i)=>'P'+(i+1))).at(-1).pattern);
   if(ability.id==='shortcut') assert.ok(ball.y>maps[map].sections[1][0]);
-  if(ability.id==='heavy') assert.equal(ball.mass,2);
+  assert.equal(game.balls.filter(b=>b.battle?.id).length,1,'only the golden marble has an ability');
+  assert.ok(game.balls.filter(b=>b!==ball).every(b=>!b.battle.id&&!b.immuneFields&&b.mass===1&&b.gravityScale===1));
+  if(ability.id==='heavy') assert.equal(ball.mass,1.9);
   if(ability.id==='immune') assert.equal(ball.immuneFields,true);
   let steps=0;
   while(game.order.length<count && !game.paused && steps++<360*120) simulation.step(1/120);

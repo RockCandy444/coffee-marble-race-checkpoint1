@@ -26,13 +26,16 @@
     ['vortex','소용돌이','🌪','방해',10,1.3,'주변 구슬을 자기 주위로 회전시켜요.'],
     ['freeze','기계 정지','⏸','방해',10,0,'주변의 움직이는 장애물·특수 핀 작동을 잠깐 멈춰요.'],
     ['mine','반발 지뢰','💣','방해',9,0,'접근한 다른 구슬을 한 번 튕기는 지뢰를 남겨요.'],
-    ['mimic','모방 구슬','🎭','변수',12,2.2,'가까운 상대의 능력을 잠깐 빌려 써요.'],
+    ['mimic','모방 구슬','🎭','변수',12,2.2,'가까운 상대 능력을 잠깐 빌려요. 일반 모드에서는 무작위 능력을 빌려요.'],
     ['reroll','변덕쟁이','🎲','변수',0,0,'다음 구간에 들어가면 다른 능력으로 바뀌어요.'],
     ['swap','자리 교환','🔀','변수',13,0,'가까운 앞쪽 구슬과 안전할 때 자리를 바꿔요.'],
     ['catchup','역전 본능','🔥','변수',0,0,'후미에 있을 때 하강력이 조금 강해져요.'],
-    ['charge','충전 구슬','🔋','변수',4,0,'충돌 에너지를 모아 부스터로 방출해요.']
+    ['charge','충전 구슬','🔋','변수',4,0,'충돌 에너지를 모아 부스터로 방출해요.'],
+    ['shortcut','지름길','⏩','이동',0,0,'첫 구간을 건너뛰고 2구간에서 출발해요. 이후에는 추가 효과가 없어요.']
   ].map(([id,name,icon,group,cooldown,duration,description]) => ({id,name,icon,group,cooldown,duration,description}));
   const byId = new Map(abilities.map(a => [a.id,a]));
+  // Ordinary marbles can receive a golden marble's attacks without gaining a power.
+  byId.set(null,{id:null,name:'일반 구슬',cooldown:0,duration:0,description:'특별한 능력 없이 달려요.'});
   const colors = {이동:'#dc9a29',방어:'#2b9d9b',방해:'#aa66ca',변수:'#e56e68'};
   const clamp = (v,a,b) => Math.max(a,Math.min(b,v));
   const effective = ball => ball.battle?.borrowId || ball.battle?.id;
@@ -53,11 +56,25 @@
     ball.battle={id,initialId:previous?.initialId||id,activeUntil:0,next:game.time+1.8+random()*2,
       shield:0,energy:0,slowUntil:0,controlGrace:0,guardUntil:0,lastImpact:-1,flashUntil:0,
       section:game.battle.sections.filter(([y])=>y<=ball.y).length,reroll:id==='reroll'||keepReroll,
+      startPending:id==='shortcut'&&game.time===0&&!keepReroll,
       wasGhost:previous?.wasGhost||previous?.exitPending||false};
   }
   function init(game,world,sections,random=Math.random) {
     game.battle={world,sections,logs:[],effects:[],traps:[],clocks:new Map(),disabled:new Map(),activations:{}};
     game.balls.forEach(ball=>assign(game,ball,abilities[Math.floor(random()*abilities.length)].id,random));
+  }
+  function initGolden(game,world,sections,ball,id,env) {
+    game.battle={world,sections,logs:[],effects:[],traps:[],clocks:new Map(),disabled:new Map(),activations:{}};
+    game.balls.forEach(b=>assign(game,b,b===ball?id:null));
+    placeShortcuts(game,env);
+    tick(game,0,env);
+  }
+  function placeShortcuts(game,env) {
+    for(const ball of game.balls)if(ball.battle?.startPending) {
+      const p=window.GoldenMarble.shortcutStart(ball,game.battle.world,game.battle.sections,
+        {pins:game.static.pins.concat(env.pins),segments:game.static.segments.concat(env.segments)},game.balls);
+      if(p){move(ball,p);ball.vx=0;ball.vy=0;ball.battle.section=2;ball.battle.startPending=false;}
+    }
   }
   function timeFor(game,key,time) {
     if(!game?.battle)return time;
@@ -171,9 +188,10 @@
       }
       if(!changed)return false;
     } else if(id==='mimic') {
-      const target=nearby(ball,game,450).find(b=>!['mimic','reroll'].includes(effective(b)));
-      if(!target)return false;
-      s.borrowId=effective(target);s.borrowUntil=now+2.2;
+      const target=nearby(ball,game,450).find(b=>effective(b)&&!['mimic','reroll','shortcut'].includes(effective(b)));
+      const choices=abilities.filter(a=>!['mimic','reroll','shortcut'].includes(a.id));
+      if(!target&&game.mode!=='normal')return false;
+      s.borrowId=target?effective(target):choices[Math.floor(random()*choices.length)].id;s.borrowUntil=now+2.2;
       fire(game,ball,s.borrowId,env,random);emit(game,ball,id,byId.get(s.borrowId).name);return true;
     } else if(id==='swap') {
       const target=nearby(ball,game,320).filter(b=>b.y>ball.y+25&&!safeZone(b,world)&&b.battle.controlGrace<=now&&b.battle.guardUntil<=now&&!b.battle.shield&&!active(b,'reflect',now)).sort((a,b)=>a.y-b.y)[0];
@@ -198,7 +216,7 @@
       if(s.borrowUntil<=now){if(s.borrowId==='shield')s.shield=0;delete s.borrowId;delete s.borrowUntil;s.activeUntil=0;}
       const section=game.battle.sections.filter(([y])=>y<=ball.y).length;
       if(s.reroll&&section>s.section&&!safeZone(ball,world)) {
-        const choices=abilities.filter(a=>a.id!=='reroll'&&a.id!==s.id),a=choices[Math.floor(random()*choices.length)];
+        const choices=abilities.filter(a=>!['reroll','shortcut'].includes(a.id)&&a.id!==s.id),a=choices[Math.floor(random()*choices.length)];
         assign(game,ball,a.id,random,true);emit(game,ball,'reroll',a.name);
       }
       const state=ball.battle,id=effective(ball),a=byId.get(state.id);
@@ -253,15 +271,17 @@
     } else window.MarbleCourse.field(ball,source,dt);
   }
   function caption(ball) {
+    if(!ball.battle?.id)return '';
     const a=byId.get(ball.battle.id),copy=ball.battle.borrowId?'→'+ability(ball).name:'';
     return (ball.battle.reroll&&a.id!=='reroll'?'🎲 변덕→':a.icon+' ')+a.name+copy;
   }
   function label(ball) {
-    return ball.battle?ball.label+' · '+caption(ball):ball.label;
+    return ball.battle?.id?ball.label+' · '+caption(ball):ball.label;
   }
   function describe(ball,time) {
+    if(!ball.battle?.id)return '#'+ball.id+' '+ball.label+' · 일반 구슬';
     const a=byId.get(ball.battle.id),s=ball.battle;
-    let state=a.cooldown?'다음 '+Math.max(0,Math.ceil(s.next-time))+'초':'상시';
+    let state=a.cooldown?'다음 '+Math.max(0,Math.ceil(s.next-time))+'초':a.id==='shortcut'?'2구간 출발 · 추가 효과 없음':'상시';
     if(s.activeUntil>time)state='발동 중';if(s.shield)state='보호막 준비';
     if(a.id==='charge')state='충전 '+s.energy+'/3';if(a.id==='reroll')state='다음 구간에서 변경';
     return '#'+ball.id+' '+label(ball)+' · '+state+(s.reroll?' · 구간마다 재추첨':'')+' — '+a.description;
@@ -274,7 +294,7 @@
     ctx.restore();
   }
   function drawBall(ctx,ball,game,camera) {
-    if(!ball.battle)return;
+    if(!ball.battle?.id)return;
     const s=ball.battle,a=ability(ball),lit=s.activeUntil>game.time||s.flashUntil>game.time||s.shield;
     ctx.save();ctx.strokeStyle=colors[a.group];ctx.lineWidth=lit?2.5:1.2;
     if(active(ball,'ghost',game.time)||active(ball,'orbphase',game.time))ctx.setLineDash([3,3]);
@@ -282,5 +302,5 @@
     if(lit||game.selectedBall===ball.id||game.balls.length<=20||camera.zoom>=1.8){ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#fffdf4';ctx.fillRect(ball.x-9,ball.y-ball.r-21,18,17);ctx.fillStyle=colors[a.group];ctx.fillText(a.icon,ball.x,ball.y-ball.r-12);}
     ctx.restore();
   }
-  window.MarbleBattle={abilities,byId,init,assign,tick,fire,hit,spot,clearAt,timeFor,frozen,disabled,skipObstacle,skipPair,contact,obstacleHit,wallHit,field,caption,label,describe,drawWorld,drawBall};
+  window.MarbleBattle={abilities,byId,init,initGolden,placeShortcuts,assign,tick,fire,hit,spot,clearAt,timeFor,frozen,disabled,skipObstacle,skipPair,contact,obstacleHit,wallHit,field,caption,label,describe,drawWorld,drawBall};
 })();

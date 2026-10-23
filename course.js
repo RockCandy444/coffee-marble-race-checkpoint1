@@ -65,16 +65,37 @@
   function enrich(pins, segments, map, world, sections) {
     pins.forEach(pin => { pin.y *= 2; });
     segments.forEach(segment => { segment.y1 *= 2; segment.y2 *= 2; });
+    if(map==='pinball') {
+      // Sloping shelves interrupt both edge highways; some leave a lucky narrow slot.
+      sections.slice(0,-1).forEach(([start],section)=>{
+        if(section===2)return; // Three original slides already alternate across this section.
+        const end=sections[section+1][0];
+        for(let k=0;k<2;k++) {
+          const left=(section+k)%2===0,y=section===4?(k===0?5620:5970):start+(end-start)*(.28+k*.4);
+          const b=bounds(y,world),gap=(section+k)%3===0?35:0,radius=wallRadius;
+          segments.push({x1:left?b.left+gap+ (gap?radius:0):b.right-gap-(gap?radius:0),y1:y,
+            x2:section===4?(left?440:580):(left?540:460),y2:y+(section===4?70:125),radius,edgeShelf:true,section});
+        }
+      });
+      // Keep inherited pins and later grids clear of board surfaces and their exit tips.
+      // A pin resting just above a sloped board otherwise forms a closed pocket.
+      for(let i=pins.length-1;i>=0;i--)if(segments.some(s=>distanceToSegment(pins[i].x,pins[i].y,s)<pins[i].r+wallRadius+45))pins.splice(i,1);
+    }
     function clear(x, y, r) {
       const b = bounds(y, world);
       // Leave room for moving defenders to sweep without forming pockets with fixed pins.
       if ([world.funnelY + 180, world.funnelY + 540].some(row => Math.abs(y - row) < r + 90)) return false;
       return x - r > b.left + 28 && x + r < b.right - 28
         && pins.every(p => Math.hypot(p.x - x, p.y - y) > p.r + r + 28)
-        && segments.every(s => distanceToSegment(x, y, s) > r + (s.radius ?? 5) + 24);
+        && segments.every(s => distanceToSegment(x, y, s) > r + (s.radius ?? 5) + (map==='pinball'?45:24));
     }
     sections.forEach(([start], section) => {
       const end = Math.min((sections[section + 1]?.[0] ?? world.funnelKnee) - 100, world.funnelKnee - 120);
+      if(map==='pinball'&&section<sections.length-1)for(let row=0;row<4;row++)for(const side of ['left','right']) {
+        const y=start+160+(end-start-260)*row/3,b=bounds(y,world),r=13+(row+section)%3*4;
+        const x=side==='left'?b.left+31+r:b.right-31-r;
+        if(clear(x,y,r))pins.push({x,y,r,bumper:true,edgeBumper:true,section});
+      }
       // Reserve seven distinct effect obstacles in every section before filling the grid.
       ['power', 'magnet', 'wind', 'power', 'magnet', 'wind', 'power'].forEach((kind, k) => {
         const baseY = start + 140 + (end - start - 280) * k / 6;
@@ -88,6 +109,7 @@
             const x = map === 'spinner' && section === 3 && k === 4
               ? 342 : b.left + (b.right - b.left) * fraction;
             if (!clear(x, y, r)) continue;
+            if(map==='pinball'&&kind!=='power'&&segments.some(s=>!s.sideWall&&distanceToSegment(x,y,s)<150))continue;
             pins.push({ x, y, r, kind, bumper: true, section, kick: kind === 'power' ? 220 + k % 3 * 25 : 0,
               range: kind === 'power' ? 0 : 120, strength: kind === 'magnet' ? 175 : 270, direction: (k + section) % 2 ? 1 : -1, defender: section === sections.length - 1 });
             placed = true; break;

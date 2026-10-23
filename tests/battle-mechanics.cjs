@@ -47,9 +47,9 @@ const firstRoll=a.battle.id;a.y=game.battle.sections[2][0]+10;battle.tick(game,.
 ({game,world,a,b}=arena('swap'));game.static.pins=[{x:b.x,y:b.y,r:35}];assert.equal(battle.fire(game,a,'swap',env),false);
 for(const id of ['warp','swap','ghost','shrink','frog']) {({game,world,a}=arena(id));a.y=world.finishY-100;assert.equal(battle.fire(game,a,id,env),false);}
 ({game,world,a,b}=arena('shock'));b.y=world.finishY-50;assert.equal(battle.hit(game,a,b,100,0,1),false);
-({game,world}=arena('heavy'));const choices=[];for(let i=0;i<30;i++)choices.push((i+.5)/30,.5);
-const all={time:0,balls:Array.from({length:30},(_,i)=>({id:i+1,r:10,x:500,y:50,label:'P'+i,name:'P'+i}))};
-battle.init(all,world,game.battle.sections,()=>choices.shift());assert.equal(new Set(all.balls.map(b=>b.battle.id)).size,30,'equal selection intervals cover all abilities');assert.ok(all.balls.every(b=>b.r===10));
+({game,world}=arena('heavy'));const choices=[];for(let i=0;i<31;i++)choices.push((i+.5)/31,.5);
+const all={time:0,balls:Array.from({length:31},(_,i)=>({id:i+1,r:10,x:500,y:50,label:'P'+i,name:'P'+i}))};
+battle.init(all,world,game.battle.sections,()=>choices.shift());assert.equal(new Set(all.balls.map(b=>b.battle.id)).size,31,'equal selection intervals cover all abilities');assert.ok(all.balls.every(b=>b.r===10));
 // Mode switch restores the ordinary golden setting and cannot stack it in battle.
 elements.get('#goldenEnabled').checked=true;elements.get('#raceMode').handlers.change();assert.equal(elements.get('#goldenEnabled').checked,false);assert.equal(elements.get('#goldenEnabled').disabled,true);
 elements.get('#raceMode').value='normal';elements.get('#raceMode').handlers.change();assert.equal(elements.get('#goldenEnabled').checked,true);assert.equal(elements.get('#goldenEnabled').disabled,false);
@@ -59,6 +59,6 @@ const dialog=elements.get('#battleDialog');dialog.showModal=()=>{dialog.open=tru
 elements.get('#openBattleAbilities').handlers.click();assert.equal(game.paused,true);assert.equal(elements.get('#battleRoster').children.length,3);
 elements.get('#closeBattleAbilities').handlers.click();assert.equal(game.paused,false);
 game.paused=true;elements.get('#openBattleAbilities').handlers.click();elements.get('#closeBattleAbilities').handlers.click();assert.equal(game.paused,true);
-console.log('30 battle abilities: distinct triggers, immunity windows, safe teleport/swap, finish protection, freeze resume, mimic/reroll cleanup and mode/golden isolation passed');
+console.log('31 battle abilities: distinct triggers, immunity windows, safe teleport/swap, finish protection, freeze resume, mimic/reroll cleanup and mode/golden isolation passed');
 `;
 new Function('require','__dirname',harness+checks)(require,__dirname);

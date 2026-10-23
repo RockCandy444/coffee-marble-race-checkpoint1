@@ -136,7 +136,7 @@ for (const map of ['pinball', 'spinner', 'fork'].filter(m => !process.env.MARBLE
   }
   const { game } = simulation.state();
   const outcome = { map, count: n, keeper: game.keeper.id, obstacles: obstacleCount, seed: randomSeed, finished: game.order.length, seconds: +game.time.toFixed(2), paused: game.autoPaused,
-    remaining: game.balls.filter(b => !b.finished).slice(0,12).map(b => ({id:b.id,x:+b.x.toFixed(1),y:+b.y.toFixed(1),rescues:b.rescueCount})) };
+    remaining: game.balls.filter(b => !b.finished).sort((a,b)=>b.rescueCount-a.rescueCount).slice(0,12).map(b => ({id:b.id,x:+b.x.toFixed(1),y:+b.y.toFixed(1),rescues:b.rescueCount})) };
   outcomes.push(outcome);
   console.log(JSON.stringify(outcome));
   assert.equal(new Set(game.order.map(b => b.id)).size, game.order.length);
