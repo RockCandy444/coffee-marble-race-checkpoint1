@@ -114,3 +114,35 @@ button:focus-visible, select:focus-visible { outline: 3px solid #478879; outline
   .quick-entry #defaultNamesHelp { margin-top: 10px; }
   .quick-entry .button { width: 100%; min-height: 44px; margin: 14px 0 0; padding: 10px 12px; font-size: 12px; }
 }
+.mode-settings { margin-top: 18px; padding: 15px 16px; background: #f5f0ff; border: 1px solid #dfd3ed; border-radius: 12px; }
+.mode-settings label { font-size: 12px; font-weight: 800; margin-right: 12px; color: #74528d; }
+.mode-settings select { min-height: 40px; padding: 7px 12px; border: 1px solid #cdb8df; border-radius: 8px; background: #fffdf9; font: inherit; font-size: 13px; color: #69447e; }
+.mode-settings p { margin: 8px 0 0; color: #8b7797; font-size: 11px; line-height: 1.6; }
+.battle-guide { margin-top: 10px; padding: 13px 16px; border: 1px solid #e5d9ec; border-radius: 12px; background: #fbf8ff; font-size: 12px; }
+.battle-guide summary { cursor: pointer; font-weight: 800; color: #805a98; }
+.battle-guide > p { line-height: 1.8; color: #8b7698; }
+.ability-catalog { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; max-height: 340px; overflow: auto; margin-top: 12px; }
+.ability-card { padding: 11px; border: 1px solid #e6dcee; border-radius: 10px; background: #fffdfa; }
+.ability-card strong { font-size: 12px; color: #754e8b; }
+.ability-card p { font-size: 11px; line-height: 1.65; color: #8a7a93; margin: 6px 0; }
+.ability-card small { font-size: 10px; color: #ac94b7; }
+.battle-open { min-height: 33px; border: 1px solid #d3bfdf; border-radius: 8px; padding: 6px 9px; background: #f6edfc; color: #83549a; cursor: pointer; font: inherit; font-weight: 800; }
+.battle-feed { position: absolute; top: 72px; left: 10px; max-width: calc(100% - 85px); padding: 6px 9px; border: 1px solid #d9bce9; background: #faf0fff2; border-radius: 8px; font-size: 10px; color: #8c509c; line-height: 1.5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; pointer-events: none; }
+.battle-dialog { width: min(650px,calc(100% - 28px)); max-height: 80dvh; padding: 22px; color: #65516d; border: 1px solid #d7bee5; border-radius: 18px; background: #fffaf3; box-shadow: 0 14px 70px #33203e55; }
+.battle-dialog::backdrop { background: #34253d77; }
+.battle-dialog-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.battle-dialog h2 { margin: 0; font-size: 20px; font-family: 'Jua',sans-serif; }
+.battle-dialog button { padding: 10px 12px; border: 1px solid #d9c8e2; border-radius: 8px; background: #f3e8fa; cursor: pointer; font: inherit; font-size: 12px; color: #805291; }
+.battle-dialog > p { font-size: 12px; line-height: 1.7; color: #9a869f; }
+.battle-roster { padding: 0; margin: 15px 0 0; list-style: none; }
+.battle-roster li { padding: 12px 2px; border-bottom: 1px solid #e9dfee; font-size: 12px; line-height: 1.8; overflow-wrap: anywhere; }
+.battle-name { display: grid; gap: 2px; min-width: 0; }
+.battle-owner { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.battle-chip { display: block; font-size: 9px; line-height: 1.3; color: #9565aa; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 600px) {
+  .mode-settings label { display: block; margin: 0 0 8px; }
+  .mode-settings select { width: 100%; min-height: 44px; font-size: 16px; }
+  .ability-catalog { grid-template-columns: 1fr; max-height: 300px; }
+  .battle-dialog { padding: 16px; }
+  .battle-feed { top: 69px; left: 7px; font-size: 9px; padding: 5px 7px; max-width: calc(100% - 67px); }
+}

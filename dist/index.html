@@ -105,7 +105,17 @@
           <span class="map-check" aria-hidden="true">✓</span>
         </button>
       </div>
-      <div class="event-option">
+      <div class="mode-settings">
+        <label for="raceMode">플레이 모드</label>
+        <select id="raceMode"><option value="normal">일반 경주</option><option value="battle">능력 배틀 · 30종</option></select>
+        <p id="modeHelp">기존 규칙으로 달리고, 황금구슬 이벤트를 선택할 수 있어요.</p>
+      </div>
+      <details id="battleGuide" class="battle-guide" hidden>
+        <summary>배틀 규칙과 능력 30종 보기</summary>
+        <p>구슬마다 능력 하나를 무작위로 받아 자동 발동해요. 능력은 중복 배정될 수 있고 황금구슬은 함께 나오지 않아요. 방해 뒤에는 잠깐 보호돼요. 결승선 바로 앞은 안전 구간으로, 방해·위치 이동·크기 변경·장애물 통과를 제한해요.</p>
+        <div id="abilityCatalog" class="ability-catalog"></div>
+      </details>
+      <div class="event-option" id="goldenOption">
         <label class="event-toggle" for="goldenEnabled">
           <input id="goldenEnabled" type="checkbox" checked aria-describedby="goldenOptionHelp">
           <span><strong>황금구슬 이벤트</strong><small id="goldenOptionHelp">켜면 가끔 특별한 능력의 구슬이 등장해요. 끄면 모두 일반 구슬로 출발해요.</small></span>
@@ -136,6 +146,7 @@
           <output id="cameraZoomLabel">1.0×</output>
           <button id="cameraZoomIn" type="button" aria-label="카메라 확대">＋</button>
           <button id="cameraReset" type="button">자동</button>
+          <button id="openBattleAbilities" class="battle-open" type="button" hidden>내 구슬 능력</button>
         </div>
         <span id="cameraStatus">자동 중계 · 출발 준비</span>
       </div>
@@ -147,6 +158,7 @@
             <div id="cameraBadge" class="camera-badge">AUTO · 자동 중계</div>
             <div id="keeperLabel" class="keeper-label"></div>
             <div id="goldenBadge" class="golden-badge" hidden></div>
+            <div id="battleFeed" class="battle-feed" aria-live="off" hidden></div>
             <div id="startCountdown" class="start-countdown" role="status" aria-live="polite" aria-atomic="true" hidden>
               <small id="countdownHelp">준비하세요</small>
               <strong id="countdownNumber">3</strong>
@@ -210,10 +222,16 @@
 
     <footer class="page-footer">모든 순위는 실제 구슬이 결승선을 통과한 순서로 정해집니다. <span>· 이 기기에서만 실행돼요.</span></footer>
   </main>
+  <dialog id="battleDialog" class="battle-dialog" aria-labelledby="battleDialogTitle">
+    <div class="battle-dialog-heading"><h2 id="battleDialogTitle">내 구슬 능력</h2><button id="closeBattleAbilities" type="button">닫고 돌아가기</button></div>
+    <p>능력을 보는 동안 경주가 잠시 멈춰요. 구슬을 눌러 추적하면 발동 상태도 확인할 수 있어요.</p>
+    <ul id="battleRoster" class="battle-roster"></ul>
+  </dialog>
   <script src="course.js"></script>
   <script src="camera.js"></script>
   <script src="roster.js"></script>
   <script src="golden.js"></script>
+  <script src="battle.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

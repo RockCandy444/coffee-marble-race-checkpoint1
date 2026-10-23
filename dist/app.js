@@ -15,6 +15,7 @@
   const Course = window.MarbleCourse;
   const Roster = window.MarbleRoster;
   const Golden = window.GoldenMarble;
+  const Battle = window.MarbleBattle;
   Object.values(MAPS).forEach(map => { map.height *= 2; map.sections = map.sections.map(([y, name]) => [y * 2, name]); });
   const $ = (selector) => document.querySelector(selector);
   const setupView = $('#setupView');
@@ -43,6 +44,50 @@
   let canvasDpr = 1;
   const cameraSelect = $('#cameraSelect');
   const cameraHint = '두 손가락·휠로 확대·축소 · 드래그로 이동 · 미니맵으로 구간 선택';
+  let normalGoldenEnabled = $('#goldenEnabled').checked;
+  let modeWasBattle = false;
+  function updateMode() {
+    const battle = $('#raceMode').value === 'battle';
+    if (battle !== modeWasBattle) {
+      if (battle) { normalGoldenEnabled = $('#goldenEnabled').checked; $('#goldenEnabled').checked = false; }
+      else $('#goldenEnabled').checked = normalGoldenEnabled;
+    }
+    modeWasBattle = battle; $('#goldenEnabled').disabled = battle;
+    $('#goldenOption').hidden = battle; $('#battleGuide').hidden = !battle;
+    $('#modeHelp').textContent = battle ? '모든 구슬에 능력 하나씩 · 자동 발동 · 황금구슬 중첩 없음' : '기존 규칙으로 달리고, 황금구슬 이벤트를 선택할 수 있어요.';
+  }
+  $('#raceMode').addEventListener('change', updateMode);
+  for (const a of Battle.abilities) {
+    const card = document.createElement('div');card.className='ability-card';
+    const title=document.createElement('strong');title.textContent=a.icon+' '+a.name;
+    const text=document.createElement('p');text.textContent=a.description;
+    const meta=document.createElement('small');meta.textContent=a.group+' · '+(a.cooldown?a.cooldown+'초 간격':'조건에 따라 자동 적용');
+    card.append(title,text,meta);$('#abilityCatalog').append(card);
+  }
+  let abilityDialogGame = null, abilityDialogPaused = false;
+  $('#openBattleAbilities').addEventListener('click', () => {
+    if (!game?.battle) return;
+    abilityDialogGame=game;abilityDialogPaused=game.paused;game.paused=true;
+    $('#pauseRace').textContent='계속하기';
+    $('#battleRoster').replaceChildren();
+    for(const ball of game.balls) {const item=document.createElement('li');item.textContent=Battle.describe(ball,game.time)+(ball.finished?' · 완주':'');$('#battleRoster').append(item);}
+    $('#battleDialog').showModal();
+  });
+  $('#closeBattleAbilities').addEventListener('click', () => $('#battleDialog').close());
+  $('#battleDialog').addEventListener('close', () => {
+    if(stage==='race'&&game===abilityDialogGame&&!game.autoPaused) {game.paused=abilityDialogPaused;$('#pauseRace').textContent=game.paused?'계속하기':'일시 정지';previousFrame=0;}
+    abilityDialogGame=null;
+  });
+  const ballLabel = ball => ball.battle ? Battle.label(ball) : ball.label;
+  function fillRaceName(node,ball) {
+    node.textContent='#'+ball.id+' '+ball.label;
+    node.title=ball.battle?Battle.describe(ball,game.time):node.textContent;
+    if(!ball.battle)return;
+    node.classList.add('battle-name');node.textContent='';
+    const owner=document.createElement('span');owner.className='battle-owner';owner.textContent='#'+ball.id+' '+ball.label;
+    const skill=document.createElement('small');skill.className='battle-chip';skill.textContent=Battle.caption(ball);
+    node.append(owner,skill);
+  }
 
   namesInput.value = defaultNames;
   countInput.value = '3';
@@ -103,6 +148,7 @@
     // Browser form restoration can change .value without firing input/change.
     // Only re-parse when the text changes; keep checking while setup is visible.
     syncSetupRoster();
+    if(modeWasBattle!==($('#raceMode').value==='battle'))updateMode();
     setupFrameId = requestAnimationFrame(watchSetupRoster);
   }
   function queueSetupSync() {
@@ -261,12 +307,13 @@
       { x: 330, y: 2730, phase: 0.2, length: 290, speed: 0.7 },
       { x: 700, y: 2920, phase: 1.6, length: 200, speed: -0.9 }
     ] : [];
-    return bars.map((bar) => {
-      const angle = time * bar.speed + bar.phase;
-      const omega = bar.speed;
+    return bars.map((bar, index) => {
+      const machineKey='rotor-'+index, localTime=Battle.timeFor(game,machineKey,time);
+      const angle = localTime * bar.speed + bar.phase;
+      const omega = Battle.frozen(game,machineKey)?0:bar.speed;
       const dx = Math.cos(angle) * bar.length / 2;
       const dy = Math.sin(angle) * bar.length / 2;
-      return { x1: bar.x - dx, y1: bar.y * 2 - dy, x2: bar.x + dx, y2: bar.y * 2 + dy, cx: bar.x, cy: bar.y * 2, omega, radius: 4 + bar.length / 85, rotating: true };
+      return { x1: bar.x - dx, y1: bar.y * 2 - dy, x2: bar.x + dx, y2: bar.y * 2 + dy, cx: bar.x, cy: bar.y * 2, omega, radius: 4 + bar.length / 85, rotating: true, machineKey };
     });
   }
 
@@ -276,18 +323,19 @@
       { x: 240, y: 3160, r: 20, amplitude: 100, speed: 0.85, phase: 0 },
       { x: 750, y: 3280, r: 38, amplitude: 110, speed: 0.7, phase: 2 },
       { x: 430, y: 3470, r: 27, amplitude: 150, speed: 0.9, phase: 1 }
-    ].map(pin => ({ ...pin, y: pin.y * 2, x: pin.x + Math.sin(time * pin.speed + pin.phase) * pin.amplitude, vx: Math.cos(time * pin.speed + pin.phase) * pin.amplitude * pin.speed, moving: true, bumper: true }));
+    ].map((pin,index) => {const machineKey='moving-pin-'+index,t=Battle.timeFor(game,machineKey,time);return { ...pin, y: pin.y * 2, x: pin.x + Math.sin(t * pin.speed + pin.phase) * pin.amplitude, vx: Battle.frozen(game,machineKey)?0:Math.cos(t * pin.speed + pin.phase) * pin.amplitude * pin.speed, moving: true, bumper: true, machineKey };});
   }
 
   function movingSegments(time) {
     const result = rotatingSegments(time);
     if (game.map === 'spinner') {
       for (const [y, center, length, radius, phase] of [[2280, 310, 190, 13, 0], [2530, 690, 290, 8, 1.8]]) {
-        const cx = center + Math.sin(time * 0.9 + phase) * 150;
-        result.push({ x1: cx - length / 2, y1: y * 2, x2: cx + length / 2, y2: y * 2, radius, vx: Math.cos(time * 0.9 + phase) * 135, sliding: true });
+        const machineKey='slider-'+y,t=Battle.timeFor(game,machineKey,time);
+        const cx = center + Math.sin(t * 0.9 + phase) * 150;
+        result.push({ x1: cx - length / 2, y1: y * 2, x2: cx + length / 2, y2: y * 2, radius, vx: Battle.frozen(game,machineKey)?0:Math.cos(t * 0.9 + phase) * 135, sliding: true, machineKey });
       }
     }
-    const diameter = game.balls[0].r * 2;
+    const diameter = (game.balls[0].baseR ?? game.balls[0].r) * 2;
     result.push(...Course.defenders(time, WORLD), ...Course.goalkeeper(game.keeper, time, diameter, WORLD));
     return result;
   }
@@ -330,7 +378,9 @@
       keeper: Course.chooseKeeper(), static: makeStaticObstacles(selectedMap), lastUiUpdate: 0, stuckCount: 0, selectedBall: null
     };
     game.collisionBuckets = Course.buckets(game.static);
-    game.goldenEnabled = $('#goldenEnabled').checked;
+    game.mode = $('#raceMode').value === 'battle' ? 'battle' : 'normal';
+    if(game.mode==='battle')Battle.init(game,WORLD,MAPS[game.map].sections);
+    game.goldenEnabled = game.mode==='normal' && $('#goldenEnabled').checked;
     game.golden = game.goldenEnabled ? Golden.activate(Golden.choose(balls), game, WORLD, MAPS[game.map].sections, {pins:movingPins(0),segments:movingSegments(0)}) : null;
     game.introRemaining = game.golden ? 2.8 : 0;
     game.countdownRemaining = 3;
@@ -351,7 +401,9 @@
       game.selectedBall = golden.ball.id;
     }
     $('#keeperLabel').textContent = '이번 골키퍼 · ' + game.keeper.name;
-    $('#raceTitle').textContent = MAPS[selectedMap].title;
+    $('#raceTitle').textContent = MAPS[selectedMap].title+(game.battle?' · 능력 배틀':'');
+    $('#openBattleAbilities').hidden=!game.battle;$('#battleFeed').hidden=!game.battle;
+    $('#battleFeed').textContent=game.battle?'⚔ 능력 배틀 · 구슬을 눌러 능력 확인':'';
     $('#raceProgress').textContent = `0 / ${n} 도착`;
     $('#raceStatus').textContent = '구슬이 출발을 기다리고 있어요.';
     $('#beadInfo').textContent = cameraHint;
@@ -458,13 +510,14 @@
     const dynamicSegments = movingSegments(game.time);
     const dynamicPins = movingPins(game.time);
     const active = game.balls.filter((ball) => !ball.finished);
+    if(game.battle)Battle.tick(game,dt,{pins:dynamicPins,segments:dynamicSegments});
 
     for (const ball of active) {
       ball.prevX = ball.x;
       ball.prevY = ball.y;
       const fields = game.collisionBuckets.get(Math.floor(ball.y / 160))?.fields ?? [];
       ball.magnetGrace = Math.max(0, (ball.magnetGrace ?? 0) - dt);
-      for (const source of fields) Course.field(ball, source, dt);
+      for (const source of fields) { if(game.battle)Battle.field(game,ball,source,dt);else Course.field(ball, source, dt); }
       ball.vy += 178 * (ball.gravityScale ?? 1) * dt;
       ball.vx += Math.sin(game.time * 1.2 + ball.id * 2.1) * 3.5 * dt;
       const drag = Math.pow(0.999, dt * 60);
@@ -536,7 +589,9 @@
   }
 
   function resolveWalls(ball) {
+    const oldX=ball.x;
     Course.contain(ball, WORLD);
+    if(game?.battle&&oldX!==ball.x)Battle.wallHit(game,ball,Math.sign(ball.x-oldX));
     if (ball.y - ball.r < WORLD.top) {
       ball.y = WORLD.top + ball.r;
       if (ball.vy < 0) ball.vy = -ball.vy * 0.48;
@@ -547,6 +602,7 @@
     }
   }
   function resolvePin(ball, pin) {
+    if(game.battle&&Battle.skipObstacle(ball,pin,game))return;
     const dx = ball.x - pin.x;
     const dy = ball.y - pin.y;
     const min = ball.r + pin.r;
@@ -559,10 +615,13 @@
     ball.x += nx * overlap;
     ball.y += ny * overlap;
     const toward = (ball.vx - (pin.vx || 0)) * nx + (ball.vy - (pin.vy || 0)) * ny;
+    const previous=game.battle?{vx:ball.vx,vy:ball.vy}:null;
     if (toward < 0) { ball.vx -= 1.48 * toward * nx; ball.vy -= 1.48 * toward * ny; }
-    Course.kick(ball, pin, nx, ny, game.time);
+    if(!Battle.disabled(game,pin))Course.kick(ball, pin, nx, ny, game.time);
+    if(game.battle)Battle.obstacleHit(game,ball,previous);
   }
   function resolveSegment(ball, segment) {
+    if(game.battle&&Battle.skipObstacle(ball,segment,game))return;
     if (segment.circle) { resolvePin(ball, { x: segment.x1, y: segment.y1, r: segment.radius, vx: segment.vx, vy: segment.vy }); return; }
     const dx = segment.x2 - segment.x1;
     const dy = segment.y2 - segment.y1;
@@ -585,11 +644,13 @@
     const surfaceVx = (segment.vx || 0) + (segment.rotating ? -segment.omega * (py - segment.cy) : 0);
     const surfaceVy = (segment.vy || 0) + (segment.rotating ? segment.omega * (px - segment.cx) : 0);
     const toward = (ball.vx - surfaceVx) * nx + (ball.vy - surfaceVy) * ny;
+    const previous=game.battle?{vx:ball.vx,vy:ball.vy}:null;
     if (toward < 0) { ball.vx -= 1.5 * toward * nx; ball.vy -= 1.5 * toward * ny; }
+    if(game.battle)Battle.obstacleHit(game,ball,previous);
   }
   function resolveBallPairs(balls) {
     if (balls.length < 2) return;
-    const cellSize = Math.max(12, balls[0].r * 2.2);
+    const cellSize = Math.max(12, Math.max(...balls.map(b=>b.baseR??b.r)) * 2.2);
     const buckets = new Map();
     for (const ball of balls) {
       const cx = Math.floor(ball.x / cellSize);
@@ -609,6 +670,7 @@
     }
   }
   function collideBalls(a, b) {
+    if(game?.battle&&Battle.skipPair(a,b,game))return;
     const dx = b.x - a.x;
     const dy = b.y - a.y;
     const min = a.r + b.r;
@@ -627,6 +689,7 @@
       a.vx -= impulse * nx * inverseA; a.vy -= impulse * ny * inverseA;
       b.vx += impulse * nx * inverseB; b.vy += impulse * ny * inverseB;
     }
+    if(game?.battle)Battle.contact(game,a,b,nx,ny);
   }
 
   function finishRace() {
@@ -636,7 +699,7 @@
     $('#raceStatus').textContent = '모든 구슬이 결승선을 통과했어요!';
     const loser = game.order[game.order.length - 1];
     $('#coffeeWinner').textContent = `#${loser.id} ${loser.label}`;
-    $('#resultSubtitle').textContent = `${new Set(game.balls.map(ball => ball.name)).size}명 · 구슬 ${game.order.length}개 모두 완주한 ${MAPS[game.map].label} 경기 · ${game.keeper.name}의 마지막 통과자예요.`;
+    $('#resultSubtitle').textContent = `${new Set(game.balls.map(ball => ball.name)).size}명 · 구슬 ${game.order.length}개 모두 완주한 ${MAPS[game.map].label}${game.battle?' 능력 배틀':''} 경기 · ${game.keeper.name}의 마지막 통과자예요.`;
     $('#resultMapLabel').textContent = MAPS[game.map].label;
     $('#goldenResult').hidden = !game.golden;
     if (game.golden) $('#goldenResult').textContent = '★ 이번 황금구슬 · #' + game.golden.ball.id + ' ' + game.golden.ball.originalLabel + ' · ' + game.golden.ability.name;
@@ -647,7 +710,7 @@
       if (index === game.order.length - 1) item.classList.add('last-place');
       const rank = document.createElement('span'); rank.className = 'rank-badge'; rank.textContent = String(index + 1);
       const bead = document.createElement('i'); bead.className = 'ranking-bead'; Roster.styleBead(bead, ball);
-      const name = document.createElement('span'); name.className = 'rank-name'; name.textContent = `#${ball.id} ${ball.label}`; name.title = name.textContent;
+      const name = document.createElement('span'); name.className = 'rank-name'; fillRaceName(name,ball);
       item.append(rank, bead, name);
       if (index === game.order.length - 1) {
         const note = document.createElement('span'); note.className = 'rank-note'; note.textContent = '☕ 커피 당첨'; item.append(note);
@@ -675,7 +738,7 @@
       const li = document.createElement('li');
       const rank = document.createElement('span'); rank.className = 'rank-number'; rank.textContent = String(index + 1);
       const bead = document.createElement('i'); bead.className = 'mini-bead'; Roster.styleBead(bead, ball);
-      const name = document.createElement('span'); name.className = 'order-name'; name.textContent = `#${ball.id} ${ball.label}`; name.title = name.textContent;
+      const name = document.createElement('span'); name.className = 'order-name'; fillRaceName(name,ball);
       li.append(rank, bead, name); fragment.append(li);
     });
     list.append(fragment);
@@ -684,9 +747,13 @@
     $('#cameraStatus').textContent = camera.label + (section ? ' · ' + section[1] : ' · 출발 구간');
     $('#cameraBadge').textContent = camera.label;
     $('#cameraZoomLabel').textContent = camera.mode === 'overview' ? '전체' : camera.zoom.toFixed(1) + '×';
+    if(game.battle) {
+      const log=game.battle.logs.at(-1);$('#battleFeed').textContent=log&&game.time-log.time<3?log.text:'⚔ 능력 배틀 · 내 구슬 능력 버튼으로 확인';
+      for(const ball of game.balls) {const label='#'+ball.id+' '+ballLabel(ball);if(ball.battle.optionText!==label){$('#cameraSelect option[value="ball:'+ball.id+'"]').textContent=label;ball.battle.optionText=label;}}
+    }
     if (game.selectedBall) {
       const ball = game.balls.find((item) => item.id === game.selectedBall);
-      if (ball) $('#beadInfo').textContent = `구슬 #${ball.id} · ${ball.label}${ball.finished ? ' — 결승선 통과!' : game.introRemaining > 0 || game.countdownRemaining > 0 ? ' — 출발 준비' : ' — 달리는 중'}`;
+      if (ball) $('#beadInfo').textContent = game.battle?Battle.describe(ball,game.time):`구슬 #${ball.id} · ${ball.label}${ball.finished ? ' — 결승선 통과!' : game.introRemaining > 0 || game.countdownRemaining > 0 ? ' — 출발 준비' : ' — 달리는 중'}`;
     }
   }
 
@@ -697,7 +764,7 @@
     }
     const group = document.createElement('optgroup'); group.label = '참가자 추적';
     balls.forEach(ball => {
-      const option = document.createElement('option'); option.value = 'ball:' + ball.id; option.textContent = '#' + ball.id + ' ' + ball.label; group.append(option);
+      const option = document.createElement('option'); option.value = 'ball:' + ball.id; option.textContent = '#' + ball.id + ' ' + ballLabel(ball); group.append(option);
     });
     cameraSelect.append(group); cameraSelect.value = 'auto';
   }
@@ -945,6 +1012,7 @@
         grad.addColorStop(0, tones[0]); grad.addColorStop(1, tones[1]); ctx.fillStyle = grad; ctx.fill();
         if (pin.ring || pin.moving) { ctx.strokeStyle = pin.moving ? '#4d6fa4' : '#a976b3'; ctx.lineWidth = 4; ctx.stroke(); }
         Course.drawPinSymbol(ctx, pin, game.time);
+        if(Battle.disabled(game,pin)||Battle.frozen(game,pin.machineKey)){ctx.strokeStyle='#74bdd3';ctx.lineWidth=3;ctx.stroke();ctx.fillStyle='#286b91';ctx.font='bold 15px sans-serif';ctx.textAlign='center';ctx.fillText('Ⅱ',pin.x,pin.y-pin.r-5);}
       }
     }
     const segments = game.static.segments.concat(movingSegments(game.time));
@@ -957,12 +1025,14 @@
       }
       ctx.lineCap = 'round'; ctx.lineWidth = (segment.radius ?? 4.5) * 2;
       ctx.strokeStyle = segment.goalkeeper ? '#c64e63' : segment.defender ? '#42678f' : segment.sliding ? '#557faf' : segment.diamond ? '#9573a9' : segment.rotating ? '#bf7545' : (segment.funnel ? '#c58b58' : '#ba946c');
+      if(Battle.frozen(game,segment.machineKey))ctx.strokeStyle='#68b3d2';
       ctx.beginPath(); ctx.moveTo(segment.x1, segment.y1); ctx.lineTo(segment.x2, segment.y2); ctx.stroke();
       ctx.lineWidth = Math.min(3, (segment.radius ?? 4.5) * 0.65); ctx.strokeStyle = segment.goalkeeper ? '#ffbec9' : segment.sliding ? '#b1d2f2' : segment.diamond ? '#dfc4ec' : segment.rotating ? '#f1bb79' : '#e0c09a'; ctx.stroke();
       if (segment.rotating) for (const [x, y] of [[segment.x1, segment.y1], [segment.x2, segment.y2]]) {
         ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2); ctx.fillStyle = '#8b5437'; ctx.fill();
       }
     }
+    if(game.battle)Battle.drawWorld(ctx,game,camera);
     for (const ball of game.balls) {
       if (ball.finished) continue;
       if (ball.y + ball.r < camera.top || ball.y - ball.r > camera.top + camera.visibleHeight) continue;
@@ -1005,6 +1075,7 @@
       ctx.font = `800 ${Math.max(5.5, Math.min(9, r * .82))}px sans-serif`;
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText(String(ball.id), ball.x, ball.y + .3, r * 1.65);
+      if(game.battle)Battle.drawBall(ctx,ball,game,camera);
     }
     ctx.restore();
     drawOuterWalls();
@@ -1029,5 +1100,6 @@
   }
 
   queueSetupSync();
+  updateMode();
   selectMap(selectedMap);
 })();
