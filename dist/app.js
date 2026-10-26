@@ -217,8 +217,10 @@
   function selectMap(map) {
     if (!MAPS[map]) return;
     selectedMap = map;
-    const descriptions={factory:'푸른 벨트는 앞으로, 주황 벨트는 거슬러 밀어요. 자석·피스톤·분배 게이트를 통과하세요.',rapids:'갈래 물길과 간헐적 교차 급류, 바위섬에서 경로가 나뉘어요. 잔잔한 쉼 구간과 출구에서는 물살이 멈춰요.',ruins:'내구도가 다른 석벽과 자석·낙석·흔들다리를 피하세요. 초록 스위치에 닿으면 석문이 3초간 열려요.'};
+    const descriptions={factory:'입고·압착·역주행·분류·교차·최종 검수, 구간마다 다른 설비를 통과해요.',rapids:'완만한 상류에서 분기·소용돌이·바위섬·합류를 거쳐 마지막 협곡으로 내려가요.',ruins:'석주 정원에서 붕괴 회랑·흔들다리·스위치 석문·낙석 신전을 지나 봉인 출구로 향해요.'};
     $('#mapMechanicHelp').textContent=descriptions[map]||'';$('#mapMechanicHelp').hidden=!descriptions[map];
+    $('#sectionGuide').hidden=!Extra.has(map);$('#sectionPlanList').replaceChildren();
+    for(const [name,primary,secondary] of Extra.sectionPlans[map]||[]){const item=document.createElement('li'),title=document.createElement('strong'),text=document.createElement('span');title.textContent=name;text.textContent=primary+' · '+secondary;item.append(title,text);$('#sectionPlanList').append(item);}
     document.querySelectorAll('.map-card').forEach((card) => {
       const selected = card.dataset.map === map;
       card.classList.toggle('selected', selected);
@@ -412,7 +414,7 @@
       game.selectedBall = golden.ball.id;
     }
     $('#keeperLabel').textContent = '이번 골키퍼 · ' + game.keeper.name;
-    $('#hazardKey').textContent=game.map==='factory'?'⇄ 순방향·역방향 벨트 · Ⓜ 자석 · ▣ 피스톤 · ◀▶ 게이트':game.map==='rapids'?'↔ 급류 · ↻ 소용돌이 · Ⓜ 자석 · ● 징검바위':game.map==='ruins'?'▱ 석벽 · Ⓜ 자석 · ▼ 낙석 · ⌁ 흔들다리 · ◆ 스위치':'⚡ 파워 범퍼 · Ⓜ 자석 · ↔ 바람 · ◆ 수비수';
+    $('#hazardKey').textContent=game.map==='factory'?'⇄ 순방향·역방향 벨트 · Ⓜ 자석 · ▣ 압착판 · ◀▶ 분류문':game.map==='rapids'?'↔ 급류 · ↻ 소용돌이 · Ⓜ 자석 · ● 바위섬':game.map==='ruins'?'▱ 석벽 · Ⓜ 자석 · ▼ 낙석 · ⌁ 흔들다리 · ◆ 스위치':'⚡ 파워 범퍼 · Ⓜ 자석 · ↔ 바람 · ◆ 수비수';
     $('#raceTitle').textContent = MAPS[selectedMap].title+(game.mode==='battle'?' · 능력 배틀':'');
     $('#openBattleAbilities').hidden=!game.battle;$('#battleFeed').hidden=!game.battle;
     $('#battleFeed').textContent=game.battle?(game.mode==='battle'?'⚔ 능력 배틀':'★ 황금구슬 능력')+' · 구슬을 눌러 능력 확인':'';

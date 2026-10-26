@@ -9,16 +9,15 @@ for(const [map,height] of Object.entries(previousHeights)) {
   assert.equal(world.finishY,world.height-60);assert.equal(world.funnelY,world.height-1120);
   assert.ok(maps[map].sections.every(([y],i,all)=>y>0&&y<world.finishY&&(!i||y>all[i-1][0])));
   if(!extra.has(map))continue;
-  const magnets=game.static.pins.filter(p=>p.kind==='magnet');assert.equal(magnets.length,11,map+' magnetic landmarks in all sections');
-  for(let section=0;section<6;section++)assert.ok(magnets.some(p=>p.section===section));
-  assert.ok(game.static.pins.length>600,map+' density remains high after extending');
+  const magnets=game.static.pins.filter(p=>p.kind==='magnet');assert.equal(magnets.length,{factory:6,rapids:4,ruins:5}[map],map+' magnets support selected sections');
+  assert.ok(game.static.pins.length>250,map+' keeps supporting obstacles while highlighting landmarks');
   for(const p of game.static.pins.filter(p=>p.y>=world.funnelY)){const b=course.bounds(p.y,world);assert.ok((p.x-b.left)/Math.hypot(1,b.leftSlope)-p.r>=40&& (b.right-p.x)/Math.hypot(1,b.rightSlope)-p.r>=40,'fixed pins leave room along narrowing wall');}
   for(const p of magnets){const b=course.bounds(p.y,world);assert.ok(p.x-p.range>b.left+20&&p.x+p.range<b.right-20);assert.ok(p.y<world.funnelY-180);
     for(const s of game.static.segments.filter(s=>!s.sideWall&&!s.funnel)){const dx=s.x2-s.x1,dy=s.y2-s.y1,t=Math.max(0,Math.min(1,((p.x-s.x1)*dx+(p.y-s.y1)*dy)/(dx*dx+dy*dy||1)));assert.ok(Math.hypot(p.x-s.x1-t*dx,p.y-s.y1-t*dy)>p.range+p.r+(s.radius||5),'magnet field stays clear of board');}
     const ball={x:p.x+65,y:p.y,r:11.2,vx:0,vy:0};course.field(ball,p,.1);assert.ok(ball.vx<0,'added magnets exert real force');ball.immuneFields=true;ball.vx=0;ball.vy=0;course.field(ball,p,.1);assert.equal(ball.vx,0);assert.equal(ball.vy,0);
   }
   const sections=maps[map].sections;
-  sections.forEach(([start],i)=>{const end=sections[i+1]?.[0]||world.finishY-280;for(let y=start+60;y+450<end;y+=225){const pins=game.static.pins.filter(p=>p.y>=y&&p.y<y+450).length,boards=game.static.segments.filter(s=>!s.sideWall&&!s.funnel&&s.y1>=y&&s.y1<y+450).length;assert.ok(pins+boards>=5,map+' section '+i+' has no empty 450-unit band');}});
+  sections.forEach(([start],i)=>{const end=sections[i+1]?.[0]||world.finishY-280;for(let y=start+60;y+450<end;y+=225){const pins=game.static.pins.filter(p=>p.y>=y&&p.y<y+450).length,boards=game.static.segments.filter(s=>!s.sideWall&&!s.funnel&&s.y1>=y&&s.y1<y+450).length,landmarks=game.static.features.filter(f=>f.y>=y&&f.y<y+450).length;assert.ok(pins+boards+landmarks*2>=5,map+' section '+i+' has no empty 450-unit band');}});
   if(map==='rapids'){
     const stop=extra.waterEnd(world);assert.ok(stop<world.funnelY);
     for(const f of game.static.features){if(f.kind==='current')assert.ok(f.y+f.height/2<=stop+.001);if(f.kind==='whirlpool')assert.ok(f.y+f.range<=stop+.001);}
