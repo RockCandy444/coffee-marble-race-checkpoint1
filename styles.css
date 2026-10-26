@@ -65,7 +65,11 @@ button:focus-visible, select:focus-visible { outline: 3px solid #478879; outline
   #miniMap { height: 110px; width: 37px; }
 }
 
-#miniMap { pointer-events: auto; cursor: pointer; touch-action: manipulation; }
+#miniMap { pointer-events: auto; cursor: grab; touch-action: none; }
+#miniMap.is-dragging { cursor: grabbing; }
+.race-speed { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; font-size: 12px; color: #785d45; font-weight: 700; }
+.race-speed select { min-width: 60px; min-height: 34px; padding: 4px 6px; border: 1px solid #e5d5bd; border-radius: 8px; background: #fffdf8; font: inherit; color: inherit; }
+@media (max-width: 680px) { body.race-active .race-heading { flex-wrap: wrap; gap: 6px; } .race-tools { flex-wrap: wrap; } }
 #miniMap:focus-visible { outline: 3px solid #e78642; outline-offset: 2px; }
 #raceCanvas { cursor: grab; touch-action: none; }
 #raceCanvas.is-dragging { cursor: grabbing; }

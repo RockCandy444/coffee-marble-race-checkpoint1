@@ -1,0 +1,51 @@
+const fs=require('node:fs'),path=require('node:path');
+let harness=fs.readFileSync(path.join(__dirname,'physics-smoke.cjs'),'utf8').split('// Manual camera movement')[0];
+harness=harness.replace('addEventListener() {}','addEventListener(type,callback) { (this.handlers ??= {})[type]=callback; }');
+harness=harness.replace('window.simulationTest = {','drawTrack=()=>{}; window.simulationTest = {');
+harness=harness.replace('step: physicsStep,','view() { return camera; }, step: physicsStep,');
+new Function('require','__dirname',harness+`
+const screen=elements.get('#raceCanvas'),mini=elements.get('#miniMap'),speed=elements.get('#raceSpeed'),capture=new Set();
+screen.getBoundingClientRect=()=>({left:20,top:30,width:600,height:400});
+mini.width=70;mini.height=210;mini.getBoundingClientRect=()=>({left:550,top:40,width:70,height:210});
+mini.setPointerCapture=id=>capture.add(id);mini.hasPointerCapture=id=>capture.has(id);
+mini.releasePointerCapture=id=>{capture.delete(id);mini.handlers.lostpointercapture({type:'lostpointercapture',pointerId:id});};
+const chooseSpeed=value=>{speed.value=String(value);speed.handlers.change();};
+for(const rate of [1,2,4]) {
+  seed=31;simulation.reset('rapids',100,0);const g=simulation.state().game;
+  chooseSpeed(rate);g.introRemaining=0;
+  simulation.frame(1000);simulation.frame(1080);
+  assert.ok(Math.abs(g.countdownRemaining-2.92)<1e-6,'countdown stays real-time at '+rate+'x');
+  g.countdownRemaining=0;g.goRemaining=0;
+  for(let i=1;i<=20;i++)simulation.frame(1080+i*1000/60);
+  assert.ok(Math.abs(g.time-rate/3)<=1/120+.00001,'simulation advances at chosen rate '+rate);
+  const duration=g.time,positions=g.balls.map(b=>[b.x,b.y,b.vx,b.vy]);
+  seed=31;simulation.reset('rapids',100,0);
+  for(let step=0;step<Math.round(duration*120);step++)simulation.step(1/120);
+  assert.deepEqual(simulation.state().game.balls.map(b=>[b.x,b.y,b.vx,b.vy]),positions,'fast-forward uses identical fixed collision steps');
+}
+simulation.reset('ruins',2,0);let g=simulation.state().game;g.countdownRemaining=0;g.introRemaining=0;
+chooseSpeed(4);simulation.frame(1000);simulation.frame(1080);
+assert.ok(g.time>.3&&g.time<=.32+.00001,'four-speed long frame drains its full fixed-step budget');
+g.paused=true;const heldTime=g.time;simulation.frame(1160);assert.equal(g.time,heldTime);
+g.paused=false;chooseSpeed(2);simulation.frame(1180);assert.ok(g.time>heldTime&&g.time-heldTime<=.05,'resume and speed changes do not add a time jump');
+chooseSpeed(99);assert.equal(speed.value,'1');
+simulation.reset('ruins',2,0);assert.equal(speed.value,'1','rematch resets to normal speed');
+const camera=simulation.view(),before=simulation.state().game.balls.map(b=>[b.x,b.y,b.vx,b.vy]);
+function pointer(type,id,x,y,button=0) {mini.handlers[type]({type,pointerId:id,button,clientX:x,clientY:y,preventDefault(){}});}
+camera.mode='overview';camera.update(simulation.state().game,simulation.state().world,600,400,1);
+pointer('pointerdown',1,570,90);assert.equal(camera.mode,'manual');assert.equal(camera.zoom,1);assert.equal(capture.size,1);
+const firstY=camera.y;pointer('pointermove',1,600,180);assert.ok(camera.y>firstY+2000,'held minimap pointer moves the viewport continuously');
+const firstX=camera.x;pointer('pointerdown',2,560,50);assert.equal(capture.size,1,'second touch cannot steal drag');
+pointer('pointermove',2,550,40);assert.equal(camera.x,firstX);
+pointer('pointermove',1,900,900);assert.ok(Number.isFinite(camera.x)&&Number.isFinite(camera.y),'captured pointer outside minimap clamps at course bounds');
+pointer('pointerup',1,900,900);assert.equal(capture.size,0);const stopped=camera.y;
+pointer('pointermove',1,560,50);assert.equal(camera.y,stopped,'released pointer no longer pans');
+pointer('pointerdown',3,580,150);pointer('pointercancel',3,580,150);assert.equal(capture.size,0);
+pointer('pointerdown',4,580,150);mini.handlers.lostpointercapture({type:'lostpointercapture',pointerId:4});capture.delete(4);
+const lost=camera.y;pointer('pointermove',4,580,200);assert.equal(camera.y,lost);
+pointer('pointerdown',5,580,100);elements.get('#cameraReset').handlers.click();assert.equal(capture.size,0);assert.equal(camera.mode,'auto');
+pointer('pointerdown',6,580,100);elements.get('#changeRaceSetup').handlers.click();assert.equal(capture.size,0);
+assert.deepEqual(simulation.state().game.balls.map(b=>[b.x,b.y,b.vx,b.vy]),before,'minimap cannot change physics');
+simulation.reset('ruins',2,0);pointer('pointerdown',7,580,100);elements.get('#restartDuringRace').handlers.click();assert.equal(capture.size,0);
+console.log('Race controls: 1/2/4x fixed-step equivalence, real countdown, slow frame, pause/resume, reset; minimap drag, capture, bounds, cancellation, navigation and camera reset passed');
+`)(require,__dirname);

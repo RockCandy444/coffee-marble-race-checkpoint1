@@ -149,6 +149,9 @@
         </div>
         <div class="race-tools">
           <span id="raceProgress" class="progress-pill">0 / 2 도착</span>
+          <label class="race-speed" for="raceSpeed">배속
+            <select id="raceSpeed" aria-label="경기 배속"><option value="1">1배</option><option value="2">2배</option><option value="4">4배</option></select>
+          </label>
           <button id="pauseRace" class="button button-small button-soft" type="button">일시 정지</button>
         </div>
       </div>
@@ -168,7 +171,7 @@
         <div class="track-column">
           <div class="canvas-wrap">
             <canvas id="raceCanvas" width="1000" height="600" aria-label="구슬 경주 중계 화면. 구슬을 누르면 추적하고, 한 손가락으로 이동하며 두 손가락으로 확대·축소합니다." role="img"></canvas>
-            <canvas id="miniMap" width="70" height="210" aria-label="미니맵: 클릭하여 카메라 이동, 방향키로 조정" role="button" tabindex="0"></canvas>
+            <canvas id="miniMap" width="70" height="210" aria-label="미니맵: 클릭하거나 드래그하여 카메라 이동, 방향키로 조정" role="button" tabindex="0"></canvas>
             <div id="cameraBadge" class="camera-badge">AUTO · 자동 중계</div>
             <div id="keeperLabel" class="keeper-label"></div>
             <div id="goldenBadge" class="golden-badge" hidden></div>

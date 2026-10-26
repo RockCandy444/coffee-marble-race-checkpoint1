@@ -95,6 +95,30 @@
         if(section===5)stoneGate(.66,.5);
       }
     });
+    // Break uninterrupted bank routes with downhill spurs and near-bank rocks.
+    // Keep the final chapter intact and leave each chapter's main mechanism clear.
+    if(map==='rapids'||map==='ruins')sections.slice(0,5).forEach(([start],section)=>{
+      const end=sections[section+1][0],span=end-start;
+      for(const left of [true,false])for(let k=0;k<8;k++){
+        const attached=k%3===0,baseY=start+150+(span-340)*(k+.25+(left?0:.3))/8;
+        for(const dy of [0,45,-45,90,-90,135,-135,180,-180,225,-225]){
+          const y=baseY+dy;if(y<start+90||y>end-100)continue;
+          const b=Course.bounds(y,world),radius=22+(k+section)%3*5;
+          const gap=25+(k+section)%3*9,x=left?b.left+(radius+gap)*Math.hypot(1,b.leftSlope):b.right-(radius+gap)*Math.hypot(1,b.rightSlope);
+          if(features.some(f=>['press','gate','stoneGate','bridge'].includes(f.kind)&&Math.abs(f.y-y)<(attached?180:125)))continue;
+          if(attached){
+            const drop=65+(k+section)%3*15,b2=Course.bounds(y+drop,world),length=105+(k+section)%3*18;
+            const s={x1:left?b.left:b.right,y1:y,x2:left?Math.max(b.left,b2.left)+length:Math.min(b.right,b2.right)-length,y2:y+drop,radius:5.5,section,bankObstacle:true,bankSide:left?'left':'right',wallAttached:true,riverLog:map==='rapids',ancient:map==='ruins'};
+            const samples=[0,.25,.5,.75,1].map(t=>({x:s.x1+(s.x2-s.x1)*t,y:s.y1+(s.y2-s.y1)*t}));
+            if(samples.some((p,i)=>{const bounds=Course.bounds(p.y,world);return i>0&&(p.x<bounds.left+s.radius||p.x>bounds.right-s.radius);}))continue;
+            if(samples.some(p=>segments.some(o=>distance(p.x,p.y,o)<s.radius+o.radius+65)||pins.some(o=>Math.hypot(p.x-o.x,p.y-o.y)<o.r+s.radius+60)))continue;
+            segments.push(s);break;
+          }
+          if(segments.some(s=>distance(x,y,s)<radius+s.radius+65)||pins.some(p=>Math.hypot(x-p.x,y-p.y)<radius+p.r+45))continue;
+          pins.push({x,y,r:radius,section,bankObstacle:true,bankSide:left?'left':'right',riverRock:map==='rapids',ancient:map==='ruins'});break;
+        }
+      }
+    });
     if(map==='rapids')for(let i=features.length-1;i>=0;i--){const f=features[i];if(f.kind==='current'){if(f.y>=waterEnd(world)){features.splice(i,1);continue;}f.height=Math.min(f.height,2*(waterEnd(world)-f.y));}if(f.kind==='whirlpool')f.y=Math.min(f.y,waterEnd(world)-f.range);}
     const clear=(x,y,r)=>{
       const b=Course.bounds(y,world),wallGap=y>=world.funnelY?40:28;

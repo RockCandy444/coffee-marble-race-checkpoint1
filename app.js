@@ -42,10 +42,11 @@
   let frameId = 0;
   let previousFrame = 0;
   let accumulator = 0;
+  let raceSpeed = 1;
   const camera = new window.RaceCamera();
   let canvasDpr = 1;
   const cameraSelect = $('#cameraSelect');
-  const cameraHint = '두 손가락·휠로 확대·축소 · 드래그로 이동 · 미니맵으로 구간 선택';
+  const cameraHint = '두 손가락·휠로 확대·축소 · 드래그로 이동 · 미니맵 클릭·드래그로 구간 선택';
   let normalGoldenEnabled = $('#goldenEnabled').checked;
   let modeWasBattle = false;
   function updateMode() {
@@ -425,6 +426,7 @@
     $('#liveFooter').textContent = '아직 결승선을 통과한 구슬이 없어요.';
     $('#recoveryControls').hidden = true;
     $('#pauseRace').textContent = '일시 정지';
+    raceSpeed = 1; $('#raceSpeed').value = '1';
     setStage('race');
     resizeCanvas();
     previousFrame = 0;
@@ -438,6 +440,11 @@
   $('#restartDuringRace').addEventListener('click', setUpRace);
   $('#rematch').addEventListener('click', setUpRace);
   $('#newSetup').addEventListener('click', () => setStage('setup'));
+  $('#raceSpeed').addEventListener('change', () => {
+    const value = Number($('#raceSpeed').value);
+    raceSpeed = [1, 2, 4].includes(value) ? value : 1;
+    $('#raceSpeed').value = String(raceSpeed);
+  });
   $('#pauseRace').addEventListener('click', () => {
     if (!game || game.autoPaused) return;
     game.paused = !game.paused;
@@ -499,9 +506,9 @@
       if (game.countdownRemaining === 0) game.goRemaining = 0.6;
     } else if (!game.paused) {
       game.goRemaining = Math.max(0, game.goRemaining - elapsed);
-      accumulator += elapsed;
+      accumulator += elapsed * raceSpeed;
       let iterations = 0;
-      while (accumulator >= FIXED_DT && iterations < 10 && !game.paused) {
+      while (accumulator >= FIXED_DT && iterations < 40 && !game.paused && stage === 'race') {
         physicsStep(FIXED_DT);
         accumulator -= FIXED_DT;
         iterations++;
@@ -843,8 +850,10 @@
   }
   let cameraDrag = null;
   let cameraPinch = null;
+  let miniMapPointer = null;
   const cameraPointers = new Map();
   function clearCameraGesture() {
+    clearMiniMapGesture();
     const ids = [...cameraPointers.keys()];
     cameraPointers.clear(); cameraDrag = null; cameraPinch = null;
     canvas.classList.remove('is-dragging');
@@ -916,13 +925,32 @@
   }
   for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) canvas.addEventListener(type, endCameraDrag);
   const miniMap = $('#miniMap');
-  miniMap.addEventListener('click', event => {
-    if (!game) return;
+  function moveFromMiniMap(event) {
+    if (stage !== 'race' || !game) return;
     const rect = miniMap.getBoundingClientRect();
     const x = ((event.clientX - rect.left) * miniMap.width / rect.width - 6) / (miniMap.width - 12) * WORLD.width;
     const y = ((event.clientY - rect.top) * miniMap.height / rect.height - 8) / (miniMap.height - 16) * WORLD.height;
     if (camera.mode === 'overview') camera.zoom = 1;
     camera.moveTo(x, y); manualView(); resizeCanvas();
+  }
+  function clearMiniMapGesture() {
+    if (miniMapPointer === null) return;
+    const id = miniMapPointer; miniMapPointer = null;
+    miniMap.classList.remove('is-dragging');
+    if (miniMap.hasPointerCapture(id)) miniMap.releasePointerCapture(id);
+  }
+  miniMap.addEventListener('pointerdown', event => {
+    if (stage !== 'race' || !game || event.button !== 0 || miniMapPointer !== null) return;
+    event.preventDefault(); miniMapPointer = event.pointerId;
+    miniMap.setPointerCapture(event.pointerId); miniMap.classList.add('is-dragging');
+    moveFromMiniMap(event);
+  });
+  miniMap.addEventListener('pointermove', event => {
+    if (miniMapPointer !== event.pointerId) return;
+    event.preventDefault(); moveFromMiniMap(event);
+  });
+  for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) miniMap.addEventListener(type, event => {
+    if (miniMapPointer === event.pointerId) clearMiniMapGesture();
   });
   miniMap.addEventListener('keydown', event => {
     if (!game || !['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Enter',' '].includes(event.key)) return;
