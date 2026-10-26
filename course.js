@@ -111,7 +111,7 @@
             if (!clear(x, y, r)) continue;
             if(map==='pinball'&&kind!=='power'&&segments.some(s=>!s.sideWall&&distanceToSegment(x,y,s)<150))continue;
             pins.push({ x, y, r, kind, bumper: true, section, kick: kind === 'power' ? 220 + k % 3 * 25 : 0,
-              range: kind === 'power' ? 0 : 120, strength: kind === 'magnet' ? 175 : 270, direction: (k + section) % 2 ? 1 : -1, defender: section === sections.length - 1 });
+              range: kind === 'power' ? 0 : 120, strength: kind === 'magnet' ? 420 : 270, direction: (k + section) % 2 ? 1 : -1, defender: section === sections.length - 1 });
             placed = true; break;
           }
           if (placed) break;
