@@ -217,7 +217,7 @@
   function selectMap(map) {
     if (!MAPS[map]) return;
     selectedMap = map;
-    const descriptions={factory:'벨트의 화살표 방향으로 밀려요. 피스톤과 분배 게이트의 타이밍을 노려보세요.',rapids:'물살과 소용돌이가 흐름을 바꿔요. 자석·바람 면역 구슬도 물살에는 밀려요.',ruins:'금이 간 석벽은 충돌이 쌓이면 부서져요. 열린 길은 다른 구슬도 이용하며 옆으로 돌아갈 수도 있어요.'};
+    const descriptions={factory:'청록 벨트는 앞으로, 붉은 벨트는 거슬러 밀어요. 피스톤 작업장과 분배 게이트를 통과하세요.',rapids:'교차 급류·삼중 소용돌이·양갈래 물살이 흐름을 바꿔요. 자석·바람 면역도 물살에는 밀려요.',ruins:'석벽마다 내구도가 달라요. 낙석과 흔들다리를 피하고 초록 스위치에 닿으면 석문이 3초간 열려요.'};
     $('#mapMechanicHelp').textContent=descriptions[map]||'';$('#mapMechanicHelp').hidden=!descriptions[map];
     document.querySelectorAll('.map-card').forEach((card) => {
       const selected = card.dataset.map === map;
@@ -343,7 +343,8 @@
       }
     }
     const diameter = (game.balls[0].baseR ?? game.balls[0].r) * 2;
-    result.push(...Course.defenders(time, WORLD), ...Course.goalkeeper(game.keeper, time, diameter, WORLD));
+    if(!Extra.has(game.map))result.push(...Course.defenders(time,WORLD));
+    result.push(...Course.goalkeeper(game.keeper, time, diameter, WORLD));
     return result;
   }
 
@@ -411,7 +412,7 @@
       game.selectedBall = golden.ball.id;
     }
     $('#keeperLabel').textContent = '이번 골키퍼 · ' + game.keeper.name;
-    $('#hazardKey').textContent=game.map==='factory'?'⇄ 운반 벨트 · ▣ 피스톤 · ◀▶ 분배 게이트':game.map==='rapids'?'↔ 물살 · ↻ 소용돌이 · ● 징검바위':game.map==='ruins'?'▱ 부서지는 석벽 · ⌁ 흔들다리 · ◀▶ 석문':'⚡ 파워 범퍼 · Ⓜ 자석 · ↔ 바람 · ◆ 수비수';
+    $('#hazardKey').textContent=game.map==='factory'?'⇄ 순방향·역방향 벨트 · ▣ 피스톤 · ◀▶ 분배 게이트':game.map==='rapids'?'↔ 급류 · ↻ 소용돌이 · ● 징검바위':game.map==='ruins'?'▱ 석벽 · ▼ 낙석 · ⌁ 흔들다리 · ◆ 석문 스위치':'⚡ 파워 범퍼 · Ⓜ 자석 · ↔ 바람 · ◆ 수비수';
     $('#raceTitle').textContent = MAPS[selectedMap].title+(game.mode==='battle'?' · 능력 배틀':'');
     $('#openBattleAbilities').hidden=!game.battle;$('#battleFeed').hidden=!game.battle;
     $('#battleFeed').textContent=game.battle?(game.mode==='battle'?'⚔ 능력 배틀':'★ 황금구슬 능력')+' · 구슬을 눌러 능력 확인':'';
@@ -629,7 +630,7 @@
     const toward = (ball.vx - (pin.vx || 0)) * nx + (ball.vy - (pin.vy || 0)) * ny;
     const previous=game.battle?{vx:ball.vx,vy:ball.vy}:null;
     if (toward < 0) { ball.vx -= 1.48 * toward * nx; ball.vy -= 1.48 * toward * ny; }
-    if(!Battle.disabled(game,pin))Course.kick(ball, pin, nx, ny, game.time);
+    if(!Battle.disabled(game,pin)){Course.kick(ball, pin, nx, ny, game.time);Extra.onPinContact(pin,ball,game);}
     if(game.battle)Battle.obstacleHit(game,ball,previous);
   }
   function resolveSegment(ball, segment) {
@@ -1028,6 +1029,7 @@
         grad.addColorStop(0, tones[0]); grad.addColorStop(1, tones[1]); ctx.fillStyle = grad; ctx.fill();
         if (pin.ring || pin.moving) { ctx.strokeStyle = pin.moving ? '#4d6fa4' : '#a976b3'; ctx.lineWidth = 4; ctx.stroke(); }
         Course.drawPinSymbol(ctx, pin, game.time);
+        Extra.drawPin(ctx,pin,game.time);
         if(Battle.disabled(game,pin)||Battle.frozen(game,pin.machineKey)){ctx.strokeStyle='#74bdd3';ctx.lineWidth=3;ctx.stroke();ctx.fillStyle='#286b91';ctx.font='bold 15px sans-serif';ctx.textAlign='center';ctx.fillText('Ⅱ',pin.x,pin.y-pin.r-5);}
       }
     }
