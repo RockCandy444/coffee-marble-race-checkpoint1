@@ -146,3 +146,4 @@ button:focus-visible, select:focus-visible { outline: 3px solid #478879; outline
   .battle-dialog { padding: 16px; }
   .battle-feed { top: 69px; left: 7px; font-size: 9px; padding: 5px 7px; max-width: calc(100% - 67px); }
 }
+.factory-visual,.rapids-visual,.ruins-visual{display:grid;place-items:center;font-size:30px}.factory-visual{background:linear-gradient(135deg,#dbe7ef,#ffdf9e)}.rapids-visual{background:linear-gradient(135deg,#d9f5e9,#b7dcef)}.ruins-visual{background:linear-gradient(135deg,#eee8cb,#cfdabc)}

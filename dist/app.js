@@ -8,6 +8,7 @@
     finishLeft: 335, finishRight: 665, funnelY: 1120, funnelKnee: 1370
   };
   const MAPS = {
+    ...window.ExtraCourses.definitions,
     pinball: { title: '핀볼 코스', label: '핀볼', height: 3600, sections: [[180, '핀 숲'], [800, '범퍼 정원'], [1400, '지그재그 슬라이드'], [2050, '링 범퍼'], [2630, '스윙 브리지'], [3030, '골키퍼 게이트']] },
     spinner: { title: '회전 장애물 코스', label: '회전 장애물', height: 3900, sections: [[190, '회전 날개'], [850, '엇갈린 회전문'], [1550, '더블 게이트'], [2150, '슬라이딩 블록'], [2800, '삼중 회전문'], [3330, '골키퍼 게이트']] },
     fork: { title: '갈림길 코스', label: '갈림길', height: 4200, sections: [[190, '첫 번째 갈림길'], [1050, '교차 합류'], [1650, '마지막 선택'], [2350, '다이아몬드 미로'], [3000, '움직이는 징검다리'], [3630, '골키퍼 게이트']] }
@@ -16,6 +17,7 @@
   const Roster = window.MarbleRoster;
   const Golden = window.GoldenMarble;
   const Battle = window.MarbleBattle;
+  const Extra = window.ExtraCourses;
   Object.values(MAPS).forEach(map => { map.height *= 2; map.sections = map.sections.map(([y, name]) => [y * 2, name]); });
   const $ = (selector) => document.querySelector(selector);
   const setupView = $('#setupView');
@@ -215,6 +217,8 @@
   function selectMap(map) {
     if (!MAPS[map]) return;
     selectedMap = map;
+    const descriptions={factory:'벨트의 화살표 방향으로 밀려요. 피스톤과 분배 게이트의 타이밍을 노려보세요.',rapids:'물살과 소용돌이가 흐름을 바꿔요. 자석·바람 면역 구슬도 물살에는 밀려요.',ruins:'금이 간 석벽은 충돌이 쌓이면 부서져요. 열린 길은 다른 구슬도 이용하며 옆으로 돌아갈 수도 있어요.'};
+    $('#mapMechanicHelp').textContent=descriptions[map]||'';$('#mapMechanicHelp').hidden=!descriptions[map];
     document.querySelectorAll('.map-card').forEach((card) => {
       const selected = card.dataset.map === map;
       card.classList.toggle('selected', selected);
@@ -242,6 +246,7 @@
   }
 
   function makeStaticObstacles(map) {
+    if(Extra.has(map)) {const result=Extra.build(map,WORLD,MAPS[map].sections,participants.length);result.segments.push(...finishFunnelSegments());return result;}
     const pins = [];
     const segments = [];
     if (map === 'pinball') {
@@ -318,6 +323,7 @@
   }
 
   function movingPins(time) {
+    if(Extra.has(game.map))return Extra.dynamic(game,WORLD,time).pins;
     if (game.map !== 'fork') return [];
     return [
       { x: 240, y: 3160, r: 20, amplitude: 100, speed: 0.85, phase: 0 },
@@ -328,6 +334,7 @@
 
   function movingSegments(time) {
     const result = rotatingSegments(time);
+    if(Extra.has(game.map))result.push(...Extra.dynamic(game,WORLD,time).segments);
     if (game.map === 'spinner') {
       for (const [y, center, length, radius, phase] of [[2280, 310, 190, 13, 0], [2530, 690, 290, 8, 1.8]]) {
         const machineKey='slider-'+y,t=Battle.timeFor(game,machineKey,time);
@@ -353,7 +360,7 @@
     WORLD.finishRight = WORLD.width / 2 + radius * 2.5;
     const columns = Math.min(n, 24, Math.max(1, Math.ceil(Math.sqrt(n * 4))));
     const rows = Math.ceil(n / columns);
-    const xSpacing = columns === 1 ? 0 : Math.min(42, 840 / (columns - 1));
+    const xSpacing = columns === 1 ? 0 : Math.min(42, (selectedMap==='rapids'?650:840) / (columns - 1));
     const ySpacing = rows === 1 ? 0 : Math.max(radius * 2 + 2, 12.5);
     const totalWidth = xSpacing * (columns - 1);
     const xStart = (WORLD.width - totalWidth) / 2;
@@ -404,6 +411,7 @@
       game.selectedBall = golden.ball.id;
     }
     $('#keeperLabel').textContent = '이번 골키퍼 · ' + game.keeper.name;
+    $('#hazardKey').textContent=game.map==='factory'?'⇄ 운반 벨트 · ▣ 피스톤 · ◀▶ 분배 게이트':game.map==='rapids'?'↔ 물살 · ↻ 소용돌이 · ● 징검바위':game.map==='ruins'?'▱ 부서지는 석벽 · ⌁ 흔들다리 · ◀▶ 석문':'⚡ 파워 범퍼 · Ⓜ 자석 · ↔ 바람 · ◆ 수비수';
     $('#raceTitle').textContent = MAPS[selectedMap].title+(game.mode==='battle'?' · 능력 배틀':'');
     $('#openBattleAbilities').hidden=!game.battle;$('#battleFeed').hidden=!game.battle;
     $('#battleFeed').textContent=game.battle?(game.mode==='battle'?'⚔ 능력 배틀':'★ 황금구슬 능력')+' · 구슬을 눌러 능력 확인':'';
@@ -520,6 +528,7 @@
       ball.prevY = ball.y;
       const fields = game.collisionBuckets.get(Math.floor(ball.y / 160))?.fields ?? [];
       ball.magnetGrace = Math.max(0, (ball.magnetGrace ?? 0) - dt);
+      Extra.apply(ball,game,WORLD,dt);
       for (const source of fields) { if(game.battle)Battle.field(game,ball,source,dt);else Course.field(ball, source, dt); }
       ball.vy += 178 * (ball.gravityScale ?? 1) * dt;
       ball.vx += Math.sin(game.time * 1.2 + ball.id * 2.1) * 3.5 * dt;
@@ -624,6 +633,7 @@
     if(game.battle)Battle.obstacleHit(game,ball,previous);
   }
   function resolveSegment(ball, segment) {
+    if(segment.broken)return;
     if(game.battle&&Battle.skipObstacle(ball,segment,game))return;
     if (segment.circle) { resolvePin(ball, { x: segment.x1, y: segment.y1, r: segment.radius, vx: segment.vx, vy: segment.vy }); return; }
     const dx = segment.x2 - segment.x1;
@@ -647,8 +657,10 @@
     const surfaceVx = (segment.vx || 0) + (segment.rotating ? -segment.omega * (py - segment.cy) : 0);
     const surfaceVy = (segment.vy || 0) + (segment.rotating ? segment.omega * (px - segment.cx) : 0);
     const toward = (ball.vx - surfaceVx) * nx + (ball.vy - surfaceVy) * ny;
+    if(Extra.onContact(segment,ball,game,toward))return;
     const previous=game.battle?{vx:ball.vx,vy:ball.vy}:null;
     if (toward < 0) { ball.vx -= 1.5 * toward * nx; ball.vy -= 1.5 * toward * ny; }
+    Extra.belt(segment,ball,game);
     if(game.battle)Battle.obstacleHit(game,ball,previous);
   }
   function resolveBallPairs(balls) {
@@ -938,7 +950,7 @@
     ctx.fillStyle = bg; ctx.fillRect(0, 0, WORLD.width, WORLD.height);
     ctx.fillStyle = '#fffdf8'; ctx.fillRect(16, 17, 968, WORLD.height - 32);
     MAPS[game.map].sections.forEach(([y, label], index) => {
-      ctx.fillStyle = ['#edf7ef', '#fff0dc', '#eef1fb', '#f9edfa', '#e6f4f3', '#fff1e8'][index];
+      ctx.fillStyle = (MAPS[game.map].colors||['#edf7ef', '#fff0dc', '#eef1fb', '#f9edfa', '#e6f4f3', '#fff1e8'])[index];
       ctx.fillRect(22, y, 956, (MAPS[game.map].sections[index + 1]?.[0] ?? WORLD.bottom) - y);
     });
     ctx.fillStyle = '#ecdfca';
@@ -1004,6 +1016,7 @@
     ctx.beginPath(); ctx.moveTo(outline[0].x, outline[0].y);
     outline.slice(1).forEach(point => ctx.lineTo(point.x, point.y));
     ctx.closePath(); ctx.clip();
+    Extra.drawWorld(ctx,game,WORLD,camera);
     {
       for (const pin of game.static.pins.concat(movingPins(game.time))) {
         if (pin.y + pin.r < camera.top || pin.y - pin.r > camera.top + camera.visibleHeight) continue;
@@ -1011,7 +1024,7 @@
         ctx.beginPath(); ctx.arc(pin.x + 1, pin.y + 2, pin.r + 1.2, 0, Math.PI * 2); ctx.fillStyle = 'rgba(96,65,36,.12)'; ctx.fill();
         ctx.beginPath(); ctx.arc(pin.x, pin.y, pin.r, 0, Math.PI * 2);
         const grad = ctx.createRadialGradient(pin.x - 2, pin.y - 2, 1, pin.x, pin.y, pin.r);
-        const tones = pin.kind === 'power' ? ['#fff6a8', '#ee7743'] : pin.kind === 'magnet' ? ['#ddd0ff', '#8160b4'] : pin.kind === 'wind' ? ['#c6f2f4', '#338c9f'] : pin.defender ? ['#b9d7ef', '#4a739a'] : pin.bumper ? ['#b8e6db', '#4f9483'] : ['#ffe6aa', '#bc8450'];
+        const tones = pin.kind === 'power' ? ['#fff6a8', '#ee7743'] : pin.kind === 'magnet' ? ['#ddd0ff', '#8160b4'] : pin.kind === 'wind' ? ['#c6f2f4', '#338c9f'] : pin.piston?['#d5e1e9','#52687a']:pin.riverRock?['#bfd9d7','#638a8a']:pin.ancient?['#dfd5ac','#8a9471']:pin.defender ? ['#b9d7ef', '#4a739a'] : pin.bumper ? ['#b8e6db', '#4f9483'] : ['#ffe6aa', '#bc8450'];
         grad.addColorStop(0, tones[0]); grad.addColorStop(1, tones[1]); ctx.fillStyle = grad; ctx.fill();
         if (pin.ring || pin.moving) { ctx.strokeStyle = pin.moving ? '#4d6fa4' : '#a976b3'; ctx.lineWidth = 4; ctx.stroke(); }
         Course.drawPinSymbol(ctx, pin, game.time);
@@ -1022,6 +1035,7 @@
     for (const segment of segments) {
       if (segment.sideWall || segment.funnel) continue;
       if (Math.max(segment.y1, segment.y2) + segment.radius < camera.top || Math.min(segment.y1, segment.y2) - segment.radius > camera.top + camera.visibleHeight) continue;
+      if(Extra.drawSegment(ctx,segment,game.time))continue;
       if (segment.circle) {
         ctx.strokeStyle = '#aa6a75'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(500, WORLD.finishY - 120); ctx.lineTo(segment.x1, segment.y1); ctx.stroke();
         ctx.beginPath(); ctx.arc(segment.x1, segment.y1, segment.radius, 0, Math.PI * 2); ctx.fillStyle = '#c94f67'; ctx.fill(); ctx.strokeStyle = '#ffbac8'; ctx.lineWidth = 2; ctx.stroke(); continue;

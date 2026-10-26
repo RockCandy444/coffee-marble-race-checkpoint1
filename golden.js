@@ -20,7 +20,7 @@
         const x = bounds.left + (bounds.right - bounds.left) * fraction;
         if (x - ball.r <= bounds.left + 12 || x + ball.r >= bounds.right - 12) continue;
         if (obstacles.pins.some(p => Math.hypot(x-p.x,y-p.y) <= ball.r+p.r+8)) continue;
-        if (obstacles.segments.some(s => segmentDistance(x,y,s) <= ball.r+(s.radius ?? 4.5)+10)) continue;
+        if (obstacles.segments.some(s => !s.broken&&segmentDistance(x,y,s) <= ball.r+(s.radius ?? 4.5)+10)) continue;
         if (balls.some(b=>b!==ball&&Math.hypot(x-b.x,y-b.y)<=ball.r+b.r+3)) continue;
         return {x,y};
       }

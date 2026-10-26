@@ -96,7 +96,7 @@
     const bounds=window.MarbleCourse.bounds(y,world);
     if(x-radius<=bounds.left+3||x+radius>=bounds.right-3)return false;
     if(game.static.pins.concat(env.pins).some(p=>Math.abs(p.y-y)<radius+p.r+5&&Math.hypot(p.x-x,p.y-y)<radius+p.r+5))return false;
-    if(game.static.segments.concat(env.segments).some(s=>y>Math.min(s.y1,s.y2)-radius-20&&y<Math.max(s.y1,s.y2)+radius+20&&segmentDistance(x,y,s)<radius+(s.radius||5)+5))return false;
+    if(game.static.segments.concat(env.segments).some(s=>!s.broken&&y>Math.min(s.y1,s.y2)-radius-20&&y<Math.max(s.y1,s.y2)+radius+20&&segmentDistance(x,y,s)<radius+(s.radius||5)+5))return false;
     return !game.balls.some(other=>other!==ball&&!other.finished&&!ignore.has(other.id)&&Math.hypot(other.x-x,other.y-y)<radius+other.r+3);
   }
   function spot(ball,game,env,advance=100) {

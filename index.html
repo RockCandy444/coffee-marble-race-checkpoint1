@@ -104,12 +104,25 @@
           <span class="map-card-copy"><strong>갈림길</strong><small>넓어지고 좁아지는 분기·다이아몬드 · 6구간 · 8,400m</small></span>
           <span class="map-check" aria-hidden="true">✓</span>
         </button>
+        <button class="map-card" data-map="factory" role="radio" aria-checked="false" type="button">
+          <span class="map-visual factory-visual" aria-hidden="true">🏭</span>
+          <span class="map-card-copy"><strong>컨베이어 공장</strong><small>벨트·피스톤·분배 게이트 · 6구간 · 7,600m</small></span><span class="map-check" aria-hidden="true">✓</span>
+        </button>
+        <button class="map-card" data-map="rapids" role="radio" aria-checked="false" type="button">
+          <span class="map-visual rapids-visual" aria-hidden="true">🌊</span>
+          <span class="map-card-copy"><strong>급류 계곡</strong><small>물살·소용돌이·징검바위 · 6구간 · 8,200m</small></span><span class="map-check" aria-hidden="true">✓</span>
+        </button>
+        <button class="map-card" data-map="ruins" role="radio" aria-checked="false" type="button">
+          <span class="map-visual ruins-visual" aria-hidden="true">🏛️</span>
+          <span class="map-card-copy"><strong>붕괴하는 유적</strong><small>부서지는 석벽·다리·석문 · 6구간 · 8,600m</small></span><span class="map-check" aria-hidden="true">✓</span>
+        </button>
       </div>
       <div class="mode-settings">
         <label for="raceMode">플레이 모드</label>
         <select id="raceMode"><option value="normal">일반 경주</option><option value="battle">능력 배틀 · 31종</option></select>
         <p id="modeHelp">기존 규칙으로 달리고, 황금구슬 이벤트를 선택할 수 있어요.</p>
       </div>
+      <p id="mapMechanicHelp" class="field-note" hidden></p>
       <details id="battleGuide" class="battle-guide" hidden>
         <summary>배틀 규칙과 능력 31종 보기</summary>
         <p>구슬마다 능력 하나를 무작위로 받아 자동 발동해요. 능력은 중복 배정될 수 있고 황금구슬은 함께 나오지 않아요. 방해 뒤에는 잠깐 보호돼요. 결승선 바로 앞은 안전 구간으로, 방해·위치 이동·크기 변경·장애물 통과를 제한해요.</p>
@@ -171,7 +184,7 @@
               <p id="goldenDescription"></p>
               <small>잠시 후 레이스가 시작돼요</small>
             </div>
-            <div class="hazard-key"><span>⚡ 파워 범퍼</span><span>Ⓜ 자석</span><span>↔ 바람</span><span>◆ 수비수</span></div>
+            <div class="hazard-key" id="hazardKey"><span>⚡ 파워 범퍼</span><span>Ⓜ 자석</span><span>↔ 바람</span><span>◆ 수비수</span></div>
           </div>
           <div class="track-legend">
             <span><i class="legend-start"></i> 출발</span>
@@ -232,6 +245,7 @@
   <script src="roster.js"></script>
   <script src="golden.js"></script>
   <script src="battle.js"></script>
+  <script src="maps.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

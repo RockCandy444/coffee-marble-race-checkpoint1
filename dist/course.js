@@ -20,6 +20,7 @@
   function configure(world, map) {
     world.funnelY = world.height - 1120;
     world.funnelKnee = world.height - 170;
+    if(window.ExtraCourses?.has(map)){window.ExtraCourses.configure(world,map);return;}
     world.sideProfile = Array.from({ length: 25 }, (_, i) => {
       const t = i / 24, y = world.funnelY * t;
       const entry = Math.min(1, y / 550);
