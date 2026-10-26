@@ -1,14 +1,21 @@
 (() => {
   'use strict';
   const definitions={
-    factory:{title:'컨베이어 공장 코스',label:'컨베이어 공장',height:3800,sections:[[180,'입고 벨트'],[820,'피스톤 작업장'],[1460,'역주행 운반로'],[2100,'분배 게이트'],[2740,'출하 라인'],[3250,'골키퍼 게이트']],colors:['#edf2f5','#fff0d9','#e7f0f4','#fff2d9','#e7eff0','#fff1e8']},
-    rapids:{title:'급류 계곡 코스',label:'급류 계곡',height:4100,sections:[[180,'계곡 입구'],[880,'굽이치는 급류'],[1580,'소용돌이 웅덩이'],[2280,'징검바위'],[2980,'합류하는 물살'],[3550,'골키퍼 게이트']],colors:['#e3f4f6','#dceff6','#dfe9f7','#e3f5ee','#d6f1f2','#e6f1ee']},
-    ruins:{title:'붕괴하는 유적 코스',label:'붕괴하는 유적',height:4300,sections:[[180,'유적의 입구'],[920,'금이 간 석벽'],[1660,'흔들리는 다리'],[2400,'고대 석문'],[3140,'무너지는 회랑'],[3750,'골키퍼 게이트']],colors:['#f1ecd9','#eee4d4','#e9e9d6','#eee1ce','#e6ead7','#fff0df']}
+    factory:{title:'컨베이어 공장 코스',label:'컨베이어 공장',height:3800,sections:[[180,'입고 벨트'],[820,'피스톤 작업장'],[1460,'역주행 운반로'],[2100,'분배 게이트'],[2740,'출하 라인'],[3250,'골키퍼 게이트']],colors:['#dfe7ed','#d1dde6','#e8e0ca','#d6e3e5','#cedce3','#e3ddd0'],theme:{backdrop:'#293b49',bank:'#435a69',wall:'#526c80',wallLight:'#b5c9d5',ink:'#3b5363',base:'#e1e9ee',end:'#cddae2',finish:'#c9a44a26'}},
+    rapids:{title:'급류 계곡 코스',label:'급류 계곡',height:4100,sections:[[180,'계곡 입구'],[880,'굽이치는 급류'],[1580,'소용돌이 웅덩이'],[2280,'징검바위'],[2980,'합류하는 물살'],[3550,'골키퍼 게이트']],colors:['#c5e9f0','#b4dfeb','#c0d9ed','#bce4db','#addce7','#cce5e3'],theme:{backdrop:'#34595d',bank:'#547a6b',wall:'#4b7475',wallLight:'#b1cec0',ink:'#305c68',base:'#ceeef0',end:'#a9d8df',finish:'#b7dcd426'}},
+    ruins:{title:'붕괴하는 유적 코스',label:'붕괴하는 유적',height:4300,sections:[[180,'유적의 입구'],[920,'금이 간 석벽'],[1660,'흔들리는 다리'],[2400,'고대 석문'],[3140,'무너지는 회랑'],[3750,'골키퍼 게이트']],colors:['#ddd9ca','#d3cabc','#dce0ce','#c9ccbc','#cfd6bf','#e0d7c4'],theme:{backdrop:'#565e50',bank:'#737665',wall:'#727d6a',wallLight:'#c6c7ac',ink:'#535e48',base:'#e2dfd0',end:'#c6ceba',finish:'#a7af7d26'}}
   };
   const has=map=>Object.hasOwn(definitions,map);
   const unit=seed=>{const n=Math.sin(seed*127.1+311.7)*43758.5453;return n-Math.floor(n);};
   const layouts={factory:['lanes','cluster','diagonal','islands','slalom','guard'],rapids:['banks','slalom','rings','islands','split','guard'],ruins:['arches','cluster','rings','slalom','diagonal','guard']};
   const waterEnd=world=>world.funnelY-80;
+  const clamp=(x,lo,hi)=>Math.max(lo,Math.min(hi,x));
+  function flowPulse(f,time){if(!f.pulsed)return 1;const phase=((time+f.offset)%f.period+f.period)%f.period;return Math.min(clamp(phase/.4,0,1),clamp((f.onTime-phase)/.4,0,1));}
+  function channelAt(f,lane,y,world){
+    const b=window.MarbleCourse.bounds(y,world),width=b.right-b.left,u=clamp((y-f.y)/f.height+.5,0,1),wave=u*Math.PI+f.phase;
+    const fraction=lane.fraction+Math.sin(wave)*.035+(u-.5)*lane.lean*.11;
+    return {x:b.left+width*fraction,halfWidth:width*lane.width,slope:width*(Math.cos(wave)*.035*Math.PI+lane.lean*.11)/f.height};
+  }
   function configure(world,map) {
     world.sideProfile=Array.from({length:25},(_,i)=>{
       const t=i/24,y=world.funnelY*t,entry=Math.min(1,y/500);
@@ -44,11 +51,24 @@
         if(section===3){feature('gate',.28);feature('gate',.82);}
         if(section===4||section===5)feature('gate',.68);
       } else if(map==='rapids') {
-        const bands=[3,4,2,3,5,2][section],strengths=[460,620,680,400,640,440];
-        for(let k=0;k<bands;k++)feature('current',.15+.66*k/Math.max(1,bands-1),{height:section===2?span*.75:150+unit(k+section)*130,direction:(section+k)%2?1:-1,strength:strengths[section],fraction:section===4?(k%2?.72:.28):.5});
-        const vortices=[1,2,4,2,3,1][section];
-        for(let k=0;k<vortices;k++)feature('whirlpool',.28+.43*k/Math.max(1,vortices-1),{range:section===5?125:180+unit(k+section)*55,direction:(section+k)%2?-1:1,fraction:vortices>1?(k%2?.72:.28):.5,power:section===2?1.25:1});
+        const positions=[[.14,.34,.79],[.12,.32,.69,.87],[.14,.34,.80],[.14,.34,.80],[.12,.31,.69,.88],[.14]][section];
+        for(const [k,fraction] of positions.entries()){
+          const direction=(section+k)%2?1:-1,split=(section+k)%2===0;
+          feature('current',fraction,{height:190+unit(k+section)*80,direction,strength:[440,540,580,420,560,400][section],phase:section+k*.8,pulsed:k%2===1||section===4,period:4.8+(section+k)%3*.8,onTime:2.6+(section%2)*.5,offset:unit(k+section*13)*5,
+            lanes:split?[{fraction:.25,width:.145,lean:direction},{fraction:.75,width:.145,lean:-direction}]:[{fraction:.23,width:.12,lean:1},{fraction:.5,width:.13,lean:direction*.5},{fraction:.77,width:.12,lean:-1}]});
+        }
+        const vortexPositions=[[.23],[.23,.74],[.22,.68,.86],[.24],[.23,.73],[]][section];
+        for(const [k,fraction] of vortexPositions.entries())feature('whirlpool',fraction,{range:145+unit(k+section)*35,direction:(section+k)%2?-1:1,fraction:k%2?.66:.36,power:section===2?1.1:1});
         if(section===0||section===1||section===3||section===5)addShelf(start+span*.57,section%2===0,section===5?150:230,{riverLog:true,section});
+        if(section<5){feature('calm',.51,{height:220});
+          for(let k=0;k<(section===3||section===4?2:1);k++){
+            const yf=k?.81:.51,xf=k?(section===3?.68:.28):[.32,.67,.42,.3,.62][section],r=43+unit(section+k)*13;
+            for(const dy of [0,-40,40,-100,100]){const y=start+span*yf+dy,b=Course.bounds(y,world),x=b.left+(b.right-b.left)*xf;
+              if(segments.some(s=>distance(x,y,s)<r+s.radius+60)||pins.some(p=>Math.hypot(x-p.x,y-p.y)<r+p.r+50))continue;
+              pins.push({x,y,r,section,riverRock:true,island:true});break;
+            }
+          }
+        }
       } else {
         const wallCount=[3,5,6,5,7,3][section];
         for(let k=0;k<wallCount;k++) {
@@ -86,7 +106,7 @@
         if(f.kind==='boulder'){const fb=Course.bounds(f.y,world),cx=(fb.left+fb.right)/2+Math.sin(f.section*2.3)*(fb.right-fb.left)*.23;return Math.abs(f.y-y)<f.height/2+65+r&&Math.abs(x-cx)<80+r;}
         return ['piston','gate','bridge','stoneGate'].includes(f.kind)&&Math.abs(f.y-y)<(f.kind==='bridge'?95:70)+r;
       }))return false;
-      return segments.every(s=>distance(x,y,s)>r+s.radius+48)&&pins.every(p=>Math.hypot(p.x-x,p.y-y)>p.r+r+25);
+      return segments.every(s=>distance(x,y,s)>r+s.radius+48)&&pins.every(p=>Math.hypot(p.x-x,p.y-y)>p.r+r+(p.island?50:25));
     };
     sections.forEach(([start],section)=>{
       const end=Math.min(sections[section+1]?.[0]||world.finishY-260,world.finishY-260),span=end-start,layout=layouts[map][section];
@@ -95,7 +115,7 @@
       for(let k=0;k<magnetCount;k++)for(let attempt=0;attempt<240;attempt++){
         const y=start+120+unit(attempt*17+k*331+section*941)*(magneticEnd-start-120),b=Course.bounds(y,world),x=b.left+155+unit(attempt*13+section*21+k)*(b.right-b.left-310),r=16+k*2;
         if(magneticEnd<=start+120||!clear(x,y,r))continue;
-        if(segments.some(s=>distance(x,y,s)<r+s.radius+130)||pins.some(p=>p.kind==='magnet'&&Math.hypot(x-p.x,y-p.y)<250))continue;
+        if(segments.some(s=>distance(x,y,s)<r+s.radius+130)||pins.some(p=>(p.kind==='magnet'&&Math.hypot(x-p.x,y-p.y)<250)||(p.island&&Math.hypot(x-p.x,y-p.y)<p.r+r+130)))continue;
         if(features.some(f=>{
           if(f.kind==='boulder'){const fb=Course.bounds(f.y,world),cx=(fb.left+fb.right)/2+Math.sin(f.section*2.3)*(fb.right-fb.left)*.23;return Math.abs(f.y-y)<f.height/2+195&&Math.abs(x-cx)<195;}
           return ['piston','gate','bridge','stoneGate'].includes(f.kind)&&Math.abs(f.y-y)<190;
@@ -165,16 +185,21 @@
   function apply(ball,game,world,dt) {
     if(game.map!=='rapids'||ball.y>=waterEnd(world))return;
     const Course=window.MarbleCourse;
-    let ax=0,ay=0;
+    if(game.static.features.some(f=>f.kind==='calm'&&Math.abs(ball.y-f.y)<f.height/2))return;
+    const banks=Course.bounds(ball.y,world),width=banks.right-banks.left,gap=Math.min(ball.x-banks.left,banks.right-ball.x)-(ball.r||0),t=clamp(gap/(width*.18),0,1),bankFade=t*t*(3-2*t);
+    let ax=0,ay=0,bankReturn=0;
     for(const f of game.static.features) {
       if(f.kind==='current'&&Math.abs(ball.y-f.y)<f.height/2) {
-        const b=Course.bounds(f.y,world),fraction=(ball.x-b.left)/(b.right-b.left);
-        if(f.section===4&&Math.abs(fraction-f.fraction)>.27)continue;
-        const strength=f.strength*(.85+.15*Math.sin(game.time*.9+f.section));
-        ax+=f.direction*strength;ay+=90;
+        const pulse=flowPulse(f,game.time),u=(ball.y-f.y)/f.height+.5;
+        // Bank eddies curl inward gently while the main current loses force at the edge.
+        bankReturn+=(ball.x<(banks.left+banks.right)/2?1:-1)*f.strength*.13*pulse*Math.sin(u*Math.PI)*(1-bankFade);
+        for(const lane of f.lanes){const c=channelAt(f,lane,ball.y,world),offset=(c.x-ball.x)/c.halfWidth;if(Math.abs(offset)>=1)continue;
+          const envelope=(1-offset*offset)*Math.sin(u*Math.PI),strength=f.strength*pulse*envelope;
+          ax+=(c.slope*.65+offset*.3)*strength;ay+=strength*.32;
+        }
       } else if(f.kind==='whirlpool'&&Math.abs(ball.y-f.y)<f.range) {
         const b=Course.bounds(f.y,world),cx=b.left+(b.right-b.left)*(f.fraction||.5),dx=ball.x-cx,dy=ball.y-f.y,d=Math.hypot(dx,dy);
-        if(d>1&&d<f.range){const factor=(1-d/f.range)*(f.power||1);ax+=(-dy/d*f.direction*470-dx/d*110)*factor;ay+=(dx/d*f.direction*170+120)*factor;}
+        if(d>1&&d<f.range){const factor=(1-d/f.range)*(f.power||1);ax+=(-dy/d*f.direction*330-dx/d*65)*factor;ay+=(dx/d*f.direction*100+110)*factor;}
       }
     }
     // Flow loses force at solid board surfaces, allowing gravity to release a marble
@@ -184,7 +209,7 @@
       if(s.sideWall||s.funnel||s.broken)continue;
       surfaceFade=Math.min(surfaceFade,Math.max(0,Math.min(1,(distance(ball.x,ball.y,s)-(ball.r||0)-(s.radius||4.5))/45)));
     }
-    ball.vx+=Math.max(-760,Math.min(760,ax))*surfaceFade*dt;ball.vy+=Math.max(-80,Math.min(260,ay))*surfaceFade*dt;
+    ball.vx+=(clamp(ax,-380,380)*bankFade+clamp(bankReturn,-85,85))*surfaceFade*dt;ball.vy+=clamp(ay,0,220)*surfaceFade*bankFade*dt;
   }
   function onContact(segment,ball,game,toward) {
     if(!segment.breakable||segment.broken)return false;
@@ -203,6 +228,28 @@
     pin.hits.set(ball.id,game.time);pin.flashUntil=game.time+.4;
     const gate=game.static.features.find(f=>f.key===pin.switchFor);if(gate)gate.openUntil=game.time+3;
   }
+  function pinTones(map,pin){
+    if(!has(map)||pin.kind)return null;
+    if(map==='factory')return pin.bumper?['#ffe2a3','#b28235']:pin.piston?['#edf5f8','#4d687d']:['#e6eef1','#6e8798'];
+    if(map==='rapids')return pin.island?['#c0d1c8','#4c6963']:pin.bumper?['#a9d8c6','#4e8b77']:['#c8dcdf','#597b80'];
+    return pin.bumper?['#d5dcba','#7d8c61']:['#e4dfcf','#7e8571'];
+  }
+  function drawTerrain(ctx,game,world,camera){
+    if(!has(game.map))return;ctx.save();
+    const outline=window.MarbleCourse.outline(world);ctx.beginPath();ctx.moveTo(outline[0].x,outline[0].y);outline.slice(1).forEach(p=>ctx.lineTo(p.x,p.y));ctx.closePath();ctx.clip();
+    const top=Math.max(0,Math.floor(camera.top/120)*120),end=Math.min(world.bottom,camera.top+camera.visibleHeight+120);
+    for(let y=top;y<end;y+=120){const b=window.MarbleCourse.bounds(y,world);
+      if(game.map==='factory'){
+        ctx.strokeStyle='#4a647014';ctx.lineWidth=1;for(let x=0;x<1000;x+=100)ctx.strokeRect(x,y,100,120);
+        if(y%600===0){ctx.strokeStyle='#bf943b66';ctx.lineWidth=5;for(let k=0;k<4;k++){ctx.beginPath();ctx.moveTo(b.left+8,y+k*17);ctx.lineTo(b.left+23,y+k*17+12);ctx.moveTo(b.right-23,y+k*17);ctx.lineTo(b.right-8,y+k*17+12);ctx.stroke();}}
+      }else if(game.map==='ruins'){
+        ctx.strokeStyle='#68765b24';ctx.lineWidth=1.5;for(let x=-100+(y/120%2)*65;x<1100;x+=130)ctx.strokeRect(x,y,130,120);
+        ctx.fillStyle='#73895c25';for(const x of [b.left+16,b.right-16]){ctx.beginPath();ctx.ellipse(x,y+50,18,34,.4,0,Math.PI*2);ctx.fill();}
+      }else{
+        ctx.strokeStyle='#f4ffff38';ctx.lineWidth=2;for(let x=b.left+30;x<b.right-25;x+=140){ctx.beginPath();ctx.moveTo(x,y+28);ctx.quadraticCurveTo(x+25,y+20,x+50,y+28);ctx.stroke();}
+      }
+    }ctx.restore();
+  }
   function drawWorld(ctx,game,world,camera) {
     if(!has(game.map))return;
     ctx.save();
@@ -210,18 +257,25 @@
       if(f.y+400<camera.top||f.y-400>camera.top+camera.visibleHeight)continue;
       const b=window.MarbleCourse.bounds(f.y,world),mid=(b.left+b.right)/2;
       if(f.kind==='current') {
-        const left=f.section===4?b.left+(b.right-b.left)*Math.max(0,f.fraction-.27):b.left,right=f.section===4?b.left+(b.right-b.left)*Math.min(1,f.fraction+.27):b.right;
-        ctx.fillStyle='#4ab6d03a';ctx.fillRect(left,f.y-f.height/2,right-left,f.height);
-        ctx.strokeStyle='#267fafa8';ctx.lineWidth=3;
-        for(let row=0;row<3;row++)for(let i=0;i<6;i++){const phase=((i/6+game.time*.12*f.direction)%1+1)%1,x=left+25+phase*(right-left-50),y=f.y+(row-1)*f.height*.27;
-          ctx.beginPath();ctx.moveTo(x-f.direction*22,y);ctx.lineTo(x+f.direction*22,y);ctx.lineTo(x+f.direction*11,y-9);ctx.moveTo(x+f.direction*22,y);ctx.lineTo(x+f.direction*11,y+9);ctx.stroke();}
+        const pulse=flowPulse(f,game.time);ctx.save();ctx.globalAlpha=.22+.78*pulse;
+        for(const lane of f.lanes){
+          ctx.beginPath();for(let i=0;i<=12;i++){const y=f.y-f.height/2+i*f.height/12,c=channelAt(f,lane,y,world);i?ctx.lineTo(c.x-c.halfWidth,y):ctx.moveTo(c.x-c.halfWidth,y);}
+          for(let i=12;i>=0;i--){const y=f.y-f.height/2+i*f.height/12,c=channelAt(f,lane,y,world);ctx.lineTo(c.x+c.halfWidth,y);}ctx.closePath();ctx.fillStyle='#268ba52d';ctx.fill();
+          ctx.strokeStyle='#287a9b99';ctx.lineWidth=2.5;
+          for(let i=0;i<3;i++){const u=(i/3+game.time*.15)%1,y=f.y+(u-.5)*f.height,c=channelAt(f,lane,y,world),angle=Math.atan2(1,c.slope);ctx.save();ctx.translate(c.x,y);ctx.rotate(angle);ctx.beginPath();ctx.moveTo(-15,0);ctx.lineTo(15,0);ctx.lineTo(7,-6);ctx.moveTo(15,0);ctx.lineTo(7,6);ctx.stroke();ctx.restore();}
+        }
+        ctx.strokeStyle='#438e9b55';for(const side of [-1,1]){const x=side<0?b.left+22:b.right-22,dx=-side*30;ctx.beginPath();ctx.moveTo(x,f.y-18);ctx.quadraticCurveTo(x,f.y+10,x+dx,f.y+18);ctx.lineTo(x+dx+side*7,f.y+9);ctx.moveTo(x+dx,f.y+18);ctx.lineTo(x+dx+side*10,f.y+23);ctx.stroke();}
+        ctx.restore();
       } else if(f.kind==='whirlpool') {
         const cx=b.left+(b.right-b.left)*(f.fraction||.5);
         const gradient=ctx.createRadialGradient(cx,f.y,5,cx,f.y,f.range);gradient.addColorStop(0,'#26779838');gradient.addColorStop(1,'#26779800');ctx.fillStyle=gradient;ctx.beginPath();ctx.arc(cx,f.y,f.range,0,Math.PI*2);ctx.fill();
-        ctx.strokeStyle='#367faba0';ctx.lineWidth=4;
+        ctx.strokeStyle='#397fa1a0';ctx.lineWidth=4;
         for(let i=0;i<4;i++){const angle=game.time*f.direction*1.4+i*1.6;ctx.beginPath();ctx.arc(cx,f.y,f.range*(.2+i*.23),angle,angle+Math.PI*1.5);ctx.stroke();}
       } else if(f.kind==='piston') {
-        ctx.strokeStyle='#a5aeb9';ctx.lineWidth=12;ctx.beginPath();ctx.moveTo(b.left+30,f.y);ctx.lineTo(b.right-30,f.y);ctx.stroke();
+        ctx.strokeStyle='#7e96a6';ctx.lineWidth=12;ctx.beginPath();ctx.moveTo(b.left+30,f.y);ctx.lineTo(b.right-30,f.y);ctx.stroke();
+      } else if(f.kind==='calm') {
+        ctx.fillStyle='#e8f8ef45';ctx.fillRect(b.left,f.y-f.height/2,b.right-b.left,f.height);
+        ctx.strokeStyle='#d8f7efb0';ctx.lineWidth=2;for(let k=0;k<3;k++){ctx.beginPath();ctx.ellipse(mid,f.y+(k-1)*36,38+k*20,7,0,0,Math.PI*2);ctx.stroke();}
       } else if(f.kind==='boulder') {
         const x=mid+Math.sin(f.section*2.3)*(b.right-b.left)*.23;
         ctx.setLineDash([8,12]);ctx.strokeStyle='#7c88864d';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x,f.y-f.height/2-35);ctx.lineTo(x,f.y+f.height/2+35);ctx.stroke();ctx.setLineDash([]);
@@ -230,12 +284,12 @@
     }
     ctx.restore();
   }
-  function drawSegment(ctx,s,time) {
+  function drawSegment(ctx,s,time,map) {
     if(s.broken) {
       if(time-s.brokenAt<.8){ctx.save();ctx.fillStyle='#89938e';for(let i=0;i<6;i++){const t=time-s.brokenAt;ctx.fillRect(s.x1+(s.x2-s.x1)*i/6+Math.sin(i)*t*30,s.y1+(s.y2-s.y1)*i/6+t*t*150,9,7);}ctx.restore();}return true;
     }
     if(!s.conveyor&&!s.breakable&&!s.riverLog&&!s.ancient&&!s.bridge&&!s.sluice)return false;
-    ctx.save();ctx.lineCap='round';ctx.strokeStyle=s.conveyor?(s.reverse?'#945e66':'#446d78'):s.riverLog?'#8b9278':s.breakable?'#798681':s.bridge?'#8b9690':s.ancient?'#7c8983':'#74959e';
+    ctx.save();ctx.lineCap='round';ctx.strokeStyle=s.conveyor?(s.reverse?'#ab6744':'#405f73'):s.riverLog?'#7b8067':s.breakable?'#737e6e':s.bridge?'#8c9480':s.ancient?'#727f6d':map==='factory'?'#597889':'#74959e';
     ctx.lineWidth=s.radius*2;ctx.beginPath();ctx.moveTo(s.x1,s.y1);ctx.lineTo(s.x2,s.y2);ctx.stroke();
     if(s.conveyor){ctx.lineWidth=2;ctx.strokeStyle=s.reverse?'#ffd0d5':'#aee4df';const dx=s.x2-s.x1,dy=s.y2-s.y1;
       for(let i=0;i<9;i++){const fraction=((i/9+time*.12*(s.reverse?-1:1))%1+1)%1,x=s.x1+dx*fraction,y=s.y1+dy*fraction;ctx.beginPath();ctx.moveTo(x-s.direction*6,y-6);ctx.lineTo(x,y);ctx.lineTo(x-s.direction*6,y+6);ctx.stroke();}}
@@ -249,11 +303,12 @@
     ctx.restore();return true;
   }
   function drawPin(ctx,p,time) {
-    if(!p.switchFor&&!p.boulder)return;
+    if(!p.switchFor&&!p.boulder&&!p.island)return;
     ctx.save();ctx.translate(p.x,p.y);ctx.strokeStyle=p.switchFor?'#e1ffe5':'#52625b';ctx.lineWidth=2;
     if(p.switchFor){ctx.fillStyle=time<p.flashUntil?'#f1ffba':'#6aae87';ctx.beginPath();ctx.arc(0,0,p.r-2,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.moveTo(0,-8);ctx.lineTo(7,0);ctx.lineTo(0,8);ctx.lineTo(-7,0);ctx.closePath();ctx.stroke();}
+    else if(p.island){ctx.fillStyle='#dae4d438';ctx.beginPath();for(let i=0;i<7;i++){const angle=i*Math.PI*2/7,r=p.r*(.72+unit(i+p.section)*.2);i?ctx.lineTo(Math.cos(angle)*r,Math.sin(angle)*r):ctx.moveTo(Math.cos(angle)*r,Math.sin(angle)*r);}ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#7e9b7080';ctx.beginPath();ctx.ellipse(-p.r*.3,-p.r*.25,p.r*.3,p.r*.2,-.4,0,Math.PI*2);ctx.fill();}
     else{ctx.rotate(time*.7);ctx.beginPath();ctx.moveTo(-p.r*.6,-p.r*.2);ctx.lineTo(0,3);ctx.lineTo(p.r*.3,-p.r*.6);ctx.moveTo(0,3);ctx.lineTo(p.r*.6,p.r*.35);ctx.stroke();}
     ctx.restore();
   }
-  window.ExtraCourses={definitions,has,waterEnd,configure,build,dynamic,apply,onContact,onPinContact,belt,drawWorld,drawSegment,drawPin};
+  window.ExtraCourses={definitions,has,waterEnd,flowPulse,channelAt,configure,build,dynamic,apply,onContact,onPinContact,belt,pinTones,drawTerrain,drawWorld,drawSegment,drawPin};
 })();

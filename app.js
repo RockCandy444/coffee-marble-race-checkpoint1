@@ -217,7 +217,7 @@
   function selectMap(map) {
     if (!MAPS[map]) return;
     selectedMap = map;
-    const descriptions={factory:'청록 벨트는 앞으로, 붉은 벨트는 거슬러 밀어요. 자석·피스톤·분배 게이트를 통과하세요.',rapids:'급류·소용돌이·자석이 흐름을 바꿔요. 자석·바람 면역도 물살에는 밀리며, 출구로 좁아지는 구간에는 물살이 없어요.',ruins:'내구도가 다른 석벽과 자석·낙석·흔들다리를 피하세요. 초록 스위치에 닿으면 석문이 3초간 열려요.'};
+    const descriptions={factory:'푸른 벨트는 앞으로, 주황 벨트는 거슬러 밀어요. 자석·피스톤·분배 게이트를 통과하세요.',rapids:'갈래 물길과 간헐적 교차 급류, 바위섬에서 경로가 나뉘어요. 잔잔한 쉼 구간과 출구에서는 물살이 멈춰요.',ruins:'내구도가 다른 석벽과 자석·낙석·흔들다리를 피하세요. 초록 스위치에 닿으면 석문이 3초간 열려요.'};
     $('#mapMechanicHelp').textContent=descriptions[map]||'';$('#mapMechanicHelp').hidden=!descriptions[map];
     document.querySelectorAll('.map-card').forEach((card) => {
       const selected = card.dataset.map === map;
@@ -931,30 +931,33 @@
 
   function drawOuterWalls() {
     ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    const theme=MAPS[game.map].theme;
     for (const side of ['left', 'right']) {
       const points = Course.wallPath(WORLD, side);
       ctx.beginPath(); ctx.moveTo(points[0].x, points[0].y);
       points.slice(1).forEach(point => ctx.lineTo(point.x, point.y));
-      ctx.strokeStyle = '#ba946c'; ctx.lineWidth = Course.wallRadius * 2; ctx.stroke();
-      ctx.strokeStyle = '#e0c09a'; ctx.lineWidth = 2.5; ctx.stroke();
+      ctx.strokeStyle = theme?.wall||'#ba946c'; ctx.lineWidth = Course.wallRadius * 2; ctx.stroke();
+      ctx.strokeStyle = theme?.wallLight||'#e0c09a'; ctx.lineWidth = 2.5; ctx.stroke();
     }
     ctx.restore();
   }
   function drawTrack() {
     if (!ctx || !canvas.width || !game) return;
+    const theme=MAPS[game.map].theme;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = '#f5ead7'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = theme?.backdrop||'#f5ead7'; ctx.fillRect(0, 0, canvas.width, canvas.height);
     camera.apply(ctx, canvasDpr);
     const bg = ctx.createLinearGradient(0, 0, 0, WORLD.height);
-    bg.addColorStop(0, '#fff7e7'); bg.addColorStop(1, '#ffedca');
+    bg.addColorStop(0, theme?.base||'#fff7e7'); bg.addColorStop(1, theme?.end||'#ffedca');
     ctx.fillStyle = bg; ctx.fillRect(0, 0, WORLD.width, WORLD.height);
-    ctx.fillStyle = '#fffdf8'; ctx.fillRect(16, 17, 968, WORLD.height - 32);
+    ctx.fillStyle = theme?.base||'#fffdf8'; ctx.fillRect(16, 17, 968, WORLD.height - 32);
     MAPS[game.map].sections.forEach(([y, label], index) => {
       ctx.fillStyle = (MAPS[game.map].colors||['#edf7ef', '#fff0dc', '#eef1fb', '#f9edfa', '#e6f4f3', '#fff1e8'])[index];
       ctx.fillRect(22, y, 956, (MAPS[game.map].sections[index + 1]?.[0] ?? WORLD.bottom) - y);
     });
-    ctx.fillStyle = '#ecdfca';
+    Extra.drawTerrain(ctx,game,WORLD,camera);
+    ctx.fillStyle = theme?.bank||'#ecdfca';
     for (const side of ['left', 'right']) {
       const edge = side === 'left' ? 0 : WORLD.width;
       ctx.beginPath(); ctx.moveTo(edge, 0);
@@ -972,7 +975,7 @@
       const text = '0' + (index + 1) + '  ' + label;
       const width = Math.min(ctx.measureText(text).width, right - left);
       ctx.fillStyle = 'rgba(255,253,248,.88)'; ctx.fillRect(left - 8, y + 12, width + 16, 28);
-      ctx.fillStyle = '#8b7258'; ctx.fillText(text, left, y + 26, right - left);
+      ctx.fillStyle = theme?.ink||'#8b7258'; ctx.fillText(text, left, y + 26, right - left);
     });
     ctx.restore();
     ctx.strokeStyle = '#dfc9a8'; ctx.lineWidth = 3;
@@ -982,8 +985,8 @@
     // 거리 표식이 길게 이어지는 코스의 진행 방향을 보여줍니다.
     ctx.save();
     ctx.font = '700 10px sans-serif';
-    ctx.fillStyle = '#c3b49f';
-    ctx.strokeStyle = '#eadfce';
+    ctx.fillStyle = theme?.ink||'#c3b49f';
+    ctx.strokeStyle = theme?.wallLight||'#eadfce';
     ctx.lineWidth = 1;
     for (let y = 300, mark = 300; y < WORLD.funnelY; y += 300, mark += 300) {
       ctx.beginPath(); ctx.moveTo(22, y); ctx.lineTo(36, y); ctx.moveTo(964, y); ctx.lineTo(978, y); ctx.stroke();
@@ -992,7 +995,7 @@
     ctx.restore();
 
     // 세 코스 공통의 단일 결승 통로.
-    ctx.fillStyle = 'rgba(252,218,158,.22)';
+    ctx.fillStyle = theme?.finish||'rgba(252,218,158,.22)';
     ctx.beginPath();
     ctx.moveTo(Course.bounds(WORLD.funnelY, WORLD).left, WORLD.funnelY);
     ctx.lineTo(WORLD.finishLeft - 5, WORLD.funnelKnee);
@@ -1025,7 +1028,7 @@
         ctx.beginPath(); ctx.arc(pin.x + 1, pin.y + 2, pin.r + 1.2, 0, Math.PI * 2); ctx.fillStyle = 'rgba(96,65,36,.12)'; ctx.fill();
         ctx.beginPath(); ctx.arc(pin.x, pin.y, pin.r, 0, Math.PI * 2);
         const grad = ctx.createRadialGradient(pin.x - 2, pin.y - 2, 1, pin.x, pin.y, pin.r);
-        const tones = pin.kind === 'power' ? ['#fff6a8', '#ee7743'] : pin.kind === 'magnet' ? ['#ddd0ff', '#8160b4'] : pin.kind === 'wind' ? ['#c6f2f4', '#338c9f'] : pin.piston?['#d5e1e9','#52687a']:pin.riverRock?['#bfd9d7','#638a8a']:pin.ancient?['#dfd5ac','#8a9471']:pin.defender ? ['#b9d7ef', '#4a739a'] : pin.bumper ? ['#b8e6db', '#4f9483'] : ['#ffe6aa', '#bc8450'];
+        const tones = Extra.pinTones(game.map,pin)||(pin.kind === 'power' ? ['#fff6a8', '#ee7743'] : pin.kind === 'magnet' ? ['#ddd0ff', '#8160b4'] : pin.kind === 'wind' ? ['#c6f2f4', '#338c9f'] : pin.piston?['#d5e1e9','#52687a']:pin.riverRock?['#bfd9d7','#638a8a']:pin.ancient?['#dfd5ac','#8a9471']:pin.defender ? ['#b9d7ef', '#4a739a'] : pin.bumper ? ['#b8e6db', '#4f9483'] : ['#ffe6aa', '#bc8450']);
         grad.addColorStop(0, tones[0]); grad.addColorStop(1, tones[1]); ctx.fillStyle = grad; ctx.fill();
         if (pin.ring || pin.moving) { ctx.strokeStyle = pin.moving ? '#4d6fa4' : '#a976b3'; ctx.lineWidth = 4; ctx.stroke(); }
         Course.drawPinSymbol(ctx, pin, game.time);
@@ -1037,7 +1040,7 @@
     for (const segment of segments) {
       if (segment.sideWall || segment.funnel) continue;
       if (Math.max(segment.y1, segment.y2) + segment.radius < camera.top || Math.min(segment.y1, segment.y2) - segment.radius > camera.top + camera.visibleHeight) continue;
-      if(Extra.drawSegment(ctx,segment,game.time))continue;
+      if(Extra.drawSegment(ctx,segment,game.time,game.map))continue;
       if (segment.circle) {
         ctx.strokeStyle = '#aa6a75'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(500, WORLD.finishY - 120); ctx.lineTo(segment.x1, segment.y1); ctx.stroke();
         ctx.beginPath(); ctx.arc(segment.x1, segment.y1, segment.radius, 0, Math.PI * 2); ctx.fillStyle = '#c94f67'; ctx.fill(); ctx.strokeStyle = '#ffbac8'; ctx.lineWidth = 2; ctx.stroke(); continue;
@@ -1106,7 +1109,7 @@
     const mini = $('#miniMap'); const m = mini.getContext('2d');
     const w = mini.width, h = mini.height, sx = (w - 12) / WORLD.width, sy = (h - 16) / WORLD.height;
     m.clearRect(0, 0, w, h); m.fillStyle = 'rgba(255,253,248,.95)'; m.fillRect(0, 0, w, h);
-    MAPS[game.map].sections.forEach(([y], index) => { m.fillStyle = ['#d9eddf', '#f7dfb9', '#dde3f4', '#e6cbe8', '#b9dfdb', '#f6d6c6'][index]; m.fillRect(6, 8 + y * sy, w - 12, 4); });
+    MAPS[game.map].sections.forEach(([y], index) => { m.fillStyle = (MAPS[game.map].colors||['#d9eddf', '#f7dfb9', '#dde3f4', '#e6cbe8', '#b9dfdb', '#f6d6c6'])[index]; m.fillRect(6, 8 + y * sy, w - 12, 4); });
     m.fillStyle = '#e77b48'; m.fillRect(6, 8 + WORLD.finishY * sy, w - 12, 2);
     for (const ball of game.balls) if (!ball.finished) { m.fillStyle = ball.color; m.beginPath(); m.arc(6 + ball.x * sx, 8 + ball.y * sy, ball.golden || ball.id === game.selectedBall ? 3 : 1.8, 0, Math.PI * 2); m.fill(); if (ball.golden) {m.strokeStyle='#956700';m.lineWidth=1;m.stroke();} }
     const top = Math.max(0, camera.top), bottom = Math.min(WORLD.height, camera.top + camera.visibleHeight);
