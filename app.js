@@ -18,7 +18,7 @@
   const Golden = window.GoldenMarble;
   const Battle = window.MarbleBattle;
   const Extra = window.ExtraCourses;
-  Object.values(MAPS).forEach(map => { map.height *= 2; map.sections = map.sections.map(([y, name]) => [y * 2, name]); });
+  Object.values(MAPS).forEach(map => { map.height *= Course.verticalScale; map.sections = map.sections.map(([y, name]) => [y * Course.verticalScale, name]); });
   const $ = (selector) => document.querySelector(selector);
   const setupView = $('#setupView');
   const mapView = $('#mapView');
@@ -217,7 +217,7 @@
   function selectMap(map) {
     if (!MAPS[map]) return;
     selectedMap = map;
-    const descriptions={factory:'청록 벨트는 앞으로, 붉은 벨트는 거슬러 밀어요. 피스톤 작업장과 분배 게이트를 통과하세요.',rapids:'교차 급류·삼중 소용돌이·양갈래 물살이 흐름을 바꿔요. 자석·바람 면역도 물살에는 밀려요.',ruins:'석벽마다 내구도가 달라요. 낙석과 흔들다리를 피하고 초록 스위치에 닿으면 석문이 3초간 열려요.'};
+    const descriptions={factory:'청록 벨트는 앞으로, 붉은 벨트는 거슬러 밀어요. 자석·피스톤·분배 게이트를 통과하세요.',rapids:'급류·소용돌이·자석이 흐름을 바꿔요. 자석·바람 면역도 물살에는 밀리며, 출구로 좁아지는 구간에는 물살이 없어요.',ruins:'내구도가 다른 석벽과 자석·낙석·흔들다리를 피하세요. 초록 스위치에 닿으면 석문이 3초간 열려요.'};
     $('#mapMechanicHelp').textContent=descriptions[map]||'';$('#mapMechanicHelp').hidden=!descriptions[map];
     document.querySelectorAll('.map-card').forEach((card) => {
       const selected = card.dataset.map === map;
@@ -318,7 +318,7 @@
       const omega = Battle.frozen(game,machineKey)?0:bar.speed;
       const dx = Math.cos(angle) * bar.length / 2;
       const dy = Math.sin(angle) * bar.length / 2;
-      return { x1: bar.x - dx, y1: bar.y * 2 - dy, x2: bar.x + dx, y2: bar.y * 2 + dy, cx: bar.x, cy: bar.y * 2, omega, radius: 4 + bar.length / 85, rotating: true, machineKey };
+      return { x1: bar.x - dx, y1: bar.y * Course.verticalScale - dy, x2: bar.x + dx, y2: bar.y * Course.verticalScale + dy, cx: bar.x, cy: bar.y * Course.verticalScale, omega, radius: 4 + bar.length / 85, rotating: true, machineKey };
     });
   }
 
@@ -329,7 +329,7 @@
       { x: 240, y: 3160, r: 20, amplitude: 100, speed: 0.85, phase: 0 },
       { x: 750, y: 3280, r: 38, amplitude: 110, speed: 0.7, phase: 2 },
       { x: 430, y: 3470, r: 27, amplitude: 150, speed: 0.9, phase: 1 }
-    ].map((pin,index) => {const machineKey='moving-pin-'+index,t=Battle.timeFor(game,machineKey,time);return { ...pin, y: pin.y * 2, x: pin.x + Math.sin(t * pin.speed + pin.phase) * pin.amplitude, vx: Battle.frozen(game,machineKey)?0:Math.cos(t * pin.speed + pin.phase) * pin.amplitude * pin.speed, moving: true, bumper: true, machineKey };});
+    ].map((pin,index) => {const machineKey='moving-pin-'+index,t=Battle.timeFor(game,machineKey,time);return { ...pin, y: pin.y * Course.verticalScale, x: pin.x + Math.sin(t * pin.speed + pin.phase) * pin.amplitude, vx: Battle.frozen(game,machineKey)?0:Math.cos(t * pin.speed + pin.phase) * pin.amplitude * pin.speed, moving: true, bumper: true, machineKey };});
   }
 
   function movingSegments(time) {
@@ -339,7 +339,7 @@
       for (const [y, center, length, radius, phase] of [[2280, 310, 190, 13, 0], [2530, 690, 290, 8, 1.8]]) {
         const machineKey='slider-'+y,t=Battle.timeFor(game,machineKey,time);
         const cx = center + Math.sin(t * 0.9 + phase) * 150;
-        result.push({ x1: cx - length / 2, y1: y * 2, x2: cx + length / 2, y2: y * 2, radius, vx: Battle.frozen(game,machineKey)?0:Math.cos(t * 0.9 + phase) * 135, sliding: true, machineKey });
+        result.push({ x1: cx - length / 2, y1: y * Course.verticalScale, x2: cx + length / 2, y2: y * Course.verticalScale, radius, vx: Battle.frozen(game,machineKey)?0:Math.cos(t * 0.9 + phase) * 135, sliding: true, machineKey });
       }
     }
     const diameter = (game.balls[0].baseR ?? game.balls[0].r) * 2;
@@ -412,7 +412,7 @@
       game.selectedBall = golden.ball.id;
     }
     $('#keeperLabel').textContent = '이번 골키퍼 · ' + game.keeper.name;
-    $('#hazardKey').textContent=game.map==='factory'?'⇄ 순방향·역방향 벨트 · ▣ 피스톤 · ◀▶ 분배 게이트':game.map==='rapids'?'↔ 급류 · ↻ 소용돌이 · ● 징검바위':game.map==='ruins'?'▱ 석벽 · ▼ 낙석 · ⌁ 흔들다리 · ◆ 석문 스위치':'⚡ 파워 범퍼 · Ⓜ 자석 · ↔ 바람 · ◆ 수비수';
+    $('#hazardKey').textContent=game.map==='factory'?'⇄ 순방향·역방향 벨트 · Ⓜ 자석 · ▣ 피스톤 · ◀▶ 게이트':game.map==='rapids'?'↔ 급류 · ↻ 소용돌이 · Ⓜ 자석 · ● 징검바위':game.map==='ruins'?'▱ 석벽 · Ⓜ 자석 · ▼ 낙석 · ⌁ 흔들다리 · ◆ 스위치':'⚡ 파워 범퍼 · Ⓜ 자석 · ↔ 바람 · ◆ 수비수';
     $('#raceTitle').textContent = MAPS[selectedMap].title+(game.mode==='battle'?' · 능력 배틀':'');
     $('#openBattleAbilities').hidden=!game.battle;$('#battleFeed').hidden=!game.battle;
     $('#battleFeed').textContent=game.battle?(game.mode==='battle'?'⚔ 능력 배틀':'★ 황금구슬 능력')+' · 구슬을 눌러 능력 확인':'';

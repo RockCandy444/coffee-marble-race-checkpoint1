@@ -2,6 +2,7 @@
   'use strict';
   const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
   const wallRadius = 4.5;
+  const verticalScale = 3;
   function wallPath(world, side, radius = wallRadius) {
     const offset = side === 'left' ? -radius : radius;
     const gate = side === 'left' ? world.finishLeft : world.finishRight;
@@ -64,15 +65,15 @@
     return Math.hypot(x - s.x1 - t * dx, y - s.y1 - t * dy);
   }
   function enrich(pins, segments, map, world, sections) {
-    pins.forEach(pin => { pin.y *= 2; });
-    segments.forEach(segment => { segment.y1 *= 2; segment.y2 *= 2; });
+    pins.forEach(pin => { pin.y *= verticalScale; });
+    segments.forEach(segment => { segment.y1 *= verticalScale; segment.y2 *= verticalScale; });
     if(map==='pinball') {
       // Sloping shelves interrupt both edge highways; some leave a lucky narrow slot.
       sections.slice(0,-1).forEach(([start],section)=>{
         if(section===2)return; // Three original slides already alternate across this section.
         const end=sections[section+1][0];
         for(let k=0;k<2;k++) {
-          const left=(section+k)%2===0,y=section===4?(k===0?5620:5970):start+(end-start)*(.28+k*.4);
+          const left=(section+k)%2===0,y=section===4?(k===0?2810:2985)*verticalScale:start+(end-start)*(.28+k*.4);
           const b=bounds(y,world),gap=(section+k)%3===0?35:0,radius=wallRadius;
           segments.push({x1:left?b.left+gap+ (gap?radius:0):b.right-gap-(gap?radius:0),y1:y,
             x2:section===4?(left?440:580):(left?540:460),y2:y+(section===4?70:125),radius,edgeShelf:true,section});
@@ -237,5 +238,5 @@
       ctx.restore();
     } else if (pin.defender) { ctx.strokeStyle = '#426a91'; ctx.lineWidth = 2.5; ctx.stroke(); }
   }
-  window.MarbleCourse = { wallRadius, wallPath, outline, keepers, chooseKeeper, configure, bounds, contain, enrich, buckets, field, kick, rescue, goalkeeper, defenders, drawField, drawPinSymbol };
+  window.MarbleCourse = { wallRadius, verticalScale, wallPath, outline, keepers, chooseKeeper, configure, bounds, contain, enrich, buckets, field, kick, rescue, goalkeeper, defenders, drawField, drawPinSymbol };
 })();

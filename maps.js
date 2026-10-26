@@ -8,6 +8,7 @@
   const has=map=>Object.hasOwn(definitions,map);
   const unit=seed=>{const n=Math.sin(seed*127.1+311.7)*43758.5453;return n-Math.floor(n);};
   const layouts={factory:['lanes','cluster','diagonal','islands','slalom','guard'],rapids:['banks','slalom','rings','islands','split','guard'],ruins:['arches','cluster','rings','slalom','diagonal','guard']};
+  const waterEnd=world=>world.funnelY-80;
   function configure(world,map) {
     world.sideProfile=Array.from({length:25},(_,i)=>{
       const t=i/24,y=world.funnelY*t,entry=Math.min(1,y/500);
@@ -31,7 +32,7 @@
       const end=Math.min(sections[section+1]?.[0]||world.finishY-280,world.finishY-280),span=end-start;
       const feature=(kind,fraction,extra={})=>features.push({kind,y:start+span*fraction,section,key:map+'-'+kind+'-'+section+'-'+features.length,...extra});
       if(map==='factory') {
-        const beltCount=[3,4,5,4,5,3][section];
+        const beltCount=[5,6,8,6,8,5][section];
         for(let k=0;k<beltCount;k++) {
           const left=(k+section)%2===0,reverse=section===2?k%2===0:(section===1||section===4||section===5)&&k%3===1;
           const y=start+95+(span-250)*k/Math.max(1,beltCount-1)+unit(k+section*11)*22;
@@ -43,13 +44,13 @@
         if(section===3){feature('gate',.28);feature('gate',.82);}
         if(section===4||section===5)feature('gate',.68);
       } else if(map==='rapids') {
-        const bands=[2,3,1,2,4,2][section],strengths=[460,620,680,400,640,440];
+        const bands=[3,4,2,3,5,2][section],strengths=[460,620,680,400,640,440];
         for(let k=0;k<bands;k++)feature('current',.15+.66*k/Math.max(1,bands-1),{height:section===2?span*.75:150+unit(k+section)*130,direction:(section+k)%2?1:-1,strength:strengths[section],fraction:section===4?(k%2?.72:.28):.5});
-        const vortices=[0,1,3,1,2,1][section];
+        const vortices=[1,2,4,2,3,1][section];
         for(let k=0;k<vortices;k++)feature('whirlpool',.28+.43*k/Math.max(1,vortices-1),{range:section===5?125:180+unit(k+section)*55,direction:(section+k)%2?-1:1,fraction:vortices>1?(k%2?.72:.28):.5,power:section===2?1.25:1});
         if(section===0||section===1||section===3||section===5)addShelf(start+span*.57,section%2===0,section===5?150:230,{riverLog:true,section});
       } else {
-        const wallCount=[2,3,4,3,5,2][section];
+        const wallCount=[3,5,6,5,7,3][section];
         for(let k=0;k<wallCount;k++) {
           const y=start+95+(span-240)*k/Math.max(1,wallCount-1)+unit(k+section*13)*25,b=Course.bounds(y,world);
           const fraction=[.32,.67,.48,.74,.25][(k+section)%5],cx=b.left+(b.right-b.left)*fraction,half=Math.min((b.right-b.left)*.23,75+unit(k*3+section)*110);
@@ -65,6 +66,11 @@
         if(section===5)feature('boulder',.27,{height:110,amplitude:30});
       }
     });
+    // Water stops before the narrowing finish approach, in both physics and rendering.
+    if(map==='rapids')for(let i=features.length-1;i>=0;i--){const f=features[i];
+      if(f.kind==='current'){if(f.y>=waterEnd(world)){features.splice(i,1);continue;}f.height=Math.min(f.height,2*(waterEnd(world)-f.y));}
+      if(f.kind==='whirlpool')f.y=Math.min(f.y,waterEnd(world)-f.range);
+    }
     // Machines occupy the gaps between belts; their sweeps never cut through a belt.
     if(map==='factory')for(const f of features){
       const start=sections[f.section][0],end=Math.min(sections[f.section+1]?.[0]||world.finishY-280,world.finishY-280),candidates=[];
@@ -74,7 +80,8 @@
     }
     const clear=(x,y,r)=>{
       const b=Course.bounds(y,world);
-      if(x-r<b.left+25||x+r>b.right-25)return false;
+      const wallGap=y>=world.funnelY?40:25;
+      if((x-b.left)/Math.hypot(1,b.leftSlope)-r<wallGap||(b.right-x)/Math.hypot(1,b.rightSlope)-r<wallGap)return false;
       if(features.some(f=>{
         if(f.kind==='boulder'){const fb=Course.bounds(f.y,world),cx=(fb.left+fb.right)/2+Math.sin(f.section*2.3)*(fb.right-fb.left)*.23;return Math.abs(f.y-y)<f.height/2+65+r&&Math.abs(x-cx)<80+r;}
         return ['piston','gate','bridge','stoneGate'].includes(f.kind)&&Math.abs(f.y-y)<(f.kind==='bridge'?95:70)+r;
@@ -83,7 +90,19 @@
     };
     sections.forEach(([start],section)=>{
       const end=Math.min(sections[section+1]?.[0]||world.finishY-260,world.finishY-260),span=end-start,layout=layouts[map][section];
-      for(let i=0;i<230;i++) {
+      // Reserve magnetic landmarks first, clear of walls, boards and moving sweeps.
+      const magneticEnd=Math.min(end-90,world.funnelY-180),magnetCount=section===5?1:2;
+      for(let k=0;k<magnetCount;k++)for(let attempt=0;attempt<240;attempt++){
+        const y=start+120+unit(attempt*17+k*331+section*941)*(magneticEnd-start-120),b=Course.bounds(y,world),x=b.left+155+unit(attempt*13+section*21+k)*(b.right-b.left-310),r=16+k*2;
+        if(magneticEnd<=start+120||!clear(x,y,r))continue;
+        if(segments.some(s=>distance(x,y,s)<r+s.radius+130)||pins.some(p=>p.kind==='magnet'&&Math.hypot(x-p.x,y-p.y)<250))continue;
+        if(features.some(f=>{
+          if(f.kind==='boulder'){const fb=Course.bounds(f.y,world),cx=(fb.left+fb.right)/2+Math.sin(f.section*2.3)*(fb.right-fb.left)*.23;return Math.abs(f.y-y)<f.height/2+195&&Math.abs(x-cx)<195;}
+          return ['piston','gate','bridge','stoneGate'].includes(f.kind)&&Math.abs(f.y-y)<190;
+        }))continue;
+        pins.push({x,y,r,section,kind:'magnet',bumper:true,range:120,strength:420});break;
+      }
+      for(let i=0;i<Math.ceil(span*.65);i++) {
         const u=unit(i+section*293),v=unit(i*3+section*177+8);let yf=u,xf=v;
         if(layout==='lanes')xf=[.15,.45,.82][i%3]+(v-.5)*.1;
         if(layout==='cluster'||layout==='islands'){yf=[.18,.47,.78][i%3]+(u-.5)*.18;xf=[.23,.75,.43][i%3]+(v-.5)*.35;}
@@ -95,6 +114,12 @@
         if(layout==='guard'){yf=u;xf=.5+Math.sin(i*2.4)*(.18+v*.23);}
         const y=start+70+Math.max(0,Math.min(1,yf))*(span-140),b=Course.bounds(y,world),x=b.left+35+(b.right-b.left-70)*Math.max(0,Math.min(1,xf)),r=7+unit(i*7+section)*12;
         if(clear(x,y,r))pins.push({x,y,r,section,bumper:i%7===0,riverRock:map==='rapids',ancient:map==='ruins'});
+      }
+      // Fill only the large holes left by each section's main pattern, retaining its landmarks.
+      for(let i=0;i<Math.ceil(span*.45);i++){
+        const y=start+70+unit(i*19+section*71)*(span-140),b=Course.bounds(y,world),x=b.left+40+unit(i*23+section*83)*(b.right-b.left-80),r=8+unit(i*31+section)*13;
+        if(pins.some(p=>Math.hypot(p.x-x,p.y-y)<90)||!clear(x,y,r))continue;
+        pins.push({x,y,r,section,bumper:i%5===0,riverRock:map==='rapids',ancient:map==='ruins'});
       }
       // Larger special obstacles add landmarks without covering the moving machines.
       for(let k=0;k<3;k++)for(const dy of [0,55,-55,100]) {
@@ -138,7 +163,7 @@
     return {pins,segments};
   }
   function apply(ball,game,world,dt) {
-    if(game.map!=='rapids'||ball.y>world.finishY-260)return;
+    if(game.map!=='rapids'||ball.y>=waterEnd(world))return;
     const Course=window.MarbleCourse;
     let ax=0,ay=0;
     for(const f of game.static.features) {
@@ -152,7 +177,14 @@
         if(d>1&&d<f.range){const factor=(1-d/f.range)*(f.power||1);ax+=(-dy/d*f.direction*470-dx/d*110)*factor;ay+=(dx/d*f.direction*170+120)*factor;}
       }
     }
-    ball.vx+=Math.max(-760,Math.min(760,ax))*dt;ball.vy+=Math.max(-80,Math.min(260,ay))*dt;
+    // Flow loses force at solid board surfaces, allowing gravity to release a marble
+    // instead of pressing it against a wall-connected log indefinitely.
+    let surfaceFade=1;
+    for(const s of game.collisionBuckets?.get(Math.floor(ball.y/160))?.segments||game.static.segments){
+      if(s.sideWall||s.funnel||s.broken)continue;
+      surfaceFade=Math.min(surfaceFade,Math.max(0,Math.min(1,(distance(ball.x,ball.y,s)-(ball.r||0)-(s.radius||4.5))/45)));
+    }
+    ball.vx+=Math.max(-760,Math.min(760,ax))*surfaceFade*dt;ball.vy+=Math.max(-80,Math.min(260,ay))*surfaceFade*dt;
   }
   function onContact(segment,ball,game,toward) {
     if(!segment.breakable||segment.broken)return false;
@@ -223,5 +255,5 @@
     else{ctx.rotate(time*.7);ctx.beginPath();ctx.moveTo(-p.r*.6,-p.r*.2);ctx.lineTo(0,3);ctx.lineTo(p.r*.3,-p.r*.6);ctx.moveTo(0,3);ctx.lineTo(p.r*.6,p.r*.35);ctx.stroke();}
     ctx.restore();
   }
-  window.ExtraCourses={definitions,has,configure,build,dynamic,apply,onContact,onPinContact,belt,drawWorld,drawSegment,drawPin};
+  window.ExtraCourses={definitions,has,waterEnd,configure,build,dynamic,apply,onContact,onPinContact,belt,drawWorld,drawSegment,drawPin};
 })();

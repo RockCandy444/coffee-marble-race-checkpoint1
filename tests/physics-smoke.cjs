@@ -71,13 +71,14 @@ assert.ok(camera.y < 7000, 'automatic tracking resumes');
 for (const n of [2,100]) for (const random of [() => 0.1, () => 0.9]) {
   seed = 123; simulation.reset('spinner', n, 0);
   const {game} = simulation.state();
-  const magnet = game.static.pins.find(p=>p.kind==='magnet' && p.section===3 && p.y>4900);
+  const magnet = game.static.pins.find(p=>p.kind==='magnet' && p.section===3 && p.x===342);
+  const sliderY=2530*course.verticalScale;
   assert.equal(magnet.x,342);
-  const distance = Math.hypot(395-magnet.x, 5060-magnet.y);
+  const distance = Math.hypot(395-magnet.x, sliderY-magnet.y);
   assert.ok(distance > magnet.r + 8 + 2*11.2, 'full slider sweep leaves a maximum-marble passage');
   const ball = game.balls[0];
   game.balls = [ball];
-  Object.assign(ball,{x:655.98,y:5060-8-ball.r-0.1,vx:0,vy:0,maxY:5060,stallTime:20,rescueCount:4});
+  Object.assign(ball,{x:655.98,y:sliderY-8-ball.r-0.1,vx:0,vy:0,maxY:sliderY,stallTime:20,rescueCount:4});
   const initialY = ball.y;
   course.rescue(ball,game.time,random);
   assert.ok(ball.vy<=-320 && Math.abs(ball.vx)>=280 && Math.hypot(ball.vx,ball.vy)>420);
