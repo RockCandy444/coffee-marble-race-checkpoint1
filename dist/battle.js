@@ -32,25 +32,25 @@
     ['catchup','역전 본능','🔥','변수',0,0,'후미에 있을 때 하강력이 조금 강해져요.'],
     ['charge','충전 구슬','🔋','변수',4,0,'충돌 에너지를 모아 부스터로 방출해요.'],
     ['shortcut','지름길','⏩','이동',0,0,'첫 구간을 건너뛰고 2구간에서 출발해요. 이후에는 추가 효과가 없어요.'],
-    ['slipstream','꼬리바람','🏎','이동',7,1.6,'가까이 앞서가는 구슬의 뒤를 따라 가속해요.'],
-    ['sidestep','옆걸음 도약','↔','이동',9,0,'같은 높이의 안전한 옆 통로로 짧게 이동해요.'],
-    ['spring','스프링 반동','🪀','이동',6,1.8,'장애물에 부딪히면 옆 아래로 반동을 한 번 방출해요.'],
-    ['glide','공기 브레이크','🪂','이동',8,1.6,'옆으로 흐르는 속도를 줄여 아래쪽 추진력으로 바꿔요.'],
-    ['recenter','중앙 복귀','🎯','이동',7,1.6,'벽 가까이에 있으면 잠깐 중앙 쪽으로 부드럽게 움직여요.'],
-    ['momentum','연속 질주','🏃','이동',0,0,'2초 동안 충돌 없이 내려가면 하강력이 서서히 강해져요.'],
-    ['dodge','긴급 회피','💨','방어',0,0,'7초마다 받을 수 있는 방해를 피하고 잠깐 다른 구슬을 통과해요.'],
-    ['counterboost','반격 가속','🥊','방어',0,0,'방해를 받은 뒤 감속을 풀고 가속해요. 7초마다 한 번 발동해요.'],
-    ['armor','철갑 구슬','🪨','방어',9,2,'잠깐 무게가 늘고 다른 구슬이 미는 힘을 크게 줄여요.'],
-    ['stabilizer','낙하 안정기','⚖','방어',8,2,'잠깐 위로 날리는 공격을 막고 공격 감속을 짧게 줄여요.'],
-    ['insulate','범퍼 절연','🧤','방어',8,1.8,'장애물과 충돌하되 파워 범퍼의 추가 반발력은 잠깐 막아요.'],
+    ['wallride','벽타기','🧗','이동',8,1.8,'잠깐 벽에 붙으면 튕기지 않고 벽을 따라 빠르게 내려가요.'],
+    ['swing','고무줄 스윙','🪢','이동',8,1.5,'가까운 핀에 줄을 걸고 주위를 돌아 빠져나와요.'],
+    ['springball','스프링볼','🏀','이동',8,1.6,'잠깐 탄성이 높아져 크게 튕겨요. 방향에 따라 손해도 봐요.'],
+    ['crossjump','횡단 도약','↔','이동',10,0,'현재 높이를 유지하며 반대편의 안전한 빈자리로 이동해요.'],
     ['seeker','추적 탄환','🔸','방해',10,0,'앞선 구슬을 향해 짧게 날아가는 탄환으로 밀어내요.'],
-    ['oil','미끄럼 자국','🛢','방해',9,0,'뒤따르는 구슬이 잠깐 좌우로 미끄러지는 자국을 남겨요.'],
-    ['seal','공간 봉인','🔒','방해',10,0,'앞선 구슬의 순간 이동을 1초 막아요. 일반 구슬은 좌우 움직임을 줄여요.'],
-    ['delay','시간 방울','⌛','방해',9,0,'다음 자동 발동을 1초 늦춰요. 한 주기 최대 2초이며 일반 구슬은 짧게 감속해요.'],
-    ['gust','측풍 파동','🌬','방해',9,0,'근처 같은 방향의 구슬들을 옆으로 밀어 경로를 바꿔요.'],
+    ['slingshot','슬링샷','🎯','이동',6,0,'움직이는 장애물과 부딪히면 그 이동 방향으로 날아가요.'],
+    ['giant','거대화','🐘','방어',10,1.8,'잠깐 커져 다른 구슬을 밀기 쉬워져요. 좁은 틈에서는 불리해요.'],
+    ['sweeper','지뢰 청소부','🧹','방어',7,0,'주변의 지뢰와 끈끈이를 지워 모두가 지나갈 길을 만들어요.'],
+    ['revenge','보복 표식','🏷','방어',0,0,'공격을 받은 뒤 공격자에게 표식을 남겨 짧은 감속을 돌려줘요.'],
+    ['decoy','미끼 분신','👥','방어',9,2,'순위에 없는 분신이 번개나 추적 탄환을 한 번 대신 받아요.'],
+    ['confuse','혼란파','🔄','방해',9,0,'주변 구슬의 좌우 속도를 뒤집어요. 아래로 떨어지는 속도는 유지해요.'],
     ['checkpoint','구간 가속','🏁','변수',0,0,'새 구간을 처음 통과할 때마다 짧게 가속해요.'],
-    ['overtake','추월 보너스','🏅','변수',0,0,'뒤에서 구슬을 추월하면 가속해요. 5초마다 한 번 발동해요.'],
-    ['laststand','막판 스퍼트','🔔','변수',0,0,'결승 800m 앞에서 경기당 한 번 막판 가속을 얻어요.']
+    ['tow','견인줄','🔗','변수',10,1.4,'가까운 구슬과 잠깐 연결돼 서로 당겨요. 상대 위치에 따라 손해도 봐요.'],
+    ['ring','가속 링','⭕','변수',9,0,'통과하면 가속되는 링을 만들어요. 다른 구슬도 이용할 수 있어요.'],
+    ['ramp','임시 경사판','📐','변수',10,0,'뒤쪽에 짧은 경사판을 잠깐 만들어 뒤따르는 구슬의 경로를 바꿔요.'],
+    ['machinefast','기계 가속','⚙','변수',10,0,'주변 기계의 움직임과 특수 핀의 힘을 잠깐 빠르고 강하게 바꿔요.'],
+    ['convert','범퍼 변환','✨','변수',9,0,'가까운 일반 핀 하나를 잠깐 강한 범퍼로 바꿔요. 누구나 영향을 받아요.'],
+    ['machinereverse','기계 역주행','⏮','변수',11,0,'주변 기계의 움직임과 특수 핀의 힘 방향을 잠깐 반대로 바꿔요.'],
+    ['portal','공용 포털','🌀','변수',12,0,'짧은 거리를 잇는 포털을 만들어요. 열린 동안 다른 구슬도 이용해요.']
   ].map(([id,name,icon,group,cooldown,duration,description]) => ({id,name,icon,group,cooldown,duration,description}));
   const byId = new Map(abilities.map(a => [a.id,a]));
   // Ordinary marbles can receive a golden marble's attacks without gaining a power.
@@ -73,19 +73,19 @@
     const previous=ball.battle;
     ball.baseR ??= ball.r;
     ball.battle={id,initialId:previous?.initialId||id,activeUntil:0,next:game.time+1.8+random()*2,
-      shield:0,energy:0,slowUntil:0,slipUntil:0,sealedUntil:0,controlGrace:0,guardUntil:0,lastImpact:-1,flashUntil:0,
-      reactionAt:game.time,collisionAt:game.time,springReady:false,delayAdded:0,aheadIds:null,
-      checkpointSection:game.battle.sections.filter(([y])=>y<=ball.y).length,sprintUsed:false,
+      shield:0,energy:0,slowUntil:0,confusedUntil:0,controlGrace:0,guardUntil:0,lastImpact:-1,flashUntil:0,
+      revengeReadyAt:game.time,decoyCharges:0,lastSpring:-1,portalGrace:0,
+      checkpointSection:game.battle.sections.filter(([y])=>y<=ball.y).length,
       section:game.battle.sections.filter(([y])=>y<=ball.y).length,reroll:id==='reroll'||keepReroll,
       startPending:id==='shortcut'&&game.time===0&&!keepReroll,
       wasGhost:previous?.wasGhost||previous?.exitPending||false};
   }
   function init(game,world,sections,random=Math.random) {
-    game.battle={world,sections,logs:[],effects:[],traps:[],projectiles:[],clocks:new Map(),disabled:new Map(),activations:{}};
+    game.battle={world,sections,logs:[],effects:[],traps:[],projectiles:[],structures:[],marks:[],clocks:new Map(),disabled:new Map(),converted:new Map(),fieldMods:new Map(),activations:{}};
     game.balls.forEach(ball=>assign(game,ball,abilities[Math.floor(random()*abilities.length)].id,random));
   }
   function initGolden(game,world,sections,ball,id,env) {
-    game.battle={world,sections,logs:[],effects:[],traps:[],projectiles:[],clocks:new Map(),disabled:new Map(),activations:{}};
+    game.battle={world,sections,logs:[],effects:[],traps:[],projectiles:[],structures:[],marks:[],clocks:new Map(),disabled:new Map(),converted:new Map(),fieldMods:new Map(),activations:{}};
     game.balls.forEach(b=>assign(game,b,b===ball?id:null));
     placeShortcuts(game,env);
     tick(game,0,env);
@@ -102,9 +102,11 @@
     let clock=game.battle.clocks.get(key);
     if(!clock){clock={time,seen:time,until:0,lock:0};game.battle.clocks.set(key,clock);}
     if(time<clock.seen)return clock.time;
-    clock.time+=Math.max(0,time-Math.max(clock.seen,clock.until));clock.seen=time;
+    const from=Math.max(clock.seen,clock.until),modified=Math.max(0,Math.min(time,clock.modUntil||0)-from);
+    clock.time+=modified*(clock.rate??1)+Math.max(0,time-from-modified);clock.seen=time;
     return clock.time;
   }
+  function machineRate(game,key){const c=game?.battle?.clocks.get(key);return c?.until>game.time?0:c?.modUntil>game.time?c.rate:1;}
   const frozen = (game,key) => !!game?.battle && (game.battle.clocks.get(key)?.until||0)>game.time;
   const disabled = (game,pin) => !!game?.battle && (game.battle.disabled.get(pin.id)||0)>game.time;
   function segmentDistance(x,y,s) {
@@ -117,7 +119,7 @@
     const bounds=window.MarbleCourse.bounds(y,world);
     if(x-radius<=bounds.left+3||x+radius>=bounds.right-3)return false;
     if(game.static.pins.concat(env.pins).some(p=>Math.abs(p.y-y)<radius+p.r+5&&Math.hypot(p.x-x,p.y-y)<radius+p.r+5))return false;
-    if(game.static.segments.concat(env.segments).some(s=>!s.broken&&y>Math.min(s.y1,s.y2)-radius-20&&y<Math.max(s.y1,s.y2)+radius+20&&segmentDistance(x,y,s)<radius+(s.radius||5)+5))return false;
+    if(game.static.segments.concat(env.segments,temporarySegments(game)).some(s=>!s.broken&&y>Math.min(s.y1,s.y2)-radius-20&&y<Math.max(s.y1,s.y2)+radius+20&&segmentDistance(x,y,s)<radius+(s.radius||5)+5))return false;
     return !game.balls.some(other=>other!==ball&&!other.finished&&!ignore.has(other.id)&&Math.hypot(other.x-x,other.y-y)<radius+other.r+3);
   }
   function spot(ball,game,env,advance=100) {
@@ -132,16 +134,18 @@
     const state=ball.battle;
     const shrinking=active(ball,'shrink',game.time)&&!safeZone(ball,game.battle.world);
     const ghosting=active(ball,'ghost',game.time)&&!safeZone(ball,game.battle.world);
-    const wanted=shrinking?ball.baseR*.65:ball.baseR;
+    const growing=active(ball,'giant',game.time)&&!safeZone(ball,game.battle.world);
+    const wanted=growing?ball.baseR*1.55:shrinking?ball.baseR*.65:ball.baseR;
     if((ball.r<wanted||state.wasGhost&&!ghosting)&&!safeZone(ball,game.battle.world)) {
       const oldR=ball.r;ball.r=wanted;
       if(!clearAt(ball,ball.x,ball.y,game,env)) {
+        if(growing&&!state.wasGhost){ball.r=oldR;state.growthPending=true;return;}
         const p=spot(ball,game,env,0);
         if(p)move(ball,p);
         else {ball.r=oldR;state.exitPending=true;state.wasGhost=true;return;}
       }
     }
-    state.exitPending=false;ball.r=wanted;state.wasGhost=ghosting;
+    state.exitPending=false;state.growthPending=false;ball.r=wanted;state.wasGhost=ghosting;
   }
   function nearby(ball,game,range=180) {
     return game.balls.filter(b=>b!==ball&&!b.finished&&Math.abs(b.y-ball.y)<range&&Math.hypot(b.x-ball.x,b.y-ball.y)<range);
@@ -151,16 +155,14 @@
     if(!s||target.finished||safeZone(source,game.battle.world)||safeZone(target,game.battle.world)||s.guardUntil>now||s.controlGrace>now)return false;
     if(s.shield>0){s.shield--;s.controlGrace=now+1;emit(game,target,'shield','방어');return false;}
     if(active(target,'reflect',now)&&!reflected){s.controlGrace=now+1;emit(game,target,'reflect','반사');hit(game,target,source,-vx*.65,Math.abs(vy)*.3,0,true,status);return false;}
-    if(effective(target)==='dodge'&&now>=s.reactionAt){s.reactionAt=now+7;s.dodgeUntil=now+.8;s.controlGrace=now+1;emit(game,target,'dodge');return false;}
-    if(active(target,'armor',now)){vx*=.35;vy*=.35;}
-    if(active(target,'stabilizer',now)){vy=Math.max(0,vy);slow=Math.min(.3,slow);}
+    if(status?.targeted&&active(target,'decoy',now)&&s.decoyCharges){s.decoyCharges=0;emit(game,target,'decoy','분신 소멸');return false;}
     const force=Math.hypot(vx,vy),scale=force>240?240/force:1;
     target.vx+=vx*scale;target.vy+=vy*scale;
     s.slowUntil=now+Math.min(1.1,slow);s.controlGrace=now+Math.max(1.5,slow+1.2);
-    if(status?.slip)s.slipUntil=now+Math.min(1.1,status.slip);
-    if(status?.seal)s.sealedUntil=now+Math.min(1.1,status.seal);
-    if(status?.delay){const delay=Math.min(status.delay,2-s.delayAdded);s.next+=delay;s.delayAdded+=delay;}
-    if(effective(target)==='counterboost'&&now>=s.reactionAt){s.reactionAt=now+7;s.slowUntil=0;s.slipUntil=0;boost(target,now,105);emit(game,target,'counterboost');}
+    if(status?.confuse){target.vx=-target.vx;s.confusedUntil=now+1;}
+    if(effective(target)==='revenge'&&!reflected&&now>=s.revengeReadyAt){
+      s.revengeReadyAt=now+7;game.battle.marks.push({owner:target.id,target:source.id,at:now+.7,until:now+1.5});emit(game,target,'revenge','표식');
+    }
     s.lastAttacker=source.id;return true;
   }
   function pulse(game,ball,kind,dt) {
@@ -177,10 +179,42 @@
     }
   }
   function boost(ball,now,strength=175) {ball.vy=Math.max(70,ball.vy)+strength;ball.boostUntil=now+.8;}
+  function temporarySegments(game){return (game.battle?.structures||[]).filter(o=>o.kind==='ramp'&&o.until>game.time).map(o=>o.segment);}
+  function makeStructure(game,ball,kind,env){
+    const b=game.battle,now=game.time,limit={ring:12,ramp:6,portal:6}[kind];
+    if(b.structures.filter(o=>o.kind===kind&&o.until>now).length>=limit)return false;
+    if(kind==='ramp'){
+      const y=ball.y-90;if(y< b.world.top+80||y>b.world.finishY-300)return false;
+      const direction=ball.x<b.world.width/2?1:-1,segment={x1:ball.x-55,y1:y-direction*22,x2:ball.x+55,y2:y+direction*22,radius:4.5,temporary:true};
+      if(b.structures.some(o=>o.kind==='ramp'&&Math.abs(o.y-y)<140))return false;
+      for(const t of [0,.25,.5,.75,1])if(!clearAt(ball,segment.x1+110*t,segment.y1+(segment.y2-segment.y1)*t,game,env,new Set(),8))return false;
+      b.structures.push({kind,owner:ball.id,x:ball.x,y,segment,until:now+2.2,used:new Set()});return true;
+    }
+    let entrance=null;for(const dy of [65,95,125])for(const dx of [0,-50,50])if(!entrance&&clearAt(ball,ball.x+dx,ball.y+dy,game,env,new Set(),kind==='ring'?32:25))entrance={x:ball.x+dx,y:ball.y+dy};
+    if(!entrance)return false;
+    if(b.structures.some(o=>Math.hypot(o.x-entrance.x,o.y-entrance.y)<110))return false;
+    const object={kind,owner:ball.id,...entrance,until:now+(kind==='ring'?3:2.6),used:new Set()};
+    if(kind==='portal'){
+      let exit=null;for(const dy of [170,140,110])for(const dx of [0,-70,70])if(!exit&&clearAt(ball,entrance.x+dx,entrance.y+dy,game,env,new Set(),25))exit={x:entrance.x+dx,y:entrance.y+dy};
+      if(!exit)return false;object.exitX=exit.x;object.exitY=exit.y;
+    }
+    b.structures.push(object);return true;
+  }
+  function modifyMachines(game,ball,kind,env){
+    let changed=false;const now=game.time,b=game.battle,keys=new Set();
+    for(const o of env.pins.concat(env.segments)){
+      if(!o.machineKey||o.temporary||keys.has(o.machineKey))continue;keys.add(o.machineKey);
+      const x=o.x??(o.x1+o.x2)/2,y=o.y??(o.y1+o.y2)/2;
+      if(Math.hypot(x-ball.x,y-ball.y)>230)continue;
+      timeFor(game,o.machineKey,now);const clock=b.clocks.get(o.machineKey);
+      if((clock.modLock||0)>now)continue;clock.rate=kind==='machinefast'?1.65:-1;clock.modUntil=now+1.6;clock.modLock=now+4.5;changed=true;
+    }
+    for(const pin of game.static.pins)if(['wind','magnet'].includes(pin.kind)&&pin.id&&Math.hypot(pin.x-ball.x,pin.y-ball.y)<200&&(b.fieldMods.get(pin.id)?.lock||0)<=now){b.fieldMods.set(pin.id,{kind,until:now+1.6,lock:now+4.5});changed=true;}
+    return changed;
+  }
   function fire(game,ball,id,env,random=Math.random) {
     const s=ball.battle,a=byId.get(id),now=game.time,world=game.battle.world;
     if(safeZone(ball,world))return false;
-    if(s.sealedUntil>now&&['warp','swap','sidestep'].includes(id))return false;
     if(id==='ghost')s.wasGhost=true;
     else if(id==='warp') {const p=spot(ball,game,env,110);if(!p||p.y<=ball.y+10)return false;move(ball,p);ball.vy=Math.max(60,ball.vy);}
     else if(id==='rocket')boost(ball,now);
@@ -195,13 +229,13 @@
       if(!game.static.pins.concat(env.pins).some(p=>Math.hypot(p.x-ball.x,p.y-ball.y)<p.r+ball.r+65))return false;
       const direction=ball.x<world.width/2?1:-1;ball.vx+=direction*140;ball.vy=-115;
     } else if(id==='shield')s.shield=1;
-    else if(id==='cleanse'){s.slowUntil=0;s.slipUntil=0;s.sealedUntil=0;s.controlGrace=now+2;s.guardUntil=now+2;}
+    else if(id==='cleanse'){s.slowUntil=0;s.confusedUntil=0;s.controlGrace=now+2;s.guardUntil=now+2;}
     else if(id==='shock')pulse(game,ball,id,0);
     else if(id==='lightning') {
       const target=nearby(ball,game,420).filter(b=>b.y>ball.y).sort((a,b)=>a.y-b.y)[0];
-      if(!target||!hit(game,ball,target,0,-45,1))return false;
+      if(!target||!hit(game,ball,target,0,-45,1,false,{targeted:true}))return false;
       game.battle.effects.push({x:ball.x,y:ball.y,x2:target.x,y2:target.y,color:'#dfaa36',icon:'⚡',until:now+.5});
-    } else if(id==='goo'||id==='mine'||id==='oil') {
+    } else if(id==='goo'||id==='mine') {
       if(safeZone(ball,world))return false;
       game.battle.traps.push({id,owner:ball.id,x:ball.x,y:ball.y+ball.r*2,until:now+(id==='goo'?2:3)});
     } else if(id==='freeze') {
@@ -230,122 +264,144 @@
       const p={x:ball.x,y:ball.y};move(ball,{x:target.x,y:target.y});move(target,p);target.battle.controlGrace=now+2.3;
     } else if(id==='charge') {
       if(s.energy<3)return false;s.energy=0;boost(ball,now,200);
-    } else if(id==='slipstream') {
-      const target=nearby(ball,game,240).filter(b=>b.y>ball.y+10&&Math.abs(b.x-ball.x)<90).sort((a,b)=>a.y-b.y)[0];
-      if(!target)return false;s.followId=target.id;
-    } else if(id==='sidestep') {
-      const direction=ball.x<world.width/2?1:-1;
-      const x=[100,70,-100,-70].map(dx=>ball.x+direction*dx).find(x=>clearAt(ball,x,ball.y,game,env));
-      if(x===undefined)return false;move(ball,{x,y:ball.y});ball.vx*=.35;
-    } else if(id==='spring')s.springReady=true;
-    else if(id==='glide') {if(Math.abs(ball.vx)<35)return false;}
-    else if(id==='recenter') {const b=window.MarbleCourse.bounds(ball.y,world);if(Math.min(ball.x-b.left,b.right-ball.x)>(b.right-b.left)*.25)return false;}
-    else if(id==='seeker') {
+    } else if(id==='wallride') {
+      const b=window.MarbleCourse.bounds(ball.y,world);if(Math.min(ball.x-b.left,b.right-ball.x)>ball.r+50)return false;
+    } else if(id==='swing') {
+      const pin=game.static.pins.concat(env.pins).filter(p=>Math.hypot(p.x-ball.x,p.y-ball.y)>p.r+ball.r+8&&Math.hypot(p.x-ball.x,p.y-ball.y)<170).sort((a,b)=>Math.hypot(a.x-ball.x,a.y-ball.y)-Math.hypot(b.x-ball.x,b.y-ball.y))[0];
+      if(!pin)return false;s.hook={x:pin.x,y:pin.y,r:pin.r,key:pin.id||pin.machineKey};s.swingSign=ball.x>=pin.x?1:-1;
+    } else if(id==='crossjump') {
+      const b=window.MarbleCourse.bounds(ball.y,world),width=b.right-b.left,mid=(b.left+b.right)/2;
+      const fractions=ball.x<mid?[.8,.7,.9,.6]:[.2,.3,.1,.4];
+      const x=fractions.map(f=>b.left+width*f).find(x=>(x-mid)*(ball.x-mid)<0&&clearAt(ball,x,ball.y,game,env));
+      if(x===undefined)return false;move(ball,{x,y:ball.y});ball.vx*=.3;
+    } else if(id==='seeker') {
       const target=nearby(ball,game,380).filter(b=>b.y>ball.y+25&&!safeZone(b,world)).sort((a,b)=>a.y-b.y)[0];
       if(!target)return false;game.battle.projectiles.push({owner:ball.id,target:target.id,x:ball.x,y:ball.y,until:now+1.4});
-    } else if(id==='seal'||id==='delay') {
-      const target=nearby(ball,game,300).filter(b=>b.y>ball.y+15&&(!effective(b)|| (id==='seal'?['warp','swap','sidestep','mimic','reroll'].includes(effective(b)):byId.get(b.battle.id).cooldown&&b.battle.delayAdded<2))).sort((a,b)=>a.y-b.y)[0];
-      if(!target)return false;
-      const ordinary=!effective(target),status=id==='seal'?{seal:1}:ordinary?null:{delay:1};
-      const slow=id==='delay'&&ordinary ? 0.6 : 0;
-      if(!hit(game,ball,target,0,0,slow,false,status))return false;
-    } else if(id==='gust') {
-      const direction=ball.vx>30?1:ball.vx<-30?-1:ball.x<world.width/2?1:-1;
-      let changed=false;for(const target of nearby(ball,game,210))if((target.x-ball.x)*direction>=-20)changed=hit(game,ball,target,direction*155,15)||changed;
+    } else if(id==='sweeper') {
+      const before=game.battle.traps.length;game.battle.traps=game.battle.traps.filter(t=>Math.hypot(t.x-ball.x,t.y-ball.y)>210);
+      if(before===game.battle.traps.length)return false;
+    } else if(id==='decoy')s.decoyCharges=1;
+    else if(id==='confuse') {
+      let changed=false;for(const target of nearby(ball,game,175))changed=hit(game,ball,target,0,0,0,false,{confuse:true})||changed;
       if(!changed)return false;
+    } else if(id==='tow') {
+      const target=nearby(ball,game,180).filter(b=>!safeZone(b,world)).sort((a,b)=>Math.hypot(a.x-ball.x,a.y-ball.y)-Math.hypot(b.x-ball.x,b.y-ball.y))[0];
+      if(!target||!hit(game,ball,target))return false;s.towId=target.id;
+    } else if(id==='ring'||id==='ramp'||id==='portal') {
+      if(!makeStructure(game,ball,id,env))return false;
+    } else if(id==='machinefast'||id==='machinereverse') {
+      if(!modifyMachines(game,ball,id,env))return false;
+    } else if(id==='convert') {
+      const pin=game.static.pins.filter(p=>p.id&&!p.kind&&!p.kick&&!p.pillar&&!p.island&&!p.switchFor&&Math.hypot(p.x-ball.x,p.y-ball.y)<200&&(game.battle.converted.get(p.id)?.lock||0)<=now).sort((a,b)=>Math.hypot(a.x-ball.x,a.y-ball.y)-Math.hypot(b.x-ball.x,b.y-ball.y))[0];
+      if(!pin)return false;game.battle.converted.set(pin.id,{until:now+2.2,lock:now+4.5});
     }
     s.activeUntil=now+a.duration;emit(game,ball,id);return true;
   }
   function tick(game,dt,env,random=Math.random) {
     if(!game.battle)return;
-    const now=game.time,world=game.battle.world;
-    game.battle.effects=game.battle.effects.filter(e=>e.until>now).slice(-80);
-    game.battle.traps=game.battle.traps.filter(e=>e.until>now).slice(-100);
-    game.battle.projectiles=(game.battle.projectiles||[]).filter(e=>e.until>now).slice(-60);
-    for(const [key,until] of game.battle.disabled)if(until<now)game.battle.disabled.delete(key);
+    const now=game.time,world=game.battle.world,battle=game.battle;
+    battle.effects=battle.effects.filter(e=>e.until>now).slice(-80);
+    battle.traps=battle.traps.filter(e=>e.until>now).slice(-100);
+    battle.projectiles=battle.projectiles.filter(e=>e.until>now).slice(-60);
+    battle.structures=battle.structures.filter(e=>e.until>now).slice(-24);
+    for(const [key,until]of battle.disabled)if(until<now)battle.disabled.delete(key);
+    for(const map of [battle.converted,battle.fieldMods])for(const [key,value]of map)if(value.lock<=now)map.delete(key);
     const ranked=game.balls.filter(b=>!b.finished).sort((a,b)=>b.y-a.y),rank=new Map(ranked.map((b,i)=>[b.id,i]));
-    for(const ball of ranked) {
+    for(const ball of ranked){
       const s=ball.battle;
-      if(s.borrowUntil<=now){if(s.borrowId==='shield')s.shield=0;delete s.borrowId;delete s.borrowUntil;s.activeUntil=0;s.springReady=false;s.followId=null;s.aheadIds=null;s.dodgeUntil=0;}
-      const section=game.battle.sections.filter(([y])=>y<=ball.y).length;
-      if(s.reroll&&section>s.section&&!safeZone(ball,world)) {
+      if(s.borrowUntil<=now){if(s.borrowId==='shield')s.shield=0;delete s.borrowId;delete s.borrowUntil;s.activeUntil=0;s.decoyCharges=0;s.hook=null;s.towId=null;}
+      const section=battle.sections.filter(([y])=>y<=ball.y).length;
+      if(s.reroll&&section>s.section&&!safeZone(ball,world)){
         const choices=abilities.filter(a=>!['reroll','shortcut'].includes(a.id)&&a.id!==s.id),a=choices[Math.floor(random()*choices.length)];
         assign(game,ball,a.id,random,true);emit(game,ball,'reroll',a.name);
       }
-      const state=ball.battle,id=effective(ball),a=byId.get(state.id);
-      if(safeZone(ball,world)){state.activeUntil=0;state.springReady=false;state.slowUntil=0;state.slipUntil=0;state.sealedUntil=0;state.dodgeUntil=0;}
-      if(safeZone(ball,world)&&['ghost','shrink'].includes(id))state.activeUntil=0;
-      if(a.cooldown&&now>=state.next&&state.id!=='wallkick') {
-        const fired=fire(game,ball,state.id,env,random);
-        state.next=now+(fired?a.cooldown:.55);if(fired)state.delayAdded=0;
+      const state=ball.battle,id=effective(ball),a=byId.get(state.id),safe=safeZone(ball,world);
+      if(safe){state.activeUntil=0;state.slowUntil=0;state.confusedUntil=0;state.decoyCharges=0;state.hook=null;state.towId=null;}
+      if(a.cooldown&&now>=state.next&&!['wallkick','slingshot'].includes(state.id)){
+        const fired=fire(game,ball,state.id,env,random);state.next=now+(fired?a.cooldown:.55);
       }
       restoreShape(ball,game,env);
-      ball.mass=id==='heavy'?1.9:1;ball.gravityScale=id==='heavy'?1.2:1;ball.speedLimit=id==='heavy'?370:340;
-      ball.immuneFields=id==='immune';
-      if(active(ball,'armor',now))ball.mass=3;
-      if(!safeZone(ball,world)){
-        if(id==='momentum'){const calm=now-state.collisionAt;ball.gravityScale=1+clamp((calm-2)*.05,0,.22);}
-        if(active(ball,'slipstream',now)){const target=game.balls.find(b=>b.id===state.followId&&!b.finished);if(target&&target.y>ball.y&&target.y-ball.y<320){ball.vy+=75*dt;ball.vx+=clamp(target.x-ball.x,-55,55)*dt;}}
-        if(active(ball,'glide',now)){const lost=Math.abs(ball.vx)*(1-Math.exp(-2.5*dt));ball.vx*=Math.exp(-2.5*dt);ball.vy+=lost*.65;}
-        if(active(ball,'recenter',now)){const b=window.MarbleCourse.bounds(ball.y,world);ball.vx+=clamp(((b.left+b.right)/2-ball.x)*.6,-125,125)*dt;}
-        if(id==='checkpoint'&&section>state.checkpointSection){state.checkpointSection=section;boost(ball,now,90);emit(game,ball,id);}
-        if(id==='overtake'){
-          if(state.aheadIds&&now>=state.reactionAt&&ranked.some(b=>state.aheadIds.includes(b.id)&&b.y<ball.y-2)){state.reactionAt=now+5;boost(ball,now,90);emit(game,ball,id);}
-          state.aheadIds=ranked.filter(b=>b!==ball&&b.y>ball.y).map(b=>b.id);
+      ball.mass=id==='heavy'?1.9:active(ball,'giant',now)&&ball.r>ball.baseR*1.1?2.3:1;
+      ball.gravityScale=id==='heavy'?1.2:1;ball.speedLimit=id==='heavy'?370:340;ball.immuneFields=id==='immune';
+      if(!safe){
+        if(active(ball,'wallride',now)){const b=window.MarbleCourse.bounds(ball.y,world);if(Math.min(ball.x-b.left,b.right-ball.x)<ball.r+50){ball.vx=ball.x<(b.left+b.right)/2?-35:35;ball.vy+=90*dt;}}
+        if(active(ball,'swing',now)&&state.hook){
+          const pin=game.static.pins.concat(env.pins).find(p=>(p.id||p.machineKey)===state.hook.key)||state.hook;state.hook.x=pin.x;state.hook.y=pin.y;
+          const dx=ball.x-pin.x,dy=ball.y-pin.y,d=Math.hypot(dx,dy)||1,rest=Math.max(65,pin.r+ball.r+22),pull=clamp((d-rest)*7,-110,160);
+          if(d>240)state.activeUntil=now;else{ball.vx+=(-dx/d*pull-dy/d*state.swingSign*140)*dt;ball.vy+=(-dy/d*pull+dx/d*state.swingSign*140)*dt;}
         }
-        if(id==='laststand'&&!state.sprintUsed&&ball.y>=world.finishY-800){state.sprintUsed=true;state.activeUntil=now+2;emit(game,ball,id);}
-        if(active(ball,'laststand',now))ball.vy+=110*dt;
+        if(id==='checkpoint'&&section>state.checkpointSection){state.checkpointSection=section;boost(ball,now,90);emit(game,ball,id);}
+        if(active(ball,'tow',now)){
+          const target=game.balls.find(b=>b.id===state.towId&&!b.finished);
+          if(!target||safeZone(target,world)||target.battle.guardUntil>now)state.activeUntil=now;
+          else{const dx=target.x-ball.x,dy=target.y-ball.y,d=Math.hypot(dx,dy)||1,force=clamp((d-55)*1.2,0,110);
+            if(d>260)state.activeUntil=now;else{ball.vx+=dx/d*force*dt/ball.mass;ball.vy+=dy/d*force*dt/ball.mass;target.vx-=dx/d*force*dt/(target.mass||1);target.vy-=dy/d*force*dt/(target.mass||1);}}
+        }
       }
       if(id==='catchup'&&rank.get(ball.id)>=Math.max(1,Math.floor(ranked.length*.6)))ball.gravityScale=1.28;
       if(active(ball,'path',now)&&state.pathX!==undefined)ball.vx+=clamp((state.pathX-ball.x)*2,-100,100)*dt;
       if(state.slowUntil>now){ball.vx*=Math.pow(.82,dt*60);ball.vy*=Math.pow(.988,dt*60);}
-      if(state.slipUntil>now){if(Math.abs(ball.vx)<35)ball.vx+=(ball.id%2?1:-1)*80*dt;ball.vx=clamp(ball.vx*Math.exp(.65*dt),-190,190);}
-      if(state.sealedUntil>now&&!id)ball.vx*=Math.exp(-4*dt);
       if(['vacuum','ice','vortex'].some(k=>active(ball,k,now)))pulse(game,ball,id,dt);
+      if(!active(ball,'decoy',now))state.decoyCharges=0;
     }
-    for(const trap of game.battle.traps) {
-      const owner=game.balls.find(b=>b.id===trap.owner);if(!owner||owner.finished)continue;
-      for(const target of ranked)if(target.id!==owner.id&&Math.hypot(target.x-trap.x,target.y-trap.y)<(trap.id==='mine'?50:40)) {
-        if(trap.id==='goo')hit(game,owner,target,0,0,.7);
-        else if(trap.id==='oil')hit(game,owner,target,Math.sign(target.vx||target.id%2-.5)*65,0,0,false,{slip:1});
-        else if(hit(game,owner,target,Math.sign(target.x-trap.x||1)*140,-65)){trap.until=0;break;}
+    for(const trap of battle.traps){const owner=game.balls.find(b=>b.id===trap.owner);if(!owner||owner.finished)continue;
+      for(const target of ranked)if(target.id!==owner.id&&Math.hypot(target.x-trap.x,target.y-trap.y)<(trap.id==='mine'?50:40)){
+        if(trap.id==='goo')hit(game,owner,target,0,0,.7);else if(hit(game,owner,target,Math.sign(target.x-trap.x||1)*140,-65)){trap.until=0;break;}
       }
     }
-    for(const shot of game.battle.projectiles){
-      const owner=game.balls.find(b=>b.id===shot.owner),target=game.balls.find(b=>b.id===shot.target);
+    for(const shot of battle.projectiles){const owner=game.balls.find(b=>b.id===shot.owner),target=game.balls.find(b=>b.id===shot.target);
       if(!owner||owner.finished||!target||target.finished||safeZone(owner,world)||safeZone(target,world)){shot.until=0;continue;}
       const dx=target.x-shot.x,dy=target.y-shot.y,d=Math.hypot(dx,dy),travel=430*dt;
-      if(d<=travel+target.r+6){hit(game,owner,target,Math.sign(dx||1)*90,-70,.35);shot.until=0;}
+      if(d<=travel+target.r+6){hit(game,owner,target,Math.sign(dx||1)*90,-70,.35,false,{targeted:true});shot.until=0;}
       else{shot.x+=dx/d*travel;shot.y+=dy/d*travel;}
+    }
+    for(const mark of battle.marks)if(mark.at<=now&&mark.until>now){
+      const owner=game.balls.find(b=>b.id===mark.owner),target=game.balls.find(b=>b.id===mark.target);mark.until=0;
+      if(owner&&!owner.finished&&target&&!target.finished)hit(game,owner,target,0,0,.65,true);
+    }
+    battle.marks=battle.marks.filter(m=>m.until>now).slice(-80);
+    for(const object of battle.structures)for(const ball of ranked){
+      if(safeZone(ball,world)||object.used.has(ball.id)||Math.hypot(ball.x-object.x,ball.y-object.y)>ball.r+(object.kind==='ring'?30:23))continue;
+      if(object.kind==='ring'){object.used.add(ball.id);boost(ball,now,100);emit(game,ball,'ring','공용 링');}
+      else if(object.kind==='portal'&&ball.battle.portalGrace<=now&&clearAt(ball,object.exitX,object.exitY,game,env)){
+        object.used.add(ball.id);move(ball,{x:object.exitX,y:object.exitY});ball.vy=Math.max(60,ball.vy);ball.battle.portalGrace=now+1.5;emit(game,ball,'portal','공용 포털');
+      }
     }
   }
   function skipObstacle(ball,object,game) {
     return !!ball.battle&&!!(active(ball,'ghost',game.time)||ball.battle.exitPending)&&!safeZone(ball,game.battle.world)&&!object.sideWall&&!object.funnel;
   }
-  function skipPair(a,b,game) {return !!game?.battle&&((!safeZone(a,game.battle.world)&&(active(a,'orbphase',game.time)||a.battle.dodgeUntil>game.time))||(!safeZone(b,game.battle.world)&&(active(b,'orbphase',game.time)||b.battle.dodgeUntil>game.time)));}
+  function skipPair(a,b,game){return !!game?.battle&&((!safeZone(a,game.battle.world)&&active(a,'orbphase',game.time))||(!safeZone(b,game.battle.world)&&active(b,'orbphase',game.time)));}
   function contact(game,a,b,nx,ny) {
     if(!game?.battle)return;
     if(active(a,'bumper',game.time))hit(game,a,b,nx*180,ny*120);
     if(active(b,'bumper',game.time))hit(game,b,a,-nx*180,-ny*120);
     if(active(a,'reflect',game.time)&&!active(b,'reflect',game.time)&&a.battle.controlGrace<=game.time&&hit(game,a,b,nx*105,ny*65)){a.battle.controlGrace=game.time+1.5;emit(game,a,'reflect','접촉 반사');}
     if(active(b,'reflect',game.time)&&!active(a,'reflect',game.time)&&b.battle.controlGrace<=game.time&&hit(game,b,a,-nx*105,-ny*65)){b.battle.controlGrace=game.time+1.5;emit(game,b,'reflect','접촉 반사');}
-    for(const ball of [a,b]){ball.battle.collisionAt=game.time;if(effective(ball)==='charge'&&game.time-ball.battle.lastImpact>.25){ball.battle.energy=Math.min(3,ball.battle.energy+1);ball.battle.lastImpact=game.time;}}
+    for(const ball of [a,b]){if(effective(ball)==='charge'&&game.time-ball.battle.lastImpact>.25){ball.battle.energy=Math.min(3,ball.battle.energy+1);ball.battle.lastImpact=game.time;}}
   }
-  function obstacleHit(game,ball,previous) {
+  function obstacleHit(game,ball,previous,object=null,nx=0,ny=0,surfaceVx=0,surfaceVy=0){
     if(!ball.battle)return;
-    ball.battle.collisionAt=game.time;
-    if(active(ball,'spring',game.time)&&ball.battle.springReady&&!safeZone(ball,game.battle.world)){
-      ball.battle.springReady=false;ball.vx+=(ball.x<game.battle.world.width/2?1:-1)*110;ball.vy=Math.max(80,ball.vy,previous.vy*.5);ball.boostUntil=game.time+.4;emit(game,ball,'spring','반동');
+    if(!safeZone(ball,game.battle.world)&&object){
+      if(active(ball,'springball',game.time)&&game.time-ball.battle.lastSpring>.2){
+        const toward=(previous.vx-surfaceVx)*nx+(previous.vy-surfaceVy)*ny;
+        if(toward< -12){const impulse=clamp(-toward*.65,35,150);ball.vx+=nx*impulse;ball.vy+=ny*impulse;ball.boostUntil=game.time+.4;ball.battle.lastSpring=game.time;}
+      }
+      if(effective(ball)==='slingshot'&&game.time>=ball.battle.next&&Math.hypot(surfaceVx,surfaceVy)>12){
+        ball.vx+=clamp(surfaceVx*1.4,-165,165);ball.vy+=clamp(surfaceVy*1.4,-140,140);ball.boostUntil=game.time+.5;ball.battle.next=game.time+6;emit(game,ball,'slingshot');
+      }
     }
     if(active(ball,'absorb',game.time)){ball.vx=previous.vx*.6+ball.vx*.4;ball.vy=Math.max(12,previous.vy*.4,ball.vy*.15);}
     if(effective(ball)==='charge'&&game.time-ball.battle.lastImpact>.25){ball.battle.energy=Math.min(3,ball.battle.energy+1);ball.battle.lastImpact=game.time;}
   }
   function wallHit(game,ball,direction) {
-    if(ball.battle)ball.battle.collisionAt=game.time;
+    if(active(ball,'wallride',game.time)&&!safeZone(ball,game.battle.world)){ball.vx=direction*12;ball.vy=Math.max(110,ball.vy);}
     if(effective(ball)==='wallkick'&&game.time>=ball.battle.next){ball.vx=direction*170;ball.vy=Math.max(80,ball.vy);ball.battle.next=game.time+3;emit(game,ball,'wallkick');}
   }
   function field(game,ball,source,dt) {
     if(disabled(game,source))return;
+    const mod=game.battle?.fieldMods.get(source.id);
+    if(mod?.until>game.time){source={...source,strength:source.strength*(mod.kind==='machinefast'?1.4:source.kind==='magnet'?-1:1),direction:source.direction*(mod.kind==='machinereverse'?-1:1)};}
     const id=effective(ball),dx=source.x-ball.x,dy=source.y-ball.y,d=Math.hypot(dx,dy);
     if(d&&d<source.range&&id==='windride'&&source.kind==='wind') {
       const force=source.strength*(1-d/source.range);ball.vx+=source.direction*force*.3*dt;ball.vy+=(40+force*.45)*dt;
@@ -353,7 +409,11 @@
       const force=source.strength*(1-d/source.range);ball.vx-=dx/d*force*dt;ball.vy+=(25-dy/d*force*.12)*dt;
     } else window.MarbleCourse.field(ball,source,dt);
   }
-  function insulates(ball,game){return !!game.battle&&active(ball,'insulate',game.time)&&!safeZone(ball,game.battle.world);}
+  function converted(game,pin){return !!game.battle&&(game.battle.converted.get(pin.id)?.until||0)>game.time;}
+  function kick(game,ball,pin,nx,ny){
+    const transformed=converted(game,pin);window.MarbleCourse.kick(ball,transformed?{...pin,kick:190}:pin,nx,ny,game.time);
+    if(transformed)pin.flashUntil=game.time+.18;
+  }
   function caption(ball) {
     if(!ball.battle?.id)return '';
     const a=byId.get(ball.battle.id),copy=ball.battle.borrowId?'→'+ability(ball).name:'';
@@ -368,16 +428,33 @@
     let state=a.cooldown?'다음 '+Math.max(0,Math.ceil(s.next-time))+'초':a.id==='shortcut'?'2구간 출발 · 추가 효과 없음':'상시';
     if(s.activeUntil>time)state='발동 중';if(s.shield)state='보호막 준비';
     if(a.id==='charge')state='충전 '+s.energy+'/3';if(a.id==='reroll')state='다음 구간에서 변경';
-    if(['dodge','counterboost','overtake'].includes(a.id))state=s.reactionAt>time?'재준비 '+Math.ceil(s.reactionAt-time)+'초':'조건 대기';
-    if(a.id==='momentum')state=time-s.collisionAt>=2?'연속 질주 중':'충돌 없이 2초 대기';
-    if(a.id==='checkpoint')state='다음 구간 통과 대기';if(a.id==='laststand')state=s.sprintUsed?(s.activeUntil>time?'스퍼트 중':'사용 완료'):'결승 800m 앞 대기';
-    if(s.slipUntil>time)state+=' · 미끄러짐';if(s.sealedUntil>time)state+=' · 공간 봉인';
+    if(a.id==='slingshot')state=s.next>time?'다음 '+Math.ceil(s.next-time)+'초':'움직이는 장애물 충돌 대기';
+    if(a.id==='revenge')state=s.revengeReadyAt>time?'재준비 '+Math.ceil(s.revengeReadyAt-time)+'초':'피격 대기';
+    if(a.id==='checkpoint')state='다음 구간 통과 대기';
+    if(s.confusedUntil>time)state+=' · 혼란';
     return '#'+ball.id+' '+label(ball)+' · '+state+(s.reroll?' · 구간마다 재추첨':'')+' — '+a.description;
   }
   function drawWorld(ctx,game,camera) {
     if(!game.battle)return;
     ctx.save();
-    for(const trap of game.battle.traps)if(trap.y>camera.top-80&&trap.y<camera.top+camera.visibleHeight+80){ctx.fillStyle=trap.id==='goo'?'#74b55b55':trap.id==='oil'?'#4c668a55':'#c371be66';ctx.beginPath();ctx.arc(trap.x,trap.y,trap.id==='goo'?28:20,0,Math.PI*2);ctx.fill();ctx.font='18px sans-serif';ctx.textAlign='center';ctx.fillStyle='#555';ctx.fillText(trap.id==='goo'?'●':trap.id==='oil'?'≈':'✹',trap.x,trap.y+6);}
+    for(const trap of game.battle.traps)if(trap.y>camera.top-80&&trap.y<camera.top+camera.visibleHeight+80){ctx.fillStyle=trap.id==='goo'?'#74b55b55':'#c371be66';ctx.beginPath();ctx.arc(trap.x,trap.y,trap.id==='goo'?28:20,0,Math.PI*2);ctx.fill();ctx.font='18px sans-serif';ctx.textAlign='center';ctx.fillStyle='#555';ctx.fillText(trap.id==='goo'?'●':'✹',trap.x,trap.y+6);}
+    for(const object of game.battle.structures){
+      if(object.y<camera.top-250||object.y>camera.top+camera.visibleHeight+100)continue;
+      ctx.save();ctx.globalAlpha=Math.min(1,(object.until-game.time)*3);ctx.lineWidth=4;
+      if(object.kind==='ramp'){const s=object.segment;ctx.strokeStyle='#8970b7';ctx.beginPath();ctx.moveTo(s.x1,s.y1);ctx.lineTo(s.x2,s.y2);ctx.stroke();ctx.setLineDash([5,5]);ctx.lineWidth=2;ctx.strokeStyle='#f7edff';ctx.stroke();}
+      else{ctx.strokeStyle=object.kind==='ring'?'#dcaa34':'#9174d3';ctx.beginPath();ctx.ellipse(object.x,object.y,object.kind==='ring'?30:23,18,0,0,Math.PI*2);ctx.stroke();ctx.font='bold 17px sans-serif';ctx.textAlign='center';ctx.fillStyle=ctx.strokeStyle;ctx.fillText('↓',object.x,object.y+6);
+        if(object.kind==='portal'){ctx.setLineDash([5,6]);ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(object.x,object.y+20);ctx.lineTo(object.exitX,object.exitY-20);ctx.stroke();ctx.setLineDash([]);ctx.strokeStyle='#4eaaa9';ctx.lineWidth=4;ctx.beginPath();ctx.ellipse(object.exitX,object.exitY,23,18,0,0,Math.PI*2);ctx.stroke();}}
+      ctx.restore();
+    }
+    for(const ball of game.balls){
+      if(ball.finished||ball.y<camera.top-100||ball.y>camera.top+camera.visibleHeight+100)continue;
+      const state=ball.battle;ctx.save();ctx.lineWidth=2;ctx.strokeStyle='#a287bc';
+      if(active(ball,'swing',game.time)&&state.hook){ctx.beginPath();ctx.moveTo(ball.x,ball.y);ctx.lineTo(state.hook.x,state.hook.y);ctx.stroke();}
+      if(active(ball,'tow',game.time)){const target=game.balls.find(b=>b.id===state.towId&&!b.finished);if(target){ctx.setLineDash([6,4]);ctx.beginPath();ctx.moveTo(ball.x,ball.y);ctx.lineTo(target.x,target.y);ctx.stroke();ctx.setLineDash([]);}}
+      if(active(ball,'decoy',game.time)&&state.decoyCharges){const b=window.MarbleCourse.bounds(ball.y,game.battle.world),x=clamp(ball.x+30,b.left+ball.r+3,b.right-ball.r-3);ctx.globalAlpha=.55;ctx.setLineDash([3,3]);ctx.fillStyle=ball.color;ctx.beginPath();ctx.arc(x,ball.y-18,ball.r,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.font='bold 12px sans-serif';ctx.fillStyle='#fff';ctx.textAlign='center';ctx.fillText('?',x,ball.y-14);}
+      ctx.restore();
+    }
+    for(const mark of game.battle.marks){const target=game.balls.find(b=>b.id===mark.target&&!b.finished);if(target&&target.y>camera.top&&target.y<camera.top+camera.visibleHeight){ctx.fillStyle='#bf8056';ctx.font='16px sans-serif';ctx.textAlign='center';ctx.fillText('◇',target.x,target.y-target.r-12);}}
     for(const shot of game.battle.projectiles||[])if(shot.until>game.time&&shot.y>camera.top-30&&shot.y<camera.top+camera.visibleHeight+30){ctx.fillStyle='#db9e45';ctx.beginPath();ctx.arc(shot.x,shot.y,5,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#e6be6d99';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(shot.x-8,shot.y-14);ctx.lineTo(shot.x,shot.y);ctx.stroke();}
     for(const e of game.battle.effects)if(e.y>camera.top-90&&e.y<camera.top+camera.visibleHeight+90){ctx.globalAlpha=clamp((e.until-game.time)/.7,0,1);ctx.strokeStyle=e.color;ctx.lineWidth=3;ctx.beginPath();ctx.arc(e.x,e.y,15+(1-(e.until-game.time)/.7)*50,0,Math.PI*2);ctx.stroke();if(e.x2!==undefined){ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.lineTo(e.x2,e.y2);ctx.stroke();}}
     ctx.restore();
@@ -391,5 +468,5 @@
     if(lit||game.selectedBall===ball.id||game.balls.length<=20||camera.zoom>=1.8){ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=colors[a.group];ctx.fillText(a.icon,ball.x,ball.y-ball.r-12);}
     ctx.restore();
   }
-  window.MarbleBattle={abilities,byId,init,initGolden,placeShortcuts,assign,tick,fire,hit,spot,clearAt,timeFor,frozen,disabled,skipObstacle,skipPair,contact,obstacleHit,wallHit,field,insulates,caption,label,describe,drawWorld,drawBall};
+  window.MarbleBattle={abilities,byId,init,initGolden,placeShortcuts,assign,tick,fire,hit,spot,clearAt,timeFor,frozen,disabled,skipObstacle,skipPair,contact,obstacleHit,wallHit,field,machineRate,temporarySegments,converted,kick,caption,label,describe,drawWorld,drawBall};
 })();

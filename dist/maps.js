@@ -168,25 +168,25 @@
     const pins=[],segments=[],Course=window.MarbleCourse,Battle=window.MarbleBattle;
     for(const f of game.static.features||[]) {
       if(!f.key)continue;
-      const t=Battle.timeFor(game,f.key,time),stopped=Battle.frozen(game,f.key),b=Course.bounds(f.y,world),mid=(b.left+b.right)/2;
+      const t=Battle.timeFor(game,f.key,time),rate=Battle.machineRate(game,f.key),stopped=rate===0,b=Course.bounds(f.y,world),mid=(b.left+b.right)/2;
       if(f.kind==='piston') {
         const amplitude=f.amplitude||105,phase=t*.9+f.section,cx=b.left+(b.right-b.left)*(f.fraction||.5);
-        pins.push({x:cx+Math.sin(phase)*Math.min(amplitude,(b.right-b.left)*.22),y:f.y,r:28+f.section%3*6,vx:stopped?0:Math.cos(phase)*Math.min(amplitude,(b.right-b.left)*.22)*.9,moving:true,piston:true,machineKey:f.key});
+        pins.push({x:cx+Math.sin(phase)*Math.min(amplitude,(b.right-b.left)*.22),y:f.y,r:28+f.section%3*6,vx:Math.cos(phase)*Math.min(amplitude,(b.right-b.left)*.22)*.9*rate,moving:true,piston:true,machineKey:f.key});
       } else if(f.kind==='gate'||f.kind==='stoneGate'||f.kind==='press') {
         const frequency=f.kind==='press'?1.3:1.05,phase=t*frequency+(f.phase??f.section),held=f.openUntil>game.time,cx=b.left+(b.right-b.left)*(f.fraction||.5);
         const maxOpening=Math.max(100,Math.min((b.right-b.left)*.78,2*Math.min(cx-b.left,b.right-cx)-60)),minOpening=f.locked?54:90;
-        const travel=f.locked?20:maxOpening-minOpening,opening=held?maxOpening:minOpening+(1+Math.sin(phase))*travel/2,speed=stopped||held?0:Math.cos(phase)*travel*frequency/4;
+        const travel=f.locked?20:maxOpening-minOpening,opening=held?maxOpening:minOpening+(1+Math.sin(phase))*travel/2,speed=held?0:Math.cos(phase)*travel*frequency/4*rate;
         const top=Course.bounds(f.y-25,world);
         segments.push({x1:top.left,y1:f.y-25,x2:cx-opening/2,y2:f.y+20,radius:f.kind==='press'?11:6,vx:-speed,machineKey:f.key,sluice:true,press:f.kind==='press',ancient:f.kind==='stoneGate'},
           {x1:top.right,y1:f.y-25,x2:cx+opening/2,y2:f.y+20,radius:f.kind==='press'?11:6,vx:speed,machineKey:f.key,sluice:true,press:f.kind==='press',ancient:f.kind==='stoneGate'});
       } else if(f.kind==='bridge') {
-        const angle=Math.sin(t*.8+(f.phase??f.section))*.25,omega=stopped?0:Math.cos(t*.8+(f.phase??f.section))*.25*.8,half=Math.min(140,(b.right-b.left)*.25),cx=b.left+(b.right-b.left)*(f.fraction||.5);
+        const angle=Math.sin(t*.8+(f.phase??f.section))*.25,omega=Math.cos(t*.8+(f.phase??f.section))*.25*.8*rate,half=Math.min(140,(b.right-b.left)*.25),cx=b.left+(b.right-b.left)*(f.fraction||.5);
         segments.push({x1:cx-Math.cos(angle)*half,y1:f.y-Math.sin(angle)*half,x2:cx+Math.cos(angle)*half,y2:f.y+Math.sin(angle)*half,
           cx,cy:f.y,omega,rotating:true,radius:5,bridge:true,machineKey:f.key});
       } else if(f.kind==='boulder') {
-        const period=f.period||4.8,cycle=((t+(f.phase??f.section*.7))%period)/period;
+        const period=f.period||4.8,cycle=(((t+(f.phase??f.section*.7))%period)+period)%period/period;
         if(cycle<.84){const phase=cycle/.84,y=f.y-f.height/2+f.height*phase*phase,x=b.left+(b.right-b.left)*(f.fraction||.5),radius=f.radius||32;
-          if(phase>.08||!game.balls.some(ball=>!ball.finished&&Math.hypot(ball.x-x,ball.y-y)<ball.r+radius+24))pins.push({x,y,r:radius,vy:stopped?0:2*f.height*phase/(period*.84),moving:true,boulder:true,ancient:true,machineKey:f.key});}
+          if(phase>.08||!game.balls.some(ball=>!ball.finished&&Math.hypot(ball.x-x,ball.y-y)<ball.r+radius+24))pins.push({x,y,r:radius,vy:2*f.height*phase/(period*.84)*rate,moving:true,boulder:true,ancient:true,machineKey:f.key});}
       }
     }
     return {pins,segments};

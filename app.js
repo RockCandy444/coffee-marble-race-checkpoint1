@@ -318,7 +318,7 @@
     return bars.map((bar, index) => {
       const machineKey='rotor-'+index, localTime=Battle.timeFor(game,machineKey,time);
       const angle = localTime * bar.speed + bar.phase;
-      const omega = Battle.frozen(game,machineKey)?0:bar.speed;
+      const omega = bar.speed * Battle.machineRate(game,machineKey);
       const dx = Math.cos(angle) * bar.length / 2;
       const dy = Math.sin(angle) * bar.length / 2;
       return { x1: bar.x - dx, y1: bar.y * Course.verticalScale - dy, x2: bar.x + dx, y2: bar.y * Course.verticalScale + dy, cx: bar.x, cy: bar.y * Course.verticalScale, omega, radius: 4 + bar.length / 85, rotating: true, machineKey };
@@ -332,7 +332,7 @@
       { x: 240, y: 3160, r: 20, amplitude: 100, speed: 0.85, phase: 0 },
       { x: 750, y: 3280, r: 38, amplitude: 110, speed: 0.7, phase: 2 },
       { x: 430, y: 3470, r: 27, amplitude: 150, speed: 0.9, phase: 1 }
-    ].map((pin,index) => {const machineKey='moving-pin-'+index,t=Battle.timeFor(game,machineKey,time);return { ...pin, y: pin.y * Course.verticalScale, x: pin.x + Math.sin(t * pin.speed + pin.phase) * pin.amplitude, vx: Battle.frozen(game,machineKey)?0:Math.cos(t * pin.speed + pin.phase) * pin.amplitude * pin.speed, moving: true, bumper: true, machineKey };});
+    ].map((pin,index) => {const machineKey='moving-pin-'+index,t=Battle.timeFor(game,machineKey,time);return { ...pin, y: pin.y * Course.verticalScale, x: pin.x + Math.sin(t * pin.speed + pin.phase) * pin.amplitude, vx: Math.cos(t * pin.speed + pin.phase) * pin.amplitude * pin.speed * Battle.machineRate(game,machineKey), moving: true, bumper: true, machineKey };});
   }
 
   function movingSegments(time) {
@@ -342,12 +342,13 @@
       for (const [y, center, length, radius, phase] of [[2280, 310, 190, 13, 0], [2530, 690, 290, 8, 1.8]]) {
         const machineKey='slider-'+y,t=Battle.timeFor(game,machineKey,time);
         const cx = center + Math.sin(t * 0.9 + phase) * 150;
-        result.push({ x1: cx - length / 2, y1: y * Course.verticalScale, x2: cx + length / 2, y2: y * Course.verticalScale, radius, vx: Battle.frozen(game,machineKey)?0:Math.cos(t * 0.9 + phase) * 135, sliding: true, machineKey });
+        result.push({ x1: cx - length / 2, y1: y * Course.verticalScale, x2: cx + length / 2, y2: y * Course.verticalScale, radius, vx: Math.cos(t * 0.9 + phase) * 135 * Battle.machineRate(game,machineKey), sliding: true, machineKey });
       }
     }
     const diameter = (game.balls[0].baseR ?? game.balls[0].r) * 2;
     if(!Extra.has(game.map))result.push(...Course.defenders(time,WORLD));
     result.push(...Course.goalkeeper(game.keeper, time, diameter, WORLD));
+    result.push(...Battle.temporarySegments(game));
     return result;
   }
 
@@ -647,8 +648,8 @@
     const toward = (ball.vx - (pin.vx || 0)) * nx + (ball.vy - (pin.vy || 0)) * ny;
     const previous=game.battle?{vx:ball.vx,vy:ball.vy}:null;
     if (toward < 0) { ball.vx -= 1.48 * toward * nx; ball.vy -= 1.48 * toward * ny; }
-    if(!Battle.disabled(game,pin)){if(!Battle.insulates(ball,game))Course.kick(ball, pin, nx, ny, game.time);Extra.onPinContact(pin,ball,game);}
-    if(game.battle)Battle.obstacleHit(game,ball,previous);
+    if(!Battle.disabled(game,pin)){Battle.kick(game,ball,pin,nx,ny);Extra.onPinContact(pin,ball,game);}
+    if(game.battle)Battle.obstacleHit(game,ball,previous,pin,nx,ny,pin.vx||0,pin.vy||0);
   }
   function resolveSegment(ball, segment) {
     if(segment.broken)return;
@@ -679,11 +680,11 @@
     const previous=game.battle?{vx:ball.vx,vy:ball.vy}:null;
     if (toward < 0) { ball.vx -= 1.5 * toward * nx; ball.vy -= 1.5 * toward * ny; }
     Extra.belt(segment,ball,game);
-    if(game.battle)Battle.obstacleHit(game,ball,previous);
+    if(game.battle)Battle.obstacleHit(game,ball,previous,segment,nx,ny,surfaceVx,surfaceVy);
   }
   function resolveBallPairs(balls) {
     if (balls.length < 2) return;
-    const cellSize = Math.max(12, Math.max(...balls.map(b=>b.baseR??b.r)) * 2.2);
+    const cellSize = Math.max(12, Math.max(...balls.map(b=>Math.max(b.baseR??b.r,b.r))) * 2.2);
     const buckets = new Map();
     for (const ball of balls) {
       const cx = Math.floor(ball.x / cellSize);
@@ -1066,7 +1067,7 @@
         ctx.beginPath(); ctx.arc(pin.x + 1, pin.y + 2, pin.r + 1.2, 0, Math.PI * 2); ctx.fillStyle = 'rgba(96,65,36,.12)'; ctx.fill();
         ctx.beginPath(); ctx.arc(pin.x, pin.y, pin.r, 0, Math.PI * 2);
         const grad = ctx.createRadialGradient(pin.x - 2, pin.y - 2, 1, pin.x, pin.y, pin.r);
-        const tones = Extra.pinTones(game.map,pin)||(pin.kind === 'power' ? ['#fff6a8', '#ee7743'] : pin.kind === 'magnet' ? ['#ddd0ff', '#8160b4'] : pin.kind === 'wind' ? ['#c6f2f4', '#338c9f'] : pin.piston?['#d5e1e9','#52687a']:pin.riverRock?['#bfd9d7','#638a8a']:pin.ancient?['#dfd5ac','#8a9471']:pin.defender ? ['#b9d7ef', '#4a739a'] : pin.bumper ? ['#b8e6db', '#4f9483'] : ['#ffe6aa', '#bc8450']);
+        const tones = Battle.converted(game,pin)?['#fff2b3','#a56ae0']:Extra.pinTones(game.map,pin)||(pin.kind === 'power' ? ['#fff6a8', '#ee7743'] : pin.kind === 'magnet' ? ['#ddd0ff', '#8160b4'] : pin.kind === 'wind' ? ['#c6f2f4', '#338c9f'] : pin.piston?['#d5e1e9','#52687a']:pin.riverRock?['#bfd9d7','#638a8a']:pin.ancient?['#dfd5ac','#8a9471']:pin.defender ? ['#b9d7ef', '#4a739a'] : pin.bumper ? ['#b8e6db', '#4f9483'] : ['#ffe6aa', '#bc8450']);
         grad.addColorStop(0, tones[0]); grad.addColorStop(1, tones[1]); ctx.fillStyle = grad; ctx.fill();
         if (pin.ring || pin.moving) { ctx.strokeStyle = pin.moving ? '#4d6fa4' : '#a976b3'; ctx.lineWidth = 4; ctx.stroke(); }
         Course.drawPinSymbol(ctx, pin, game.time);
@@ -1076,7 +1077,7 @@
     }
     const segments = game.static.segments.concat(movingSegments(game.time));
     for (const segment of segments) {
-      if (segment.sideWall || segment.funnel) continue;
+      if (segment.sideWall || segment.funnel || segment.temporary) continue;
       if (Math.max(segment.y1, segment.y2) + segment.radius < camera.top || Math.min(segment.y1, segment.y2) - segment.radius > camera.top + camera.visibleHeight) continue;
       if(Extra.drawSegment(ctx,segment,game.time,game.map))continue;
       if (segment.circle) {
