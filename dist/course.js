@@ -186,7 +186,7 @@
     ball.vy = -(320 + random() * 80);
     ball.boostUntil = time + 1.4;
     ball.magnetGrace = 1.4;
-    ball.stallTime = 0; ball.rescueCount = 0;
+    ball.stallTime = 0; ball.noProgressTime = 0; ball.rescueCount = 0;
   }
   function goalkeeper(type, time, diameter, world) {
     const mid = world.width / 2, gap = world.finishRight - world.finishLeft, y = world.finishY - 45;

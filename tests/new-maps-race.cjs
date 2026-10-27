@@ -13,7 +13,7 @@ for(const mode of modes)for(const map of mapNames)for(const count of [2,100]) {
     const {game,world,maps}=simulation.state();
     for(const ball of game.balls){const b=course.bounds(ball.y,world);assert.ok(ball.x-ball.r>b.left&&ball.x+ball.r<b.right,'countdown starts inside walls');}
     assert.equal(maps[map].sections.length,6);assert.ok(game.static.pins.length>180);
-    if(mode==='battle'&&count===100){game.balls.forEach((b,i)=>battle.assign(game,b,battle.abilities[i%31].id));battle.placeShortcuts(game,simulation.dynamics());}
+    if(mode==='battle'&&count===100){game.balls.forEach((b,i)=>battle.assign(game,b,battle.abilities[i%battle.abilities.length].id));battle.placeShortcuts(game,simulation.dynamics());}
     let steps=0,escapes=0;
     while(game.order.length<count&&!game.paused&&steps++<360*120) {
       simulation.step(1/120);

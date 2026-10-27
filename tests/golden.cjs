@@ -8,7 +8,7 @@ for(const count of [2,100]) {
   assert.equal(golden.choose(balls,random([.1])),null);
   assert.equal(golden.choose(balls,random([.9999])),null);
   const hit=golden.choose(balls,random([.099999,.999999,.999999]));
-  assert.equal(hit.ballId,count); assert.equal(hit.abilityId,'shortcut');
+  assert.equal(hit.ballId,count); assert.equal(hit.abilityId,golden.abilities.at(-1).id);
   let hits=0;
   for(let i=0;i<10000;i++) if(golden.choose(balls,random([(i+.5)/10000,.5,.5]))) hits++;
   assert.equal(hits,1000,'one race-wide 10% interval, independent of marble count');
@@ -16,7 +16,7 @@ for(const count of [2,100]) {
   const selected=Array(count).fill(0),abilities=Array(golden.abilities.length).fill(0);
   for(let i=0;i<count;i++) selected[golden.choose(balls,random([0,(i+.5)/count,0])).ballId-1]++;
   assert.ok(selected.every(n=>n===1),'each marble has one equal selection interval');
-  for(let i=0;i<3100;i++) abilities[golden.abilities.findIndex(a=>a.id===golden.choose(balls,random([0,0,(i+.5)/3100])).abilityId)]++;
+  for(let i=0;i<(golden.abilities.length*100);i++) abilities[golden.abilities.findIndex(a=>a.id===golden.choose(balls,random([0,0,(i+.5)/(golden.abilities.length*100)])).abilityId)]++;
   assert.ok(abilities.every(n=>n===100));
 }
 const immune={immuneFields:true,x:400,y:400,vx:20,vy:30};

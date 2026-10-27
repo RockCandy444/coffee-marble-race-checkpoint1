@@ -568,11 +568,13 @@
       if (ball.y > ball.maxY + 0.7) {
         ball.maxY = ball.y;
         ball.stallTime = 0;
+        ball.noProgressTime = 0;
       } else if (Math.hypot(ball.vx, ball.vy) < 18) {
         ball.stallTime += dt;
       } else {
         ball.stallTime = Math.max(0, ball.stallTime - dt * 0.25);
       }
+      if (ball.y <= ball.maxY + 0.7) ball.noProgressTime = (ball.noProgressTime || 0) + dt;
       // 실제 결승선 위에서 아래로 이동하며 좁은 게이트를 통과했을 때만 완주 처리합니다.
       if (ball.prevY < WORLD.finishY && ball.y >= WORLD.finishY) {
         const travel = ball.y - ball.prevY;
@@ -583,7 +585,13 @@
           continue;
         }
       }
-      if (ball.stallTime > 7.5) {
+      if (ball.noProgressTime > 12 && ball.y < WORLD.funnelY) {
+        const rescues = ball.rescueCount + 1;
+        Course.rescue(ball, game.time);
+        ball.rescueCount = rescues;
+        ball.noProgressTime = 0;
+        if (ball.rescueCount >= 4) game.stuckCount++;
+      } else if (ball.stallTime > 7.5) {
         ball.stallTime = 0;
         ball.rescueCount++;
         ball.vy += 70 + Math.random() * 30;
@@ -639,7 +647,7 @@
     const toward = (ball.vx - (pin.vx || 0)) * nx + (ball.vy - (pin.vy || 0)) * ny;
     const previous=game.battle?{vx:ball.vx,vy:ball.vy}:null;
     if (toward < 0) { ball.vx -= 1.48 * toward * nx; ball.vy -= 1.48 * toward * ny; }
-    if(!Battle.disabled(game,pin)){Course.kick(ball, pin, nx, ny, game.time);Extra.onPinContact(pin,ball,game);}
+    if(!Battle.disabled(game,pin)){if(!Battle.insulates(ball,game))Course.kick(ball, pin, nx, ny, game.time);Extra.onPinContact(pin,ball,game);}
     if(game.battle)Battle.obstacleHit(game,ball,previous);
   }
   function resolveSegment(ball, segment) {
