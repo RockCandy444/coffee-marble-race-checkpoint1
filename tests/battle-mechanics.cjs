@@ -23,7 +23,7 @@ game.time+=2;battle.tick(game,.01,env);assert.equal(battle.skipObstacle(a,{},gam
 ({game,a}=arena('path'));game.static.pins=[{x:a.x,y:a.y+100,r:20}];assert.equal(battle.fire(game,a,'path',env),true);assert.ok(Math.abs(a.vx)>0);
 ({game,a}=arena('shrink'));battle.fire(game,a,'shrink',env);battle.tick(game,.01,env);assert.ok(a.r<a.baseR);game.time+=2;battle.tick(game,.01,env);assert.equal(a.r,a.baseR);
 ({game,a}=arena('shrink'));battle.fire(game,a,'shrink',env);battle.tick(game,.01,env);game.static.pins=[{x:a.x-23,y:a.y,r:15},{x:a.x+23,y:a.y,r:15}];game.time+=2;battle.tick(game,.01,env);assert.equal(a.r,a.baseR);assert.equal(battle.clearAt(a,a.x,a.y,game,env),true,'growth moves out of a narrow gap safely');
-({game,a}=arena('frog'));game.static.pins=[{x:a.x,y:a.y+35,r:20}];battle.fire(game,a,'frog',env);assert.ok(a.vy<0&&a.vx!==0);
+({game,a}=arena('frog'));game.static.pins=[{x:a.x,y:a.y+35,r:20}];battle.fire(game,a,'frog',env);assert.ok(a.vy>0&&a.vx!==0);
 ({game,a,b}=arena('shield'));battle.fire(game,a,'shield',env);assert.equal(battle.hit(game,b,a,150,0,1),false);assert.equal(a.battle.shield,0);assert.equal(a.vx,0);
 ({game,a}=arena('absorb'));battle.fire(game,a,'absorb',env);a.vy=-200;battle.obstacleHit(game,a,{vx:0,vy:150});assert.ok(a.vy>0);
 ({game,a,b}=arena('reflect'));battle.fire(game,a,'reflect',env);battle.hit(game,b,a,-150,0);assert.equal(a.vx,0);assert.ok(b.vx>0);

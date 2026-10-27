@@ -199,17 +199,18 @@
     const section=Math.max(0,definitions.rapids.sections.findLastIndex(([start])=>ball.y>=start));
     let ax=0,ay=0,bankReturn=[0,1,2,4].includes(section)?(ball.x<(banks.left+banks.right)/2?1:-1)*45*(1-bankFade):0;
     for(const f of game.static.features) {
+      const sign=flowDirection(game,f);
       if(f.kind==='current'&&Math.abs(ball.y-f.y)<f.height/2) {
         const pulse=flowPulse(f,game.time),u=(ball.y-f.y)/f.height+.5;
         // Bank eddies curl inward gently while the main current loses force at the edge.
         bankReturn+=(ball.x<(banks.left+banks.right)/2?1:-1)*f.strength*.13*pulse*Math.sin(u*Math.PI)*(1-bankFade);
         for(const lane of f.lanes){const c=channelAt(f,lane,ball.y,world),offset=(c.x-ball.x)/c.halfWidth;if(Math.abs(offset)>=1)continue;
           const envelope=(1-offset*offset)*Math.sin(u*Math.PI),strength=f.strength*pulse*envelope;
-          ax+=(c.slope*.65+offset*.3)*strength;ay+=strength*.32;
+          ax+=(c.slope*.65+offset*.3)*strength*sign;ay+=strength*.32*sign;
         }
       } else if(f.kind==='whirlpool'&&Math.abs(ball.y-f.y)<f.range) {
         const b=Course.bounds(f.y,world),cx=b.left+(b.right-b.left)*(f.fraction||.5),dx=ball.x-cx,dy=ball.y-f.y,d=Math.hypot(dx,dy);
-        if(d>1&&d<f.range){const factor=(1-d/f.range)*(f.power||1);ax+=(-dy/d*f.direction*330-dx/d*65)*factor;ay+=(dx/d*f.direction*100+110)*factor;}
+        if(d>1&&d<f.range){const factor=(1-d/f.range)*(f.power||1);ax+=(-dy/d*f.direction*sign*330-dx/d*65)*factor;ay+=(dx/d*f.direction*sign*100+110)*factor;}
       }
     }
     // Flow loses force at solid board surfaces, allowing gravity to release a marble
@@ -219,8 +220,9 @@
       if(s.sideWall||s.funnel||s.broken)continue;
       surfaceFade=Math.min(surfaceFade,Math.max(0,Math.min(1,(distance(ball.x,ball.y,s)-(ball.r||0)-(s.radius||4.5))/45)));
     }
-    ball.vx+=(clamp(ax,-380,380)*bankFade+clamp(bankReturn,-85,85))*surfaceFade*dt;ball.vy+=clamp(ay,0,220)*surfaceFade*bankFade*dt;
+    ball.vx+=(clamp(ax,-380,380)*bankFade+clamp(bankReturn,-85,85))*surfaceFade*dt;ball.vy+=clamp(ay,-220,220)*surfaceFade*bankFade*dt;
   }
+  function flowDirection(game,feature){const mod=game.battle?.fieldMods?.get(feature.key);return mod?.kind==='machinereverse'&&mod.until>game.time?-1:1;}
   function onContact(segment,ball,game,toward) {
     if(!segment.breakable||segment.broken)return false;
     if(-toward<35||game.time-(segment.hits.get(ball.id)??-1)<.3)return false;
@@ -266,21 +268,22 @@
     for(const f of game.static.features) {
       if(f.y+400<camera.top||f.y-400>camera.top+camera.visibleHeight)continue;
       const b=window.MarbleCourse.bounds(f.y,world),mid=(b.left+b.right)/2;
+      const sign=flowDirection(game,f);
       if(f.kind==='current') {
         const pulse=flowPulse(f,game.time);ctx.save();ctx.globalAlpha=.22+.78*pulse;
         for(const lane of f.lanes){
           ctx.beginPath();for(let i=0;i<=12;i++){const y=f.y-f.height/2+i*f.height/12,c=channelAt(f,lane,y,world);i?ctx.lineTo(c.x-c.halfWidth,y):ctx.moveTo(c.x-c.halfWidth,y);}
           for(let i=12;i>=0;i--){const y=f.y-f.height/2+i*f.height/12,c=channelAt(f,lane,y,world);ctx.lineTo(c.x+c.halfWidth,y);}ctx.closePath();ctx.fillStyle='#268ba52d';ctx.fill();
-          ctx.strokeStyle='#287a9b99';ctx.lineWidth=2.5;
-          for(let i=0;i<3;i++){const u=(i/3+game.time*.15)%1,y=f.y+(u-.5)*f.height,c=channelAt(f,lane,y,world),angle=Math.atan2(1,c.slope);ctx.save();ctx.translate(c.x,y);ctx.rotate(angle);ctx.beginPath();ctx.moveTo(-15,0);ctx.lineTo(15,0);ctx.lineTo(7,-6);ctx.moveTo(15,0);ctx.lineTo(7,6);ctx.stroke();ctx.restore();}
+          ctx.strokeStyle=sign<0?'#9a65bddd':'#287a9b99';ctx.lineWidth=2.5;
+          for(let i=0;i<3;i++){const u=((i/3+game.time*.15*sign)%1+1)%1,y=f.y+(u-.5)*f.height,c=channelAt(f,lane,y,world),angle=Math.atan2(1,c.slope)+(sign<0?Math.PI:0);ctx.save();ctx.translate(c.x,y);ctx.rotate(angle);ctx.beginPath();ctx.moveTo(-15,0);ctx.lineTo(15,0);ctx.lineTo(7,-6);ctx.moveTo(15,0);ctx.lineTo(7,6);ctx.stroke();ctx.restore();}
         }
         ctx.strokeStyle='#438e9b55';for(const side of [-1,1]){const x=side<0?b.left+22:b.right-22,dx=-side*30;ctx.beginPath();ctx.moveTo(x,f.y-18);ctx.quadraticCurveTo(x,f.y+10,x+dx,f.y+18);ctx.lineTo(x+dx+side*7,f.y+9);ctx.moveTo(x+dx,f.y+18);ctx.lineTo(x+dx+side*10,f.y+23);ctx.stroke();}
         ctx.restore();
       } else if(f.kind==='whirlpool') {
         const cx=b.left+(b.right-b.left)*(f.fraction||.5);
         const gradient=ctx.createRadialGradient(cx,f.y,5,cx,f.y,f.range);gradient.addColorStop(0,'#26779838');gradient.addColorStop(1,'#26779800');ctx.fillStyle=gradient;ctx.beginPath();ctx.arc(cx,f.y,f.range,0,Math.PI*2);ctx.fill();
-        ctx.strokeStyle='#397fa1a0';ctx.lineWidth=4;
-        for(let i=0;i<4;i++){const angle=game.time*f.direction*1.4+i*1.6;ctx.beginPath();ctx.arc(cx,f.y,f.range*(.2+i*.23),angle,angle+Math.PI*1.5);ctx.stroke();}
+        ctx.strokeStyle=sign<0?'#9a65bddd':'#397fa1a0';ctx.lineWidth=4;
+        for(let i=0;i<4;i++){const angle=game.time*f.direction*sign*1.4+i*1.6;ctx.beginPath();ctx.arc(cx,f.y,f.range*(.2+i*.23),angle,angle+Math.PI*1.5);ctx.stroke();}
       } else if(f.kind==='press') {
         ctx.strokeStyle='#738a9c55';ctx.lineWidth=4;for(const x of [b.left+12,b.right-12])ctx.strokeRect(x-8,f.y-65,16,130);
       } else if(f.kind==='piston') {
@@ -324,5 +327,5 @@
     else{ctx.rotate(time*.7);ctx.beginPath();ctx.moveTo(-p.r*.6,-p.r*.2);ctx.lineTo(0,3);ctx.lineTo(p.r*.3,-p.r*.6);ctx.moveTo(0,3);ctx.lineTo(p.r*.6,p.r*.35);ctx.stroke();}
     ctx.restore();
   }
-  window.ExtraCourses={definitions,sectionPlans,magnetCounts,has,waterEnd,flowPulse,channelAt,configure,build,dynamic,apply,onContact,onPinContact,belt,pinTones,drawTerrain,drawWorld,drawSegment,drawPin};
+  window.ExtraCourses={definitions,sectionPlans,magnetCounts,has,waterEnd,flowPulse,flowDirection,channelAt,configure,build,dynamic,apply,onContact,onPinContact,belt,pinTones,drawTerrain,drawWorld,drawSegment,drawPin};
 })();

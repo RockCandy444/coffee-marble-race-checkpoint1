@@ -10,7 +10,7 @@
     ['wallkick','벽차기','↘','이동',3,0,'벽에 닿으면 중앙 아래쪽으로 튀어나와요.'],
     ['path','빈틈 탐색','🧭','이동',7,1.4,'가까운 빈 통로 쪽으로 방향을 바꿔요.'],
     ['shrink','압축 구슬','🔹','이동',9,1.8,'잠깐 작아져 좁은 틈을 빠져나가요.'],
-    ['frog','개구리 점프','🐸','이동',6,0,'앞이 막히면 위와 옆으로 짧게 뛰어요.'],
+    ['frog','개구리 점프','🐸','이동',6,0,'앞이 막힐 때 빈 방향으로 옆·아래 도약해요. 하강 속도는 유지해요.'],
     ['shield','충격 보호막','🛡','방어',7,0,'다른 구슬의 방해를 한 번 막아요.'],
     ['absorb','충격 흡수','🧽','방어',7,2,'잠깐 장애물에 크게 튕겨 올라가지 않아요.'],
     ['reflect','반사 갑옷','🔁','방어',8,2,'받은 공격을 막고 공격자에게 충격을 돌려줘요.'],
@@ -49,7 +49,7 @@
     ['ramp','임시 경사판','📐','변수',10,0,'뒤쪽에 짧은 경사판을 잠깐 만들어 뒤따르는 구슬의 경로를 바꿔요.'],
     ['machinefast','기계 가속','⚙','변수',10,0,'주변 기계의 움직임과 특수 핀의 힘을 잠깐 빠르고 강하게 바꿔요.'],
     ['convert','범퍼 변환','✨','변수',9,0,'가까운 일반 핀 하나를 잠깐 강한 범퍼로 바꿔요. 누구나 영향을 받아요.'],
-    ['machinereverse','기계 역주행','⏮','변수',11,0,'주변 기계의 움직임과 특수 핀의 힘 방향을 잠깐 반대로 바꿔요.'],
+    ['machinereverse','흐름 역전','⏮','변수',11,0,'주변 기계·자석·바람의 방향과 급류·소용돌이 흐름을 잠깐 뒤집어요. 모두에게 적용돼요.'],
     ['portal','공용 포털','🌀','변수',12,0,'짧은 거리를 잇는 포털을 만들어요. 열린 동안 다른 구슬도 이용해요.']
   ].map(([id,name,icon,group,cooldown,duration,description]) => ({id,name,icon,group,cooldown,duration,description}));
   const byId = new Map(abilities.map(a => [a.id,a]));
@@ -210,6 +210,13 @@
       if((clock.modLock||0)>now)continue;clock.rate=kind==='machinefast'?1.65:-1;clock.modUntil=now+1.6;clock.modLock=now+4.5;changed=true;
     }
     for(const pin of game.static.pins)if(['wind','magnet'].includes(pin.kind)&&pin.id&&Math.hypot(pin.x-ball.x,pin.y-ball.y)<200&&(b.fieldMods.get(pin.id)?.lock||0)<=now){b.fieldMods.set(pin.id,{kind,until:now+1.6,lock:now+4.5});changed=true;}
+    if(kind==='machinereverse'&&game.map==='rapids')for(const f of game.static.features||[]){
+      if(!['current','whirlpool'].includes(f.kind)||(b.fieldMods.get(f.key)?.lock||0)>now)continue;
+      const bounds=window.MarbleCourse.bounds(f.y,b.world),cx=bounds.left+(bounds.right-bounds.left)*(f.fraction||.5);
+      const near=f.kind==='whirlpool'?Math.hypot(ball.x-cx,ball.y-f.y)<f.range+100:
+        Math.abs(ball.y-f.y)<f.height/2+100&&f.lanes.some(l=>{const c=window.ExtraCourses.channelAt(f,l,clamp(ball.y,f.y-f.height/2,f.y+f.height/2),b.world);return Math.abs(ball.x-c.x)<c.halfWidth+100;});
+      if(near){b.fieldMods.set(f.key,{kind,until:now+1.6,lock:now+4.5});changed=true;}
+    }
     return changed;
   }
   function fire(game,ball,id,env,random=Math.random) {
@@ -226,8 +233,15 @@
       const x=candidates.find(x=>clearAt(ball,x,ball.y+80,game,env));if(x===undefined)return false;
       s.pathX=x;ball.vx+=Math.sign(x-ball.x)*85;
     } else if(id==='frog') {
-      if(!game.static.pins.concat(env.pins).some(p=>Math.hypot(p.x-ball.x,p.y-ball.y)<p.r+ball.r+65))return false;
-      const direction=ball.x<world.width/2?1:-1;ball.vx+=direction*140;ball.vy=-115;
+      const pins=game.static.pins.concat(env.pins),segments=game.static.segments.concat(env.segments);
+      const blocked=pins.some(p=>p.y>=ball.y-ball.r&&p.y-ball.y<ball.r+p.r+90&&Math.abs(p.x-ball.x)<ball.r+p.r+28)||
+        segments.some(o=>!o.sideWall&&!o.funnel&&!o.broken&&Math.max(o.y1,o.y2)>=ball.y&&Math.min(o.y1,o.y2)<ball.y+90&&segmentDistance(ball.x,ball.y+35,o)<ball.r+(o.radius||5)+18);
+      if(!blocked)return false;
+      const inward=ball.x<world.width/2?1:-1;
+      // Select a clear short arc, then apply velocity only. Walls and obstacles remain solid.
+      const dx=[inward*110,-inward*110,inward*75,-inward*75].find(dx=>[.25,.5,.75,1].every(t=>clearAt(ball,ball.x+dx*t,ball.y+45*t,game,env)));
+      if(dx===undefined)return false;
+      const length=Math.hypot(dx,45);ball.vx=dx/length*210;ball.vy=Math.max(ball.vy,45/length*210+45);ball.boostUntil=now+.45;
     } else if(id==='shield')s.shield=1;
     else if(id==='cleanse'){s.slowUntil=0;s.confusedUntil=0;s.controlGrace=now+2;s.guardUntil=now+2;}
     else if(id==='shock')pulse(game,ball,id,0);

@@ -1,0 +1,19 @@
+const fs=require('node:fs'),path=require('node:path');
+const harness=fs.readFileSync(path.join(__dirname,'physics-smoke.cjs'),'utf8').split('// Manual camera movement')[0];
+new Function('require','__dirname',harness+`
+const battle=sandbox.window.MarbleBattle,extra=sandbox.window.ExtraCourses,env={pins:[],segments:[]};elements.get('#raceMode').value='battle';
+function river(kind){seed=31;simulation.reset('rapids',2,0);const {game,world}=simulation.state(),f=game.static.features.find(f=>f.kind===kind);game.time=10;game.static={...game.static,pins:[],segments:[],features:[f]};game.collisionBuckets=new Map();const a=game.balls[0],b=game.balls[1];b.y=world.top;const c=course.bounds(f.y,world);Object.assign(a,{x:kind==='current'?extra.channelAt(f,f.lanes[0],f.y,world).x:c.left+(c.right-c.left)*f.fraction,y:f.y+(kind==='whirlpool'?50:0),vx:0,vy:0});battle.assign(game,a,'machinereverse');a.battle.next=100;battle.assign(game,b,null);b.battle.next=100;return{game,world,a,b,f};}
+for(const kind of ['current','whirlpool']){
+ let {game,world,a,b,f}=river(kind);const sample=()=>{const p={x:a.x,y:a.y,r:a.r,vx:0,vy:0};extra.apply(p,game,world,.1);return p;};let normal=sample();assert.equal(battle.fire(game,a,'machinereverse',env),true);assert.equal(extra.flowDirection(game,f),-1);let reversed=sample();if(kind==='current'){assert.ok(normal.vy>0&&reversed.vy<0);assert.ok(Math.abs(normal.vx+reversed.vx)<1e-6);}else assert.ok(normal.vx*reversed.vx<0,'vortex tangential direction reverses');
+ Object.assign(b,{x:a.x,y:a.y,vx:0,vy:0});extra.apply(b,game,world,.1);assert.equal(b.vx,reversed.vx);assert.equal(b.vy,reversed.vy,'public effect also changes an ordinary marble');
+ assert.equal(battle.fire(game,a,'machinereverse',env),false,'target lock prevents permanent reversal');game.time+=1.61;assert.equal(extra.flowDirection(game,f),1);assert.equal(sample().vx,normal.vx);assert.equal(sample().vy,normal.vy);
+ a.y=world.finishY-100;assert.equal(battle.fire(game,a,'machinereverse',env),false);Object.assign(b,{y:world.finishY-100,vx:7,vy:30});extra.apply(b,game,world,.1);assert.equal(b.vx,7);assert.equal(b.vy,30);
+}
+let {game,world,a,f}=river('current');a.y=f.y+f.height/2+150;assert.equal(battle.fire(game,a,'machinereverse',env),false,'far water cannot be reversed');
+function frog(){simulation.reset('spinner',2,0);const {game,world}=simulation.state();game.static={pins:[],segments:[]};game.collisionBuckets=new Map();game.time=10;const a=game.balls[0];game.balls=[a];Object.assign(a,{x:450,y:1000,vx:0,vy:180});battle.assign(game,a,'frog');a.battle.next=100;return{game,world,a};}
+({game,world,a}=frog());assert.equal(battle.fire(game,a,'frog',env),false,'clear travel does not spend a hop');game.static.pins=[{x:450,y:940,r:20}];assert.equal(battle.fire(game,a,'frog',env),false,'pins behind do not trigger');game.static.pins=[{x:450,y:1035,r:20}];const x=a.x,y=a.y,vy=a.vy;assert.equal(battle.fire(game,a,'frog',env),true);assert.equal(a.x,x);assert.equal(a.y,y);assert.ok(a.vx!==0);assert.equal(a.vy,vy,'fast fall never loses speed');assert.equal(battle.skipObstacle(a,{},game),false);
+({game,a}=frog());game.static.segments=[{x1:440,x2:460,y1:1040,y2:1040,radius:5}];assert.equal(battle.fire(game,a,'frog',env),true,'short boards trigger escape');
+({game,a}=frog());game.static.segments=[{x1:30,x2:970,y1:1035,y2:1035,radius:9}];assert.equal(battle.fire(game,a,'frog',env),false,'closed route waits without spending a hop');
+assert.equal(battle.byId.get('frog').name,'개구리 점프');assert.equal(battle.byId.get('machinereverse').name,'흐름 역전');assert.equal(battle.abilities.length,50);
+console.log('Flow reversal: real current/vortex vectors, shared ordinary effect, expiry/lock, distance/finish; frog: front-only, safe arc, no teleport/phase, retained fall speed/name passed');
+`)(require,__dirname);
