@@ -148,36 +148,34 @@
           <p class="eyebrow">STEP 3 · 레이스 진행 중</p>
           <h2 id="raceTitle">핀볼 코스</h2>
         </div>
+      </div>
+      <div class="race-controls">
         <div class="race-tools">
           <span id="raceProgress" class="progress-pill">0 / 2 도착</span>
-          <label class="race-speed" for="raceSpeed">배속
+          <label class="race-speed" for="raceSpeed"><span class="control-full">배속</span>
             <select id="raceSpeed" aria-label="경기 배속"><option value="0.25">0.25배</option><option value="0.5">0.5배</option><option value="1" selected>1배</option><option value="2">2배</option><option value="4">4배</option></select>
           </label>
           <button id="pauseRace" class="button button-small button-soft" type="button">일시 정지</button>
+          <button id="trackComet" class="comet-track" type="button" hidden><span class="comet-track-spark" aria-hidden="true">✦</span><span id="trackCometLabel" class="control-full">혜성 추적</span><span id="trackCometShort" class="control-short" aria-hidden="true">혜성</span></button>
+          <button id="openBattleAbilities" class="battle-open" type="button" aria-label="내 구슬 능력" hidden><span class="control-full">내 구슬 능력</span><span class="control-short" aria-hidden="true">능력</span></button>
         </div>
-      </div>
       <div class="camera-toolbar" aria-label="경주 카메라 설정">
         <label for="cameraSelect">카메라</label>
         <select id="cameraSelect" aria-label="카메라 시점"></select>
-        <button id="trackComet" class="comet-track" type="button" hidden><span class="comet-track-spark" aria-hidden="true">✦</span><span id="trackCometLabel">혜성 추적</span></button>
         <div class="camera-zoom">
           <button id="cameraZoomOut" type="button" aria-label="카메라 축소">−</button>
           <output id="cameraZoomLabel">1.0×</output>
           <button id="cameraZoomIn" type="button" aria-label="카메라 확대">＋</button>
           <button id="cameraReset" type="button">자동</button>
-          <button id="openBattleAbilities" class="battle-open" type="button" hidden>내 구슬 능력</button>
         </div>
         <span id="cameraStatus">자동 중계 · 출발 준비</span>
+      </div>
       </div>
       <div class="race-layout card">
         <div class="track-column">
           <div class="canvas-wrap">
             <canvas id="raceCanvas" width="1000" height="600" aria-label="구슬 경주 중계 화면. 구슬을 누르면 추적하고, 한 손가락으로 이동하며 두 손가락으로 확대·축소합니다." role="img"></canvas>
             <canvas id="miniMap" width="70" height="210" aria-label="미니맵: 클릭하거나 드래그하여 카메라 이동, 방향키로 조정" role="button" tabindex="0"></canvas>
-            <div id="cameraBadge" class="camera-badge">AUTO · 자동 중계</div>
-            <div id="keeperLabel" class="keeper-label"></div>
-            <div id="goldenBadge" class="golden-badge" hidden></div>
-            <div id="battleFeed" class="battle-feed" aria-live="off" hidden></div>
             <div id="startCountdown" class="start-countdown" role="status" aria-live="polite" aria-atomic="true" hidden>
               <small id="countdownHelp">준비하세요</small>
               <strong id="countdownNumber">3</strong>
@@ -190,14 +188,21 @@
               <p id="goldenDescription"></p>
               <small>잠시 후 레이스가 시작돼요</small>
             </div>
-            <div class="hazard-key" id="hazardKey"><span>⚡ 파워 범퍼</span><span>Ⓜ 자석</span><span>↔ 바람</span><span>◆ 수비수</span></div>
           </div>
           <div class="track-legend">
             <span><i class="legend-start"></i> 출발</span>
             <span><i class="legend-finish"></i> 결승선</span>
             <span id="raceStatus" aria-live="polite">구슬이 출발을 기다리고 있어요.</span>
           </div>
+          <div class="race-information" role="region" aria-label="경기 정보 · 좌우로 밀어 더 보기" tabindex="0">
+            <span class="race-information-label" aria-hidden="true">정보 ↔</span>
+            <div id="goldenBadge" class="golden-badge" hidden></div>
+            <div id="battleFeed" class="battle-feed" aria-live="off" hidden></div>
+            <div id="keeperLabel" class="keeper-label"></div>
+            <div id="cameraBadge" class="camera-badge">AUTO · 자동 중계</div>
+            <div class="hazard-key" id="hazardKey"><span>⚡ 파워 범퍼</span><span>Ⓜ 자석</span><span>↔ 바람</span><span>◆ 수비수</span></div>
             <div id="beadInfo" class="bead-info" aria-live="polite">두 손가락·휠로 확대·축소 · 드래그로 이동 · 미니맵으로 구간 선택</div>
+          </div>
           <div id="recoveryControls" class="recovery-controls" hidden>
             <p id="recoveryMessage">일부 구슬이 오래 움직이지 않아 경주를 잠시 멈췄어요. 미완주 구슬을 임의로 꼴찌 처리하지 않습니다.</p>
             <button id="nudgeBalls" class="button button-soft" type="button">멈춘 구슬 흔들어 계속하기</button>

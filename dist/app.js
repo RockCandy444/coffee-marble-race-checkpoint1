@@ -830,7 +830,7 @@
     const group = document.createElement('optgroup'); group.label = '참가자 추적';
     const comet=balls.find(ball=>ball.battle?.id==='comet'),ordered=comet?[comet,...balls.filter(ball=>ball!==comet)]:balls;
     $('#trackComet').hidden=!comet;$('#trackComet').dataset.ballId=comet?String(comet.id):'';
-    if(comet){$('#trackCometLabel').textContent='혜성 추적 · #'+comet.id;$('#trackComet').title=cameraBallLabel(comet);}
+    if(comet){$('#trackCometLabel').textContent='혜성 추적 · #'+comet.id;$('#trackCometShort').textContent='#'+comet.id;$('#trackComet').setAttribute('aria-label','혜성 추적 · #'+comet.id);$('#trackComet').title=cameraBallLabel(comet);}
     ordered.forEach(ball => {
       const option = document.createElement('option'); option.value = 'ball:' + ball.id; option.textContent = cameraBallLabel(ball);if(ball===comet)option.className='comet-option';group.append(option);
     });
