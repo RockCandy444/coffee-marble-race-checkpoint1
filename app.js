@@ -52,6 +52,7 @@
   let cometPending = false;
   let cometCard = null, cometFxTimer = null;
   function hideCometFx(){clearTimeout(cometFxTimer);cometFxTimer=null;$('#cometUnlockFx').hidden=true;$('#cometUnlockFx').classList.remove('is-playing');}
+  function clearCometDiscovery(){hideCometFx();if(cometCard){cometCard.remove();cometCard=null;}}
   function showCometDiscovery(){
     if(!cometCard){cometCard=makeAbilityCard(Battle.hiddenAbility);cometCard.id='cometAbilityCard';cometCard.classList.add('comet-ability-card');$('#abilityCatalog').append(cometCard);}
     cometCard.scrollIntoView?.({block:'nearest',behavior:'smooth'});
@@ -63,8 +64,8 @@
   window.addEventListener('blur',()=>secretCommand.reset());
   document.addEventListener('visibilitychange',()=>{if(document.hidden)secretCommand.reset();});
   $('#battleGuide').addEventListener('toggle',()=>{if(!$('#battleGuide').open)secretCommand.reset();});
-  $('#cancelComet').addEventListener('click',()=>{cometPending=false;$('#cometReservation').hidden=true;secretCommand.reset();});
-  $('#goldenEnabled').addEventListener('change',()=>{if(!$('#goldenEnabled').checked&&$('#raceMode').value!=='battle'){cometPending=false;$('#cometReservation').hidden=true;}});
+  $('#cancelComet').addEventListener('click',()=>{cometPending=false;$('#cometReservation').hidden=true;secretCommand.reset();clearCometDiscovery();});
+  $('#goldenEnabled').addEventListener('change',()=>{if(!$('#goldenEnabled').checked&&$('#raceMode').value!=='battle'){cometPending=false;$('#cometReservation').hidden=true;clearCometDiscovery();}});
   function updateMode() {
     const battle = $('#raceMode').value === 'battle';
     if (battle !== modeWasBattle) {
@@ -77,15 +78,14 @@
   }
   $('#raceMode').addEventListener('change', updateMode);
   function makeAbilityCard(a){
-    const interactive=['ghost','rocket','goo'].includes(a.id),card = document.createElement(interactive?'button':'div');card.className='ability-card';card.dataset.ability=a.id;
-    if(interactive){card.type='button';card.classList.add('secret-card');}
+    const card = document.createElement('button');card.className='ability-card';card.dataset.ability=a.id;card.type='button';
     const title=document.createElement('strong');title.textContent=a.icon+' '+a.name;
     const text=document.createElement('p');text.textContent=a.description;
-    const meta=document.createElement('small');meta.textContent=a.group+' · '+(a.id==='comet'?'3초 발동 · 11초 쿨타임':a.id==='shortcut'?'출발할 때 한 번':a.cooldown?a.cooldown+'초 간격':'조건에 따라 자동 적용');
-    card.append(title,text,meta);return card;
+    const meta=document.createElement('small');meta.textContent=a.group+' · '+(a.id==='comet'?a.duration+'초 발동 · '+a.cooldown+'초 쿨타임':a.id==='shortcut'?'출발할 때 한 번':a.cooldown?a.cooldown+'초 간격':'조건에 따라 자동 적용');
+    card.append(title,text,meta);card.addEventListener('click',()=>secretCommand.tap(a.id));return card;
   }
   for (const a of Battle.abilities) {
-    const card=makeAbilityCard(a);card.addEventListener('click',()=>secretCommand.tap(a.id));$('#abilityCatalog').append(card);
+    $('#abilityCatalog').append(makeAbilityCard(a));
   }
   let abilityDialogGame = null, abilityDialogPaused = false;
   $('#openBattleAbilities').addEventListener('click', () => {
@@ -414,7 +414,7 @@
     };
     game.collisionBuckets = Course.buckets(game.static);
     game.mode = $('#raceMode').value === 'battle' ? 'battle' : 'normal';
-    const forced=cometPending;cometPending=false;$('#cometReservation').hidden=true;secretCommand.reset();
+    const forced=cometPending;cometPending=false;$('#cometReservation').hidden=true;secretCommand.reset();clearCometDiscovery();
     if(game.mode==='battle') {
       Battle.init(game,WORLD,MAPS[game.map].sections);
       game.comet=Battle.grantComet(game,Battle.chooseComet(balls,Math.random,forced));
@@ -813,7 +813,7 @@
     $('#cameraZoomLabel').textContent = camera.mode === 'overview' ? '전체' : camera.zoom.toFixed(1) + '×';
     if(game.battle) {
       const log=game.battle.logs.at(-1);$('#battleFeed').textContent=log&&game.time-log.time<3?log.text:(game.mode==='battle'?'⚔ 능력 배틀':'★ 황금구슬 능력')+' · 내 구슬 능력 버튼으로 확인';
-      for(const ball of game.balls) {const label='#'+ball.id+' '+ballLabel(ball);if(ball.battle.optionText!==label){$('#cameraSelect option[value="ball:'+ball.id+'"]').textContent=label;ball.battle.optionText=label;}}
+      for(const ball of game.balls) {const label=cameraBallLabel(ball);if(ball.battle.optionText!==label){$('#cameraSelect option[value="ball:'+ball.id+'"]').textContent=label;ball.battle.optionText=label;}}
     }
     if (game.selectedBall) {
       const ball = game.balls.find((item) => item.id === game.selectedBall);
@@ -821,23 +821,30 @@
     }
   }
 
+  const cameraBallLabel=ball=>(ball.battle?.id==='comet'?'✦ ':'')+'#'+ball.id+' '+ballLabel(ball);
   function populateCamera(balls = Roster.entries(participants)) {
     cameraSelect.replaceChildren();
     for (const [value, label] of [['auto', '자동 중계'], ['leader', '선두 따라가기'], ['pack', '중간 그룹'], ['tail', '후미 따라가기'], ['overview', '전체 코스'], ['manual', '수동 보기']]) {
       const option = document.createElement('option'); option.value = value; option.textContent = label; cameraSelect.append(option);
     }
     const group = document.createElement('optgroup'); group.label = '참가자 추적';
-    balls.forEach(ball => {
-      const option = document.createElement('option'); option.value = 'ball:' + ball.id; option.textContent = '#' + ball.id + ' ' + ballLabel(ball); group.append(option);
+    const comet=balls.find(ball=>ball.battle?.id==='comet'),ordered=comet?[comet,...balls.filter(ball=>ball!==comet)]:balls;
+    $('#trackComet').hidden=!comet;$('#trackComet').dataset.ballId=comet?String(comet.id):'';
+    if(comet){$('#trackCometLabel').textContent='혜성 추적 · #'+comet.id;$('#trackComet').title=cameraBallLabel(comet);}
+    ordered.forEach(ball => {
+      const option = document.createElement('option'); option.value = 'ball:' + ball.id; option.textContent = cameraBallLabel(ball);if(ball===comet)option.className='comet-option';group.append(option);
     });
     cameraSelect.append(group); cameraSelect.value = 'auto';
   }
-  cameraSelect.addEventListener('change', () => {
+  function selectCamera(){
+    if(!game)return;
     camera.mode = cameraSelect.value;
     game.selectedBall = camera.mode.startsWith('ball:') ? Number(camera.mode.slice(5)) : null;
     if (camera.mode === 'manual') manualView();
     else $('#beadInfo').textContent = cameraHint;
-  });
+  }
+  cameraSelect.addEventListener('change', selectCamera);
+  $('#trackComet').addEventListener('click',()=>{const ball=game?.balls.find(ball=>ball.id===Number($('#trackComet').dataset.ballId)&&ball.battle?.id==='comet');if(ball){cameraSelect.value='ball:'+ball.id;selectCamera();}});
   function changeZoom(amount) {
     camera.zoom = Math.max(0.8, Math.min(4, camera.zoom + amount));
     if (camera.mode === 'overview') { camera.mode = 'auto'; cameraSelect.value = 'auto'; }

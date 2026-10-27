@@ -10,8 +10,9 @@ function element() {
     classList: { add() {}, remove() {}, toggle() {} },
     addEventListener() {}, setAttribute() {}, getContext: () => ({}),
     getBoundingClientRect: () => ({ width: 0, height: 0 }),
-    replaceChildren(...children) { this.children = children; },
-    append(...children) { this.children.push(...children); }
+    replaceChildren(...children) { for(const child of this.children)if(child&&typeof child==='object')child.parentNode=null;this.children=[];this.append(...children); },
+    append(...children) { for(const child of children){if(child&&typeof child==='object')Object.defineProperty(child,'parentNode',{value:this,writable:true,configurable:true});this.children.push(child);} },
+    remove() {if(this.parentNode){const siblings=this.parentNode.children,index=siblings.indexOf(this);if(index>=0)siblings.splice(index,1);this.parentNode=null;}}
   };
 }
 const document = { body: element(), addEventListener() {}, querySelector(selector) { if (!elements.has(selector)) elements.set(selector, element()); return elements.get(selector); }, querySelectorAll: () => [], createElement: element, createDocumentFragment: element };

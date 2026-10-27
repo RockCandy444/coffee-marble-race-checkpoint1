@@ -53,7 +53,7 @@
     ['portal','공용 포털','🌀','변수',12,0,'짧은 거리를 잇는 포털을 만들어요. 열린 동안 다른 구슬도 이용해요.']
   ].map(([id,name,icon,group,cooldown,duration,description]) => ({id,name,icon,group,cooldown,duration,description}));
   const byId = new Map(abilities.map(a => [a.id,a]));
-  const hiddenAbility={id:'comet',name:'혜성 질주',icon:'☄',group:'히든',cooldown:11,duration:3,description:'3초간 벽을 제외한 장애물을 통과하며 가속해요. 혜성 꼬리에 닿은 다른 구슬을 짧게 감속시켜요. 11초마다 발동해요.'};
+  const hiddenAbility={id:'comet',name:'혜성 질주',icon:'☄',group:'히든',cooldown:15,duration:3,description:'3초간 벽을 제외한 장애물을 통과하며 가속해요. 혜성 꼬리에 닿은 다른 구슬을 짧게 감속시켜요. 15초마다 발동해요.'};
   byId.set('comet',hiddenAbility);
   // Ordinary marbles can receive a golden marble's attacks without gaining a power.
   byId.set(null,{id:null,name:'일반 구슬',cooldown:0,duration:0,description:'특별한 능력 없이 달려요.'});
@@ -508,6 +508,14 @@
   function drawBall(ctx,ball,game,camera) {
     if(!ball.battle?.id)return;
     const s=ball.battle,a=ability(ball),lit=s.activeUntil>game.time||s.flashUntil>game.time||s.shield;
+    if(a.id==='comet'&&!ball.finished){
+      const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+      const pulse=reduced ? .55 :(1+Math.sin(game.time*Math.PI*2/2.6))/2,radius=ball.r+12+pulse*5;
+      ctx.save();ctx.globalAlpha=.18+pulse*.62;
+      const halo=ctx.createRadialGradient(ball.x,ball.y,ball.r+1,ball.x,ball.y,radius);
+      halo.addColorStop(0,'rgba(133,215,255,0)');halo.addColorStop(.32,'rgba(133,215,255,.85)');halo.addColorStop(.68,'rgba(174,148,240,.4)');halo.addColorStop(1,'rgba(133,215,255,0)');
+      ctx.fillStyle=halo;ctx.beginPath();ctx.arc(ball.x,ball.y,radius,0,Math.PI*2);ctx.fill();ctx.restore();
+    }
     ctx.save();ctx.strokeStyle=colors[a.group];ctx.lineWidth=lit?2.5:1.2;
     if(active(ball,'ghost',game.time)||active(ball,'orbphase',game.time)||active(ball,'comet',game.time))ctx.setLineDash([3,3]);
     ctx.beginPath();ctx.arc(ball.x,ball.y,ball.r+3,0,Math.PI*2);ctx.stroke();
