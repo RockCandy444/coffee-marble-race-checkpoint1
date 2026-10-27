@@ -53,9 +53,11 @@
     ['portal','공용 포털','🌀','변수',12,0,'짧은 거리를 잇는 포털을 만들어요. 열린 동안 다른 구슬도 이용해요.']
   ].map(([id,name,icon,group,cooldown,duration,description]) => ({id,name,icon,group,cooldown,duration,description}));
   const byId = new Map(abilities.map(a => [a.id,a]));
+  const hiddenAbility={id:'comet',name:'혜성 질주',icon:'☄',group:'히든',cooldown:11,duration:3,description:'3초간 벽을 제외한 장애물을 통과하며 가속해요. 혜성 꼬리에 닿은 다른 구슬을 짧게 감속시켜요. 11초마다 발동해요.'};
+  byId.set('comet',hiddenAbility);
   // Ordinary marbles can receive a golden marble's attacks without gaining a power.
   byId.set(null,{id:null,name:'일반 구슬',cooldown:0,duration:0,description:'특별한 능력 없이 달려요.'});
-  const colors = {이동:'#dc9a29',방어:'#2b9d9b',방해:'#aa66ca',변수:'#e56e68'};
+  const colors = {이동:'#dc9a29',방어:'#2b9d9b',방해:'#aa66ca',변수:'#e56e68',히든:'#58a8cf'};
   const clamp = (v,a,b) => Math.max(a,Math.min(b,v));
   const effective = ball => ball.battle?.borrowId || ball.battle?.id;
   const ability = ball => byId.get(effective(ball));
@@ -83,6 +85,14 @@
   function init(game,world,sections,random=Math.random) {
     game.battle={world,sections,logs:[],effects:[],traps:[],projectiles:[],structures:[],marks:[],clocks:new Map(),disabled:new Map(),converted:new Map(),fieldMods:new Map(),activations:{}};
     game.balls.forEach(ball=>assign(game,ball,abilities[Math.floor(random()*abilities.length)].id,random));
+  }
+  function chooseComet(balls,random=Math.random,forced=false){
+    if(!balls.length||!forced&&random()>=.03)return null;
+    return {ballId:balls[Math.floor(random()*balls.length)].id,abilityId:'comet'};
+  }
+  function grantComet(game,choice,random=Math.random){
+    if(!choice)return null;const ball=game.balls.find(b=>b.id===choice.ballId);if(!ball)return null;
+    assign(game,ball,'comet',random);ball.battle.initialId='comet';return{ball,ability:hiddenAbility};
   }
   function initGolden(game,world,sections,ball,id,env) {
     game.battle={world,sections,logs:[],effects:[],traps:[],projectiles:[],structures:[],marks:[],clocks:new Map(),disabled:new Map(),converted:new Map(),fieldMods:new Map(),activations:{}};
@@ -118,6 +128,7 @@
     if(y-radius<world.top+2||y+radius>=world.finishY-240)return false;
     const bounds=window.MarbleCourse.bounds(y,world);
     if(x-radius<=bounds.left+3||x+radius>=bounds.right-3)return false;
+    if((game.static.solids||[]).some(s=>Math.abs(x-s.x)/s.rx+Math.abs(y-s.y)/s.ry<=1))return false;
     if(game.static.pins.concat(env.pins).some(p=>Math.abs(p.y-y)<radius+p.r+5&&Math.hypot(p.x-x,p.y-y)<radius+p.r+5))return false;
     if(game.static.segments.concat(env.segments,temporarySegments(game)).some(s=>!s.broken&&y>Math.min(s.y1,s.y2)-radius-20&&y<Math.max(s.y1,s.y2)+radius+20&&segmentDistance(x,y,s)<radius+(s.radius||5)+5))return false;
     return !game.balls.some(other=>other!==ball&&!other.finished&&!ignore.has(other.id)&&Math.hypot(other.x-x,other.y-y)<radius+other.r+3);
@@ -133,7 +144,7 @@
   function restoreShape(ball,game,env) {
     const state=ball.battle;
     const shrinking=active(ball,'shrink',game.time)&&!safeZone(ball,game.battle.world);
-    const ghosting=active(ball,'ghost',game.time)&&!safeZone(ball,game.battle.world);
+    const ghosting=(active(ball,'ghost',game.time)||active(ball,'comet',game.time))&&!safeZone(ball,game.battle.world);
     const growing=active(ball,'giant',game.time)&&!safeZone(ball,game.battle.world);
     const wanted=growing?ball.baseR*1.55:shrinking?ball.baseR*.65:ball.baseR;
     if((ball.r<wanted||state.wasGhost&&!ghosting)&&!safeZone(ball,game.battle.world)) {
@@ -222,7 +233,8 @@
   function fire(game,ball,id,env,random=Math.random) {
     const s=ball.battle,a=byId.get(id),now=game.time,world=game.battle.world;
     if(safeZone(ball,world))return false;
-    if(id==='ghost')s.wasGhost=true;
+    if(id==='comet'){s.wasGhost=true;s.trail=[];s.trailNext=now;boost(ball,now,190);}
+    else if(id==='ghost')s.wasGhost=true;
     else if(id==='warp') {const p=spot(ball,game,env,110);if(!p||p.y<=ball.y+10)return false;move(ball,p);ball.vy=Math.max(60,ball.vy);}
     else if(id==='rocket')boost(ball,now);
     else if(id==='path') {
@@ -265,7 +277,7 @@
       }
       if(!changed)return false;
     } else if(id==='mimic') {
-      const target=nearby(ball,game,450).find(b=>effective(b)&&!['mimic','reroll','shortcut'].includes(effective(b)));
+      const target=nearby(ball,game,450).find(b=>effective(b)&&!['mimic','reroll','shortcut','comet'].includes(effective(b)));
       const choices=abilities.filter(a=>!['mimic','reroll','shortcut'].includes(a.id));
       if(!target&&game.mode!=='normal')return false;
       s.borrowId=target?effective(target):choices[Math.floor(random()*choices.length)].id;s.borrowUntil=now+2.2;
@@ -330,13 +342,19 @@
         assign(game,ball,a.id,random,true);emit(game,ball,'reroll',a.name);
       }
       const state=ball.battle,id=effective(ball),a=byId.get(state.id),safe=safeZone(ball,world);
-      if(safe){state.activeUntil=0;state.slowUntil=0;state.confusedUntil=0;state.decoyCharges=0;state.hook=null;state.towId=null;}
+      if(safe){state.activeUntil=0;state.slowUntil=0;state.confusedUntil=0;state.decoyCharges=0;state.hook=null;state.towId=null;state.trail=[];}
       if(a.cooldown&&now>=state.next&&!['wallkick','slingshot'].includes(state.id)){
         const fired=fire(game,ball,state.id,env,random);state.next=now+(fired?a.cooldown:.55);
       }
       restoreShape(ball,game,env);
       ball.mass=id==='heavy'?1.9:active(ball,'giant',now)&&ball.r>ball.baseR*1.1?2.3:1;
       ball.gravityScale=id==='heavy'?1.2:1;ball.speedLimit=id==='heavy'?370:340;ball.immuneFields=id==='immune';
+      if(active(ball,'comet',now)&&!safe){
+        ball.vy+=110*dt;ball.boostUntil=now+.1;
+        state.trail=(state.trail||[]).filter(p=>p.time>now-.7);
+        const last=state.trail.at(-1);if(last&&Math.hypot(last.x-ball.x,last.y-ball.y)>150)state.trail=[];
+        if(now>=(state.trailNext||0)){state.trail.push({x:ball.x,y:ball.y,time:now});state.trailNext=now+.045;}
+      }else if(state.trail)state.trail=[];
       if(!safe){
         if(active(ball,'wallride',now)){const b=window.MarbleCourse.bounds(ball.y,world);if(Math.min(ball.x-b.left,b.right-ball.x)<ball.r+50){ball.vx=ball.x<(b.left+b.right)/2?-35:35;ball.vy+=90*dt;}}
         if(active(ball,'swing',now)&&state.hook){
@@ -357,6 +375,15 @@
       if(state.slowUntil>now){ball.vx*=Math.pow(.82,dt*60);ball.vy*=Math.pow(.988,dt*60);}
       if(['vacuum','ice','vortex'].some(k=>active(ball,k,now)))pulse(game,ball,id,dt);
       if(!active(ball,'decoy',now))state.decoyCharges=0;
+    }
+    for(const owner of ranked)if(active(owner,'comet',now)&&!safeZone(owner,world)){
+      const trail=owner.battle.trail||[];
+      for(const target of nearby(owner,game,430))for(let i=1;i<trail.length;i++){
+        const p=trail[i-1],q=trail[i];
+        if(segmentDistance(target.x,target.y,{x1:p.x,y1:p.y,x2:q.x,y2:q.y})<target.r+owner.r+6){
+          if(hit(game,owner,target,0,0,.55))emit(game,owner,'comet','꼬리 감속');break;
+        }
+      }
     }
     for(const trap of battle.traps){const owner=game.balls.find(b=>b.id===trap.owner);if(!owner||owner.finished)continue;
       for(const target of ranked)if(target.id!==owner.id&&Math.hypot(target.x-trap.x,target.y-trap.y)<(trap.id==='mine'?50:40)){
@@ -383,7 +410,7 @@
     }
   }
   function skipObstacle(ball,object,game) {
-    return !!ball.battle&&!!(active(ball,'ghost',game.time)||ball.battle.exitPending)&&!safeZone(ball,game.battle.world)&&!object.sideWall&&!object.funnel;
+    return !!ball.battle&&!!(active(ball,'ghost',game.time)||active(ball,'comet',game.time)||ball.battle.exitPending)&&!safeZone(ball,game.battle.world)&&!object.sideWall&&!object.funnel;
   }
   function skipPair(a,b,game){return !!game?.battle&&((!safeZone(a,game.battle.world)&&active(a,'orbphase',game.time))||(!safeZone(b,game.battle.world)&&active(b,'orbphase',game.time)));}
   function contact(game,a,b,nx,ny) {
@@ -451,6 +478,11 @@
   function drawWorld(ctx,game,camera) {
     if(!game.battle)return;
     ctx.save();
+    for(const ball of game.balls)if(!ball.finished&&active(ball,'comet',game.time)){
+      const trail=ball.battle.trail||[];ctx.save();ctx.lineCap='round';
+      for(let i=1;i<trail.length;i++){const p=trail[i-1],q=trail[i];ctx.globalAlpha=clamp(1-(game.time-p.time)/.7,0,.8);ctx.strokeStyle=i%2?'#75c8f4':'#bd9fff';ctx.lineWidth=ball.r*1.2;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(q.x,q.y);ctx.stroke();}
+      ctx.restore();
+    }
     for(const trap of game.battle.traps)if(trap.y>camera.top-80&&trap.y<camera.top+camera.visibleHeight+80){ctx.fillStyle=trap.id==='goo'?'#74b55b55':'#c371be66';ctx.beginPath();ctx.arc(trap.x,trap.y,trap.id==='goo'?28:20,0,Math.PI*2);ctx.fill();ctx.font='18px sans-serif';ctx.textAlign='center';ctx.fillStyle='#555';ctx.fillText(trap.id==='goo'?'●':'✹',trap.x,trap.y+6);}
     for(const object of game.battle.structures){
       if(object.y<camera.top-250||object.y>camera.top+camera.visibleHeight+100)continue;
@@ -477,10 +509,10 @@
     if(!ball.battle?.id)return;
     const s=ball.battle,a=ability(ball),lit=s.activeUntil>game.time||s.flashUntil>game.time||s.shield;
     ctx.save();ctx.strokeStyle=colors[a.group];ctx.lineWidth=lit?2.5:1.2;
-    if(active(ball,'ghost',game.time)||active(ball,'orbphase',game.time))ctx.setLineDash([3,3]);
+    if(active(ball,'ghost',game.time)||active(ball,'orbphase',game.time)||active(ball,'comet',game.time))ctx.setLineDash([3,3]);
     ctx.beginPath();ctx.arc(ball.x,ball.y,ball.r+3,0,Math.PI*2);ctx.stroke();
     if(lit||game.selectedBall===ball.id||game.balls.length<=20||camera.zoom>=1.8){ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=colors[a.group];ctx.fillText(a.icon,ball.x,ball.y-ball.r-12);}
     ctx.restore();
   }
-  window.MarbleBattle={abilities,byId,init,initGolden,placeShortcuts,assign,tick,fire,hit,spot,clearAt,timeFor,frozen,disabled,skipObstacle,skipPair,contact,obstacleHit,wallHit,field,machineRate,temporarySegments,converted,kick,caption,label,describe,drawWorld,drawBall};
+  window.MarbleBattle={abilities,hiddenAbility,byId,chooseComet,grantComet,init,initGolden,placeShortcuts,assign,tick,fire,hit,spot,clearAt,timeFor,frozen,disabled,skipObstacle,skipPair,contact,obstacleHit,wallHit,field,machineRate,temporarySegments,converted,kick,caption,label,describe,drawWorld,drawBall};
 })();

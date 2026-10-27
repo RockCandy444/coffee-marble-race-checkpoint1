@@ -4,7 +4,8 @@
     // One race-wide draw, independent of the number of marbles.
     if (!balls.length || random() >= 0.1) return null;
     const abilities=window.MarbleBattle.abilities;
-    return { ballId: balls[Math.floor(random() * balls.length)].id, abilityId: abilities[Math.floor(random() * abilities.length)].id };
+    const ballId=balls[Math.floor(random()*balls.length)].id,roll=random();
+    return {ballId,abilityId:roll<.15?'comet':abilities[Math.min(abilities.length-1,Math.floor((roll-.15)/.85*abilities.length))].id};
   }
   function segmentDistance(x, y, s) {
     const dx = s.x2 - s.x1, dy = s.y2 - s.y1;
@@ -29,8 +30,8 @@
   }
   function activate(choice, game, world, sections, dynamic = {pins:[],segments:[]}) {
     if (!choice) return null;
-    const ball = game.balls.find(b=>b.id===choice.ballId), ability = window.MarbleBattle.abilities.find(a=>a.id===choice.abilityId);
-    if (!ball || !ability) return null;
+    const ball = game.balls.find(b=>b.id===choice.ballId), ability = window.MarbleBattle.byId.get(choice.abilityId);
+    if (!ball || !ability || ability.id===null) return null;
     window.MarbleBattle.initGolden(game,world,sections,ball,ability.id,dynamic);
     ball.golden = true; ball.ability = ability.id; ball.abilityName = ability.name;
     ball.originalColor = ball.color; ball.originalLabel = ball.label;

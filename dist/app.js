@@ -49,6 +49,15 @@
   const cameraHint = '두 손가락·휠로 확대·축소 · 드래그로 이동 · 미니맵 클릭·드래그로 구간 선택';
   let normalGoldenEnabled = $('#goldenEnabled').checked;
   let modeWasBattle = false;
+  let cometPending = false;
+  const secretCommand = new window.CometCommand({allowed:()=>stage==='map'&&$('#battleGuide').open&&!document.hidden,
+    arm:()=>{cometPending=true;normalGoldenEnabled=true;if($('#raceMode').value!=='battle')$('#goldenEnabled').checked=true;$('#cometReservation').hidden=false;}});
+  document.addEventListener('keydown',event=>{if(secretCommand.key(event)||secretCommand.keys.length&&event.code?.startsWith('Arrow'))event.preventDefault();});
+  window.addEventListener('blur',()=>secretCommand.reset());
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)secretCommand.reset();});
+  $('#battleGuide').addEventListener('toggle',()=>{if(!$('#battleGuide').open)secretCommand.reset();});
+  $('#cancelComet').addEventListener('click',()=>{cometPending=false;$('#cometReservation').hidden=true;secretCommand.reset();});
+  $('#goldenEnabled').addEventListener('change',()=>{if(!$('#goldenEnabled').checked&&$('#raceMode').value!=='battle'){cometPending=false;$('#cometReservation').hidden=true;}});
   function updateMode() {
     const battle = $('#raceMode').value === 'battle';
     if (battle !== modeWasBattle) {
@@ -56,7 +65,7 @@
       else $('#goldenEnabled').checked = normalGoldenEnabled;
     }
     modeWasBattle = battle; $('#goldenEnabled').disabled = battle;
-    $('#goldenOption').hidden = battle; $('#battleGuide').hidden = !battle;
+    $('#goldenOption').hidden = battle; $('#battleGuide').hidden = false;secretCommand.reset();
     $('#modeHelp').textContent = battle ? '모든 구슬에 능력 하나씩 · 자동 발동 · 황금구슬 중첩 없음' : '기존 규칙으로 달리고, 황금구슬 이벤트를 선택할 수 있어요.';
   }
   $('#raceMode').addEventListener('change', updateMode);
@@ -66,6 +75,14 @@
     const text=document.createElement('p');text.textContent=a.description;
     const meta=document.createElement('small');meta.textContent=a.group+' · '+(a.id==='shortcut'?'출발할 때 한 번':a.cooldown?a.cooldown+'초 간격':'조건에 따라 자동 적용');
     card.append(title,text,meta);$('#abilityCatalog').append(card);
+    {
+      if(['ghost','rocket','goo'].includes(a.id))card.classList.add('secret-card');
+      card.addEventListener('pointerdown',event=>{if(secretCommand.down(a.id,event)){event.preventDefault();card.classList.add('secret-holding');card.setPointerCapture?.(event.pointerId);}});
+      card.addEventListener('pointermove',event=>{secretCommand.move(event);if(!secretCommand.pointer)card.classList.remove('secret-holding');});
+      card.addEventListener('pointerup',event=>{secretCommand.up(event);card.classList.remove('secret-holding');if(card.hasPointerCapture?.(event.pointerId))card.releasePointerCapture(event.pointerId);});
+      for(const type of ['pointercancel','lostpointercapture'])card.addEventListener(type,event=>{secretCommand.pointerCancel(event);card.classList.remove('secret-holding');});
+      card.addEventListener('contextmenu',event=>{if(secretCommand.pointer?.holding)event.preventDefault();});
+    }
   }
   let abilityDialogGame = null, abilityDialogPaused = false;
   $('#openBattleAbilities').addEventListener('click', () => {
@@ -97,6 +114,7 @@
   ballsPerPersonInput.value = '5';
 
   function setStage(next) {
+    secretCommand.reset();
     if (next !== 'race') clearCameraGesture();
     stage = next;
     setupView.hidden = next !== 'setup';
@@ -297,7 +315,8 @@
     Course.enrich(pins, segments, map, WORLD, MAPS[map].sections);
     // 세 맵 모두 결승선은 한 곳뿐이며, 넓은 트랙을 하나의 결승 통로로 모읍니다.
     segments.push(...finishFunnelSegments());
-    return { pins, segments };
+    const solids=map==='fork'?[[260,2500,65],[740,2540,90],[470,2780,75]].map(([x,y,r])=>({x,y:y*Course.verticalScale,rx:r,ry:r*Course.verticalScale})):[];
+    return { pins, segments, solids };
   }
 
   function rotatingSegments(time) {
@@ -391,26 +410,33 @@
     };
     game.collisionBuckets = Course.buckets(game.static);
     game.mode = $('#raceMode').value === 'battle' ? 'battle' : 'normal';
+    const forced=cometPending;cometPending=false;$('#cometReservation').hidden=true;secretCommand.reset();
     if(game.mode==='battle') {
       Battle.init(game,WORLD,MAPS[game.map].sections);
+      game.comet=Battle.grantComet(game,Battle.chooseComet(balls,Math.random,forced));
       Battle.placeShortcuts(game,{pins:movingPins(0),segments:movingSegments(0)});
     }
     game.goldenEnabled = game.mode==='normal' && $('#goldenEnabled').checked;
-    game.golden = game.goldenEnabled ? Golden.activate(Golden.choose(balls), game, WORLD, MAPS[game.map].sections, {pins:movingPins(0),segments:movingSegments(0)}) : null;
-    game.introRemaining = game.golden ? 2.8 : 0;
+    game.golden = game.goldenEnabled ? Golden.activate(forced?Battle.chooseComet(balls,Math.random,true):Golden.choose(balls), game, WORLD, MAPS[game.map].sections, {pins:movingPins(0),segments:movingSegments(0)}) : null;
+    if(game.golden?.ability.id==='comet')game.comet=game.golden;
+    game.reveal=game.comet||game.golden;
+    game.introRemaining = game.reveal ? 2.8 : 0;
     game.countdownRemaining = 3;
     game.goRemaining = 0;
     updateStartCountdown();
     populateCamera(balls);
-    const golden = game.golden;
+    const golden = game.reveal;
     $('#goldenBadge').hidden = !golden; $('#goldenReveal').hidden = !golden;
+    $('#goldenReveal').classList.toggle('is-comet',!!game.comet);
+    $('#revealTitle').textContent=game.comet?'히든 혜성 등장!':'황금구슬 등장!';
+    $('#goldenBadge').classList.toggle('comet-badge',!!game.comet);
     if (golden) {
-      const owner = '#' + golden.ball.id + ' ' + golden.ball.originalLabel;
+      const owner = '#' + golden.ball.id + ' ' + (golden.ball.originalLabel||golden.ball.label);
       $('#goldenOwner').textContent = owner;
       $('#goldenOrb').textContent = String(golden.ball.id);
       $('#goldenAbility').textContent = golden.ability.name;
       $('#goldenDescription').textContent = golden.ability.description;
-      $('#goldenBadge').textContent = '★ ' + golden.ability.name + ' · ' + owner;
+      $('#goldenBadge').textContent = (game.comet?'☄ ':'★ ') + golden.ability.name + ' · ' + owner;
       $('#goldenBadge').title = owner + ' · ' + golden.ability.description;
       camera.mode = 'ball:' + golden.ball.id; cameraSelect.value = camera.mode;
       game.selectedBall = golden.ball.id;
@@ -497,7 +523,7 @@
       game.introRemaining = Math.max(0, game.introRemaining - elapsed);
       if (game.introRemaining === 0) {
         $('#goldenReveal').hidden = true;
-        if (camera.mode === 'ball:' + game.golden.ball.id) {
+        if (camera.mode === 'ball:' + game.reveal.ball.id) {
           camera.mode = 'auto'; cameraSelect.value = 'auto'; game.selectedBall = null;
           $('#beadInfo').textContent = cameraHint;
         }
@@ -735,8 +761,8 @@
     $('#coffeeWinner').textContent = `#${loser.id} ${loser.label}`;
     $('#resultSubtitle').textContent = `${new Set(game.balls.map(ball => ball.name)).size}명 · 구슬 ${game.order.length}개 모두 완주한 ${MAPS[game.map].label}${game.mode==='battle'?' 능력 배틀':''} 경기 · ${game.keeper.name}의 마지막 통과자예요.`;
     $('#resultMapLabel').textContent = MAPS[game.map].label;
-    $('#goldenResult').hidden = !game.golden;
-    if (game.golden) $('#goldenResult').textContent = '★ 이번 황금구슬 · #' + game.golden.ball.id + ' ' + game.golden.ball.originalLabel + ' · ' + game.golden.ability.name;
+    $('#goldenResult').hidden = !game.reveal;
+    if (game.reveal) $('#goldenResult').textContent = (game.comet?'☄ 이번 히든 혜성 · #':'★ 이번 황금구슬 · #') + game.reveal.ball.id + ' ' + (game.reveal.ball.originalLabel||game.reveal.ball.label) + ' · ' + game.reveal.ability.name;
     const list = $('#finalRanking');
     list.replaceChildren();
     game.order.forEach((ball, index) => {
@@ -758,7 +784,7 @@
     if (!game) return;
     const remaining = game.balls.length - game.order.length;
     $('#raceProgress').textContent = `${game.order.length} / ${game.balls.length} 도착`;
-    if (game.introRemaining > 0) $('#raceStatus').textContent = game.paused ? '황금구슬 공개를 잠시 멈췄어요.' : '황금구슬이 선택됐어요. 잠시 후 출발합니다!';
+    if (game.introRemaining > 0) $('#raceStatus').textContent = game.paused ? '특별한 구슬 공개를 잠시 멈췄어요.' : (game.comet?'히든 혜성이 선택됐어요.':'황금구슬이 선택됐어요.')+' 잠시 후 출발합니다!';
     else if (game.countdownRemaining > 0) $('#raceStatus').textContent = game.paused ? '출발 준비를 잠시 멈췄어요.' : `${Math.ceil(game.countdownRemaining)}초 후 출발해요!`;
     else if (!game.paused && game.order.length === 0) $('#raceStatus').textContent = '구슬들이 장애물 사이를 달리는 중이에요!';
     else if (!game.paused && remaining > 0) $('#raceStatus').textContent = `${remaining}개의 구슬이 아직 달리는 중이에요.`;

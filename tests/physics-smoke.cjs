@@ -19,6 +19,7 @@ let seed = 1;
 const math = Object.create(Math);
 math.random = () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; };
 const sandbox = { document, Math: math, console, ResizeObserver: class { observe() {} }, requestAnimationFrame: () => 1, cancelAnimationFrame() {} };
+sandbox.setTimeout=setTimeout;sandbox.clearTimeout=clearTimeout;sandbox.performance=performance;
 sandbox.window = { addEventListener() {}, scrollTo() {} };
 const context = vm.createContext(sandbox);
 vm.runInContext(fs.readFileSync(path.join(root, 'camera.js'), 'utf8'), context);
@@ -27,6 +28,7 @@ vm.runInContext(fs.readFileSync(path.join(root, 'roster.js'), 'utf8'), context);
 vm.runInContext(fs.readFileSync(path.join(root, 'golden.js'), 'utf8'), context);
 vm.runInContext(fs.readFileSync(path.join(root, 'battle.js'), 'utf8'), context);
 vm.runInContext(fs.readFileSync(path.join(root, 'maps.js'), 'utf8'), context);
+vm.runInContext(fs.readFileSync(path.join(root, 'secret.js'), 'utf8'), context);
 const golden = sandbox.window.GoldenMarble;
 // The baseline matrix deliberately exercises the ordinary race branch.
 golden.choose = () => null;

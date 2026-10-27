@@ -1,0 +1,8 @@
+const fs=require('node:fs'),path=require('node:path');const harness=fs.readFileSync(path.join(__dirname,'physics-smoke.cjs'),'utf8').split('// Manual camera movement')[0];new Function('require','__dirname',harness+`
+const battle=sandbox.window.MarbleBattle;let passed=0;
+for(const mode of ['normal','battle'])for(const map of ['pinball','spinner','fork','factory','rapids','ruins'])for(const count of [2,100]){
+ seed=2801+passed*17;elements.get('#raceMode').value=mode;golden.choose=balls=>({ballId:balls.at(-1).id,abilityId:'comet'});simulation.reset(map,count,passed%4);const {game,world}=simulation.state();if(mode==='battle'){const prior=game.balls.find(b=>b.battle.id==='comet');if(prior)battle.assign(game,prior,'immune');battle.grantComet(game,{ballId:game.balls.at(-1).id});}
+ assert.equal(game.balls.filter(b=>b.battle?.id==='comet').length,1);let steps=0,escapes=0;while(game.order.length<count&&!game.paused&&steps++<360*120){simulation.step(1/120);for(const b of game.balls)if(!b.finished){assert.ok([b.x,b.y,b.vx,b.vy,b.r].every(Number.isFinite));const edge=course.bounds(b.y,world);if(b.x-b.r<edge.left-.1||b.x+b.r>edge.right+.1)escapes++;}}
+ const comet=game.balls.find(b=>b.battle?.id==='comet');console.log(JSON.stringify({mode,map,count,finished:game.order.length,seconds:+game.time.toFixed(2),escapes,cometRank:game.order.indexOf(comet)+1,cometUses:game.battle.activations.comet||0}));assert.equal(game.order.length,count);assert.equal(escapes,0);assert.ok(game.order.every(b=>b.y>=world.finishY));assert.equal(new Set(game.order.map(b=>b.id)).size,count);passed++;
+}console.log(JSON.stringify({cometRacesPassed:passed}));
+`)(require,__dirname);
