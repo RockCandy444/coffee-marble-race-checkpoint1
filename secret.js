@@ -2,12 +2,16 @@
   'use strict';
   const sequence=['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','KeyC','KeyO','KeyM','KeyE','KeyT'];
   class CometCommand {
-    constructor({allowed,arm,now=()=>performance.now()}){
-      Object.assign(this,{allowed,arm,now});this.keys=[];this.taps=0;this.lastKey=0;this.lastTap=0;
+    static isMobileDevice(navigator=window.navigator){
+      const ua=navigator?.userAgent||'';
+      return navigator?.userAgentData?.mobile===true||/Android|iPhone|iPad|iPod/i.test(ua)||/Macintosh/i.test(ua)&&(navigator?.maxTouchPoints||0)>1;
+    }
+    constructor({allowed,arm,now=()=>performance.now(),mobile=()=>CometCommand.isMobileDevice()}){
+      Object.assign(this,{allowed,arm,now,mobile});this.keys=[];this.taps=0;this.lastKey=0;this.lastTap=0;
     }
     reset(){this.keys=[];this.taps=0;}
     key(event){
-      if(!this.allowed()){this.reset();return false;}
+      if(this.mobile()||!this.allowed()){this.reset();return false;}
       if(event.target?.closest?.('input,textarea,select,[contenteditable="true"]')){this.reset();return false;}
       if(event.repeat||event.ctrlKey||event.altKey||event.metaKey)return false;
       if(['Shift','CapsLock','AltGraph','HangulMode','Process','Unidentified'].includes(event.key)&&!sequence.includes(event.code))return false;
@@ -19,8 +23,8 @@
       if(length===sequence.length){this.reset();this.arm();return true;}
       return false;
     }
-    tap(id){
-      if(!this.allowed()){this.reset();return false;}
+    tap(id,event){
+      if(!this.mobile()||!this.allowed()||event?.detail===0||event?.pointerType&&event.pointerType!=='touch'&&event.pointerType!=='pen'){this.reset();return false;}
       const now=this.now();if(now-this.lastTap>30000)this.taps=0;
       const expected=['ghost','ghost','ghost','rocket','rocket','goo'][this.taps];
       this.taps=id===expected?this.taps+1:id==='ghost'?1:0;this.lastTap=now;

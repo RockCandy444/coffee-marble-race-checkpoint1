@@ -82,7 +82,7 @@
     const title=document.createElement('strong');title.textContent=a.icon+' '+a.name;
     const text=document.createElement('p');text.textContent=a.description;
     const meta=document.createElement('small');meta.textContent=a.group+' · '+(a.id==='comet'?a.duration+'초 발동 · '+a.cooldown+'초 쿨타임':a.id==='shortcut'?'출발할 때 한 번':a.cooldown?a.cooldown+'초 간격':'조건에 따라 자동 적용');
-    card.append(title,text,meta);card.addEventListener('click',()=>secretCommand.tap(a.id));return card;
+    card.append(title,text,meta);card.addEventListener('click',event=>secretCommand.tap(a.id,event));return card;
   }
   for (const a of Battle.abilities) {
     $('#abilityCatalog').append(makeAbilityCard(a));
@@ -94,6 +94,7 @@
     $('#pauseRace').textContent='계속하기';
     $('#battleRoster').replaceChildren();
     for(const ball of game.balls) {const item=document.createElement('li');item.textContent=Battle.describe(ball,game.time)+(ball.finished?' · 완주':'');$('#battleRoster').append(item);}
+    $('#battleDialogBody').scrollTop=0;
     $('#battleDialog').showModal();
   });
   $('#closeBattleAbilities').addEventListener('click', () => $('#battleDialog').close());

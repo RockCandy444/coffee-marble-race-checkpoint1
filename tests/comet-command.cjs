@@ -9,8 +9,8 @@ for(const n of [2,100]){const balls=Array.from({length:n},(_,i)=>({id:i+1}));let
  for(let i=0;i<n;i++)assert.equal(battle.chooseComet(balls,rng([(i+.5)/n]),true).ballId,i+1);
 }
 assert.equal(battle.abilities.length,50);assert.equal(battle.abilities.some(a=>a.id==='comet'),false);
-let now=100,allowed=true,armed=0;
-const command=new Command({allowed:()=>allowed,arm:()=>armed++,now:()=>now});
+let now=100,allowed=true,armed=0,mobile=false;
+const command=new Command({allowed:()=>allowed,arm:()=>armed++,now:()=>now,mobile:()=>mobile});
 const codes=['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','KeyC','KeyO','KeyM','KeyE','KeyT'];
 for(const style of ['lower','upper','ime'])for(const code of codes)command.key({code,key:style==='ime'?'Process':code.startsWith('Key')?(style==='upper'?code.slice(3):code.slice(3).toLowerCase()):code,isComposing:style==='ime'});
 assert.equal(armed,3,'physical key codes ignore case and IME composition');
@@ -18,7 +18,8 @@ for(const code of codes.slice(0,8))command.key({code});now+=10001;for(const code
 command.reset();allowed=false;for(const code of codes)command.key({code});assert.equal(armed,3);allowed=true;
 for(const code of codes)command.key({code,target:{closest:()=>({})}});assert.equal(armed,3);
 command.reset();for(const code of codes)command.key({code,repeat:true});assert.equal(armed,3);
-const tap=id=>{now+=50;return command.tap(id);},prefix=()=>{command.reset();for(const id of ['ghost','ghost','ghost','rocket','rocket'])tap(id);};
+mobile=true;
+const tap=id=>{now+=50;return command.tap(id,{detail:1,pointerType:'touch'});},prefix=()=>{command.reset();for(const id of ['ghost','ghost','ghost','rocket','rocket'])tap(id);};
 prefix();assert.equal(armed,3,'five taps are not a full command');assert.equal(tap('goo'),true);assert.equal(armed,4,'six native activations unlock without a hold');assert.equal(tap('goo'),false);assert.equal(armed,4,'extra final taps do not repeat');
 prefix();tap('heavy');tap('goo');assert.equal(armed,4,'wrong card resets');prefix();now+=30001;tap('goo');assert.equal(armed,4,'old taps expire');prefix();allowed=false;tap('goo');allowed=true;tap('goo');assert.equal(armed,4,'closed guide/race blocks command and resets');
 command.reset();tap('ghost');tap('rocket');tap('ghost');tap('rocket');tap('rocket');tap('goo');assert.equal(armed,4,'wrong order cannot unlock');
