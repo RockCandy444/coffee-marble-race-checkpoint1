@@ -50,8 +50,15 @@
   let normalGoldenEnabled = $('#goldenEnabled').checked;
   let modeWasBattle = false;
   let cometPending = false;
+  let cometCard = null, cometFxTimer = null;
+  function hideCometFx(){clearTimeout(cometFxTimer);cometFxTimer=null;$('#cometUnlockFx').hidden=true;$('#cometUnlockFx').classList.remove('is-playing');}
+  function showCometDiscovery(){
+    if(!cometCard){cometCard=makeAbilityCard(Battle.hiddenAbility);cometCard.id='cometAbilityCard';cometCard.classList.add('comet-ability-card');$('#abilityCatalog').append(cometCard);}
+    cometCard.scrollIntoView?.({block:'nearest',behavior:'smooth'});
+    hideCometFx();const fx=$('#cometUnlockFx');fx.hidden=false;void fx.offsetWidth;fx.classList.add('is-playing');cometFxTimer=setTimeout(hideCometFx,1800);
+  }
   const secretCommand = new window.CometCommand({allowed:()=>stage==='map'&&$('#battleGuide').open&&!document.hidden,
-    arm:()=>{cometPending=true;normalGoldenEnabled=true;if($('#raceMode').value!=='battle')$('#goldenEnabled').checked=true;$('#cometReservation').hidden=false;}});
+    arm:()=>{cometPending=true;normalGoldenEnabled=true;if($('#raceMode').value!=='battle')$('#goldenEnabled').checked=true;$('#cometReservation').hidden=false;showCometDiscovery();}});
   document.addEventListener('keydown',event=>{if(secretCommand.key(event)||secretCommand.keys.length&&event.code?.startsWith('Arrow'))event.preventDefault();});
   window.addEventListener('blur',()=>secretCommand.reset());
   document.addEventListener('visibilitychange',()=>{if(document.hidden)secretCommand.reset();});
@@ -69,20 +76,16 @@
     $('#modeHelp').textContent = battle ? '모든 구슬에 능력 하나씩 · 자동 발동 · 황금구슬 중첩 없음' : '기존 규칙으로 달리고, 황금구슬 이벤트를 선택할 수 있어요.';
   }
   $('#raceMode').addEventListener('change', updateMode);
-  for (const a of Battle.abilities) {
-    const card = document.createElement('div');card.className='ability-card';
+  function makeAbilityCard(a){
+    const interactive=['ghost','rocket','goo'].includes(a.id),card = document.createElement(interactive?'button':'div');card.className='ability-card';card.dataset.ability=a.id;
+    if(interactive){card.type='button';card.classList.add('secret-card');}
     const title=document.createElement('strong');title.textContent=a.icon+' '+a.name;
     const text=document.createElement('p');text.textContent=a.description;
-    const meta=document.createElement('small');meta.textContent=a.group+' · '+(a.id==='shortcut'?'출발할 때 한 번':a.cooldown?a.cooldown+'초 간격':'조건에 따라 자동 적용');
-    card.append(title,text,meta);$('#abilityCatalog').append(card);
-    {
-      if(['ghost','rocket','goo'].includes(a.id))card.classList.add('secret-card');
-      card.addEventListener('pointerdown',event=>{if(secretCommand.down(a.id,event)){event.preventDefault();card.classList.add('secret-holding');card.setPointerCapture?.(event.pointerId);}});
-      card.addEventListener('pointermove',event=>{secretCommand.move(event);if(!secretCommand.pointer)card.classList.remove('secret-holding');});
-      card.addEventListener('pointerup',event=>{secretCommand.up(event);card.classList.remove('secret-holding');if(card.hasPointerCapture?.(event.pointerId))card.releasePointerCapture(event.pointerId);});
-      for(const type of ['pointercancel','lostpointercapture'])card.addEventListener(type,event=>{secretCommand.pointerCancel(event);card.classList.remove('secret-holding');});
-      card.addEventListener('contextmenu',event=>{if(secretCommand.pointer?.holding)event.preventDefault();});
-    }
+    const meta=document.createElement('small');meta.textContent=a.group+' · '+(a.id==='comet'?'3초 발동 · 11초 쿨타임':a.id==='shortcut'?'출발할 때 한 번':a.cooldown?a.cooldown+'초 간격':'조건에 따라 자동 적용');
+    card.append(title,text,meta);return card;
+  }
+  for (const a of Battle.abilities) {
+    const card=makeAbilityCard(a);card.addEventListener('click',()=>secretCommand.tap(a.id));$('#abilityCatalog').append(card);
   }
   let abilityDialogGame = null, abilityDialogPaused = false;
   $('#openBattleAbilities').addEventListener('click', () => {
@@ -115,6 +118,7 @@
 
   function setStage(next) {
     secretCommand.reset();
+    if(next!=='map')hideCometFx();
     if (next !== 'race') clearCameraGesture();
     stage = next;
     setupView.hidden = next !== 'setup';
@@ -469,7 +473,7 @@
   $('#newSetup').addEventListener('click', () => setStage('setup'));
   $('#raceSpeed').addEventListener('change', () => {
     const value = Number($('#raceSpeed').value);
-    raceSpeed = [1, 2, 4].includes(value) ? value : 1;
+    raceSpeed = [.25, .5, 1, 2, 4].includes(value) ? value : 1;
     $('#raceSpeed').value = String(raceSpeed);
   });
   $('#pauseRace').addEventListener('click', () => {

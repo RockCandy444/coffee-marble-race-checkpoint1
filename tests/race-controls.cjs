@@ -10,7 +10,7 @@ mini.width=70;mini.height=210;mini.getBoundingClientRect=()=>({left:550,top:40,w
 mini.setPointerCapture=id=>capture.add(id);mini.hasPointerCapture=id=>capture.has(id);
 mini.releasePointerCapture=id=>{capture.delete(id);mini.handlers.lostpointercapture({type:'lostpointercapture',pointerId:id});};
 const chooseSpeed=value=>{speed.value=String(value);speed.handlers.change();};
-for(const rate of [1,2,4]) {
+for(const rate of [.25,.5,1,2,4]) {
   seed=31;simulation.reset('rapids',100,0);const g=simulation.state().game;
   chooseSpeed(rate);g.introRemaining=0;
   simulation.frame(1000);simulation.frame(1080);
@@ -21,7 +21,7 @@ for(const rate of [1,2,4]) {
   const duration=g.time,positions=g.balls.map(b=>[b.x,b.y,b.vx,b.vy]);
   seed=31;simulation.reset('rapids',100,0);
   for(let step=0;step<Math.round(duration*120);step++)simulation.step(1/120);
-  assert.deepEqual(simulation.state().game.balls.map(b=>[b.x,b.y,b.vx,b.vy]),positions,'fast-forward uses identical fixed collision steps');
+  assert.deepEqual(simulation.state().game.balls.map(b=>[b.x,b.y,b.vx,b.vy]),positions,'all speed choices use identical fixed collision steps');
 }
 simulation.reset('ruins',2,0);let g=simulation.state().game;g.countdownRemaining=0;g.introRemaining=0;
 chooseSpeed(4);simulation.frame(1000);simulation.frame(1080);
@@ -47,5 +47,5 @@ pointer('pointerdown',5,580,100);elements.get('#cameraReset').handlers.click();a
 pointer('pointerdown',6,580,100);elements.get('#changeRaceSetup').handlers.click();assert.equal(capture.size,0);
 assert.deepEqual(simulation.state().game.balls.map(b=>[b.x,b.y,b.vx,b.vy]),before,'minimap cannot change physics');
 simulation.reset('ruins',2,0);pointer('pointerdown',7,580,100);elements.get('#restartDuringRace').handlers.click();assert.equal(capture.size,0);
-console.log('Race controls: 1/2/4x fixed-step equivalence, real countdown, slow frame, pause/resume, reset; minimap drag, capture, bounds, cancellation, navigation and camera reset passed');
+console.log('Race controls: 0.25/0.5/1/2/4x fixed-step equivalence, real countdown, slow frame, pause/resume, reset; minimap drag, capture, bounds, cancellation, navigation and camera reset passed');
 `)(require,__dirname);
