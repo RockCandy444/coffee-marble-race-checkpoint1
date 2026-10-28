@@ -240,3 +240,21 @@ body.race-active .race-information .hazard-key { bottom: 55px; }
 @media(max-width:600px){.hidden-map-panel{padding:13px}.hidden-map-options{grid-template-columns:1fr}.random-map{padding:11px}.random-map span{font-size:10px}}
 @media(prefers-reduced-motion:reduce){.hidden-map-panel.just-unlocked{animation:none}}
 .map-card,.random-map,.hidden-map-options button { touch-action:manipulation; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }
+.map-unlock-fx { position:fixed; inset:0; z-index:100; pointer-events:none; display:grid; place-items:center; overflow:hidden; background:radial-gradient(ellipse at center,#14264caa,#070c1c55 65%,transparent); }
+.map-unlock-fx[hidden] { display:none; }
+.map-unlock-space { position:absolute; width:min(64vw,420px); aspect-ratio:1; color:#b5e9ff; }
+.map-unlock-space i { position:absolute; inset:12%; border:2px solid currentColor; border-radius:50%; box-shadow:0 0 20px #8ebaff77; transform:rotateX(60deg) rotateZ(-25deg); }
+.map-unlock-space i:nth-child(2) { inset:4%; transform:rotateY(65deg) rotateZ(35deg); }
+.map-unlock-space i:nth-child(3) { inset:25%; transform:rotateX(-40deg); }
+.map-unlock-space b { position:absolute; left:50%; top:50%; width:15px; height:15px; background:#effaff; border-radius:50%; box-shadow:0 0 25px 14px #7aa4eebb,0 0 90px 40px #b2a4ff44; }
+.map-unlock-fx > span { position:relative; margin-top:min(74vw,450px); max-width:90vw; padding:12px 20px; border:1px solid #adceff88; border-radius:12px; color:#f3f5ff; background:#162139e6; font-family:inherit; font-weight:700; font-size:clamp(14px,3.8vw,20px); text-align:center; }
+.map-unlock-fx.is-playing .map-unlock-space { animation:observatory-unlock 2.2s ease-out both; }
+.map-unlock-fx[data-route="rift"] { background:radial-gradient(ellipse,#45306cbb,#0e0d2355 70%,transparent); }
+.map-unlock-fx[data-route="rift"] .map-unlock-space { color:#d6b3ff; }
+.map-unlock-fx[data-route="rift"] .map-unlock-space i { inset:8%; border-radius:42% 58% 40% 60%; transform:none; border-width:3px; }
+.map-unlock-fx[data-route="rift"] .map-unlock-space i:nth-child(2) { inset:20%; transform:rotate(65deg); }
+.map-unlock-fx[data-route="rift"] .map-unlock-space i:nth-child(3) { inset:32%; transform:rotate(-35deg); }
+.map-unlock-fx[data-route="rift"].is-playing .map-unlock-space { animation:dimension-unlock 2.2s ease-out both; }
+@keyframes observatory-unlock { 0%{opacity:0;transform:scale(.15) rotate(-60deg)} 25%,70%{opacity:1} 100%{opacity:0;transform:scale(1.4) rotate(35deg)} }
+@keyframes dimension-unlock { 0%{opacity:0;transform:scaleY(.02) rotate(-45deg)} 25%{opacity:1;transform:scaleY(1) rotate(0)} 70%{opacity:1} 100%{opacity:0;transform:scale(1.7) rotate(80deg)} }
+@media(prefers-reduced-motion:reduce){.map-unlock-fx.is-playing .map-unlock-space{animation:none;opacity:1}.map-unlock-fx{background:#151d39c9}}

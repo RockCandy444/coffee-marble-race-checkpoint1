@@ -4,6 +4,7 @@
   const wallRadius = 4.5;
   const verticalScale = 3;
   function wallPath(world, side, radius = wallRadius) {
+    if(world.exitGates)return window.HiddenCourses.outerPath(world,side,radius);
     const offset = side === 'left' ? -radius : radius;
     const gate = side === 'left' ? world.finishLeft : world.finishRight;
     return [...world.sideProfile.map(point => ({ x: point[side] + offset, y: point.y })),
@@ -20,6 +21,7 @@
 
   function configure(world, map) {
     world.exitGates=null;
+    world.riftIslands=[];
     world.funnelY = world.height - 1120;
     world.funnelKnee = world.height - 170;
     if(window.HiddenCourses?.has(map)){window.HiddenCourses.configure(world,map);return;}
@@ -34,19 +36,21 @@
   }
   function bounds(y, world) {
     if (y >= world.funnelY) {
+      if(world.exitGates){const a=window.HiddenCourses.laneBounds(-1000,y,world),b=window.HiddenCourses.laneBounds(2000,y,world);return{left:a.left,right:b.right,leftSlope:a.leftSlope,rightSlope:b.rightSlope};}
       const start = world.sideProfile.at(-1);
       const span = world.funnelKnee - world.funnelY;
       const t = clamp((y - world.funnelY) / span, 0, 1);
       return { left: start.left + (world.finishLeft - start.left) * t, right: start.right + (world.finishRight - start.right) * t,
         leftSlope: t < 1 ? (world.finishLeft - start.left) / span : 0, rightSlope: t < 1 ? (world.finishRight - start.right) / span : 0 };
     }
-    const index = clamp(Math.floor(y / world.funnelY * 24), 0, 23);
+    const index = clamp(Math.floor(y / world.funnelY * (world.sideProfile.length-1)), 0, world.sideProfile.length-2);
     const a = world.sideProfile[index], b = world.sideProfile[index + 1];
     const t = clamp((y - a.y) / (b.y - a.y), 0, 1);
     return { left: a.left + (b.left - a.left) * t, right: a.right + (b.right - a.right) * t,
       leftSlope: (b.left - a.left) / (b.y - a.y), rightSlope: (b.right - a.right) / (b.y - a.y) };
   }
   function contain(ball, world) {
+    window.HiddenCourses?.containStructure(ball,world);
     const b = window.HiddenCourses?.laneBounds(ball.x,ball.y,world)||bounds(ball.y, world);
     if (ball.x - ball.r < b.left) {
       ball.x = b.left + ball.r;

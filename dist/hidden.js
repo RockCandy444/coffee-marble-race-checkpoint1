@@ -8,30 +8,37 @@
   const starts={observatory:[180,2250,4450,6650,8850,11100],rift:[180,3400,6620,9840,13060,16280,19500,22720]};
   const definitions=Object.fromEntries(Object.keys(names).map(id=>[id,{title:id==='rift'?'차원의 틈':'혜성 천문대',label:id==='rift'?'차원의 틈':'혜성 천문대',height:(id==='rift'?25000:13500)/3,sections:starts[id].map((y,i)=>[y/3,names[id][i]]),theme:{...theme},colors:['#252e4c','#302e50','#292f50','#34304f','#273d50','#38334e','#2e354f','#3c3152']}]));
   const has=id=>Object.hasOwn(definitions,id);
-  const plans={observatory:[['관측 정원','공전 위성','별 무리 범퍼'],['별빛 관문','개폐 관문','자석 성운'],['혜성 잔해대','교차하는 혜성 잔해','운석 발판'],['공전 회랑','공전 날개','궤도 위성'],['성운 항로','성운 물살','작은 블랙홀'],['천문대 수문장','별빛 검문소','골키퍼']],rift:names.rift.map((name,i)=>[name,['핀볼 대표 구간','회전 장애물 대표 구간','갈림길 대표 구간','공장 대표 구간','계곡 대표 구간','유적 대표 구간','천문대 대표 구간','3갈래 이중 골키퍼'][i],i===7?'각 출구에서 실제 결승선 통과':'연속된 차원문'])};
+  const plans={observatory:[['관측 정원','공전 위성','별 무리 범퍼'],['별빛 관문','개폐 관문','자석 성운'],['혜성 잔해대','교차하는 혜성 잔해','운석 발판'],['공전 회랑','공전 날개','궤도 위성'],['성운 항로','방향이 보이는 성운 물살','작은 블랙홀'],['천문대 수문장','별빛 검문소','골키퍼']],rift:names.rift.map((name,i)=>[name,['굽은 핀볼 협곡','넓은 공전 방과 두 갈래','세 갈래 평행 항로','좁은 역행 협곡','물살과 왼쪽 샛길','모래시계 붕괴 회랑','세 갈래 공전 합류','삼중 수문·무수문 협곡·이중 수문'][i],i===7?'폭과 굴곡이 다른 세 출구':'기존 대표 기믹과 새로운 지형'])};
   function configure(world,map){
-    world.sideProfile=Array.from({length:25},(_,i)=>{const y=world.funnelY*i/24,fade=Math.min(1,y/500),wave=map==='rift'?0:Math.sin(i*.65)*18;return{y,left:40+fade*(22+wave),right:960-fade*(22-wave)};});
+    if(map==='rift')world.funnelY=world.height-1600;
+    world.sideProfile=Array.from({length:49},(_,i)=>{
+      const y=world.funnelY*i/48,fade=Math.min(1,y/600);
+      if(map!=='rift'){const wave=Math.sin(i*.325)*18;return{y,left:40+fade*(22+wave),right:960-fade*(22-wave)};}
+      const section=Math.max(0,starts.rift.findLastIndex(start=>y>=start)),u=clamp((y-starts.rift[section])/((starts.rift[section+1]||world.funnelY)-starts.rift[section]),0,1);
+      const widths=[[880,430],[900,650],[920,830],[720,370],[920,750],[810,360],[930,640],[900,820]],centers=[-70,30,0,95,-25,-80,40,0];
+      const width=920*(1-fade)+fade*(widths[section][0]-(widths[section][0]-widths[section][1])*Math.sin(u*Math.PI)**2),center=500+centers[section]*Math.sin(u*Math.PI)*fade;
+      return{y,left:clamp(center-width/2,30,400),right:clamp(center+width/2,600,970)};
+    });
     if(map==='rift')world.funnelKnee=world.height-420;
   }
   function exits(world,map,radius){
     world.exitGates=null;
     if(map!=='rift')return;
-    const b=Course.bounds(world.funnelY,world),width=b.right-b.left;
-    world.exitGates=[0,1,2].map(i=>({center:220+i*280,left:220+i*280-radius*2.5,right:220+i*280+radius*2.5,startLeft:b.left+width*i/3,startRight:b.left+width*(i+1)/3}));
+    const b=world.sideProfile.at(-1),width=b.right-b.left,y=world.funnelY;
+    const partitions=[b.left,b.left+width*.4,b.left+width*.6,b.right],centers=[220,500,780];
+    const routes=[[[y+240,80,360],[y+640,95,350],[y+900,145,300]],[[y+240,415,515],[y+530,510,600],[y+830,425,505]],[[y+240,650,930],[y+610,680,900],[y+900,715,850]]];
+    world.exitGates=centers.map((center,i)=>({center,left:center-radius*2.5,right:center+radius*2.5,startLeft:partitions[i],startRight:partitions[i+1],keepers:i===0?3:i===1?0:2,tone:['#729ad8','#7edac5','#bc92d3'][i],points:[{y,left:partitions[i],right:partitions[i+1]},...routes[i].map(([y,left,right])=>({y,left,right})),{y:world.funnelKnee,left:center-radius*2.5,right:center+radius*2.5},{y:world.bottom,left:center-radius*2.5,right:center+radius*2.5}]}));
     world.finishLeft=world.exitGates[0].left;world.finishRight=world.exitGates[2].right;
   }
+  function atPath(points,y){const found=points.findIndex((p,i)=>i<points.length-1&&y<points[i+1].y),i=found<0?points.length-2:found,a=points[i],b=points[i+1],t=clamp((y-a.y)/(b.y-a.y),0,1);return{left:a.left+(b.left-a.left)*t,right:a.right+(b.right-a.right)*t,leftSlope:(b.left-a.left)/(b.y-a.y),rightSlope:(b.right-a.right)/(b.y-a.y)};}
+  function outerPath(world,side,radius){const lane=world.exitGates[side==='left'?0:2];return [...world.sideProfile,...lane.points.slice(1)].map(p=>({x:p[side]+(side==='left'?-radius:radius),y:p.y}));}
   function laneBounds(x,y,world){
     if(!world.exitGates||y<world.funnelY)return null;
-    const gate=world.exitGates.reduce((a,b)=>Math.abs(a.center-x)<=Math.abs(b.center-x)?a:b),span=world.funnelKnee-world.funnelY,t=clamp((y-world.funnelY)/span,0,1);
-    return {left:gate.startLeft+(gate.left-gate.startLeft)*t,right:gate.startRight+(gate.right-gate.startRight)*t,leftSlope:t<1?(gate.left-gate.startLeft)/span:0,rightSlope:t<1?(gate.right-gate.startRight)/span:0};
+    return world.exitGates.map(g=>atPath(g.points,y)).reduce((a,b)=>Math.max(a.left-x,0,x-a.right)<=Math.max(b.left-x,0,x-b.right)?a:b);
   }
-  function inside(x,y,r,world){const b=laneBounds(x,y,world);return !b||x-r>=b.left-.01&&x+r<=b.right+.01;}
-  function finishSegments(world){return world.exitGates.flatMap(g=>[
-    {x1:g.startLeft-4.5,y1:world.funnelY,x2:g.left-4.5,y2:world.funnelKnee,radius:4.5,funnel:true},
-    {x1:g.startRight+4.5,y1:world.funnelY,x2:g.right+4.5,y2:world.funnelKnee,radius:4.5,funnel:true},
-    {x1:g.left-4.5,y1:world.funnelKnee,x2:g.left-4.5,y2:world.bottom,radius:4.5,funnel:true},
-    {x1:g.right+4.5,y1:world.funnelKnee,x2:g.right+4.5,y2:world.bottom,radius:4.5,funnel:true}
-  ]);}
+  function inside(x,y,r,world){const b=laneBounds(x,y,world);return (!b||x-r>=b.left-.01&&x+r<=b.right+.01)&&!(world.riftIslands||[]).some(s=>Math.abs(y-s.y)<s.ry&&Math.abs(x-s.x)<s.rx*(1-Math.abs(y-s.y)/s.ry)+r);}
+  function containStructure(ball,world){for(const s of world.riftIslands||[]){const dy=Math.abs(ball.y-s.y);if(dy>=s.ry)continue;const half=s.rx*(1-dy/s.ry)+ball.r+1;if(Math.abs(ball.x-s.x)<half){const sign=ball.x<s.x?-1:1;ball.x=s.x+sign*half;ball.vx=sign*Math.max(15,Math.abs(ball.vx)*.5);}}}
+  function finishSegments(world){return world.exitGates.flatMap(g=>['left','right'].flatMap(side=>g.points.slice(1).map((b,i)=>({x1:g.points[i][side]+(side==='left'?-4.5:4.5),y1:g.points[i].y,x2:b[side]+(side==='left'?-4.5:4.5),y2:b.y,radius:4.5,funnel:true}))));}
   function sideWalls(world){return world.sideProfile.slice(1).flatMap((b,i)=>{const a=world.sideProfile[i];return[{x1:a.left-4.5,y1:a.y,x2:b.left-4.5,y2:b.y,radius:4.5,sideWall:true},{x1:a.right+4.5,y1:a.y,x2:b.right+4.5,y2:b.y,radius:4.5,sideWall:true}];});}
   function distance(x,y,s){const dx=s.x2-s.x1,dy=s.y2-s.y1,t=clamp(((x-s.x1)*dx+(y-s.y1)*dy)/(dx*dx+dy*dy||1),0,1);return Math.hypot(x-s.x1-t*dx,y-s.y1-t*dy);}
   function buildObservatory(world,sections,count){
@@ -83,7 +90,35 @@
       }
       chapters.push({source,section:chapter,pins:pins.filter(p=>p.section===index).length,features:features.filter(f=>f.section===index).length});
     });
-    const start=sections[7][0];for(let k=0;k<4;k++){const y=start+150+k*230,b=Course.bounds(y,world);for(const x of [b.left+100,b.right-100])pins.push({x,y,r:18+k%2*8,section:7,id:'rift-final-'+pins.length,stellar:true,bumper:true});}
+    // Long tapered islands are structural walls: two/three real routes, never ghost shortcuts.
+    const islands=[];
+    for(const [section,fraction,rx,ry]of [[1,.5,85,610],[2,.32,42,770],[2,.68,42,770],[4,.22,42,730],[6,.33,54,640],[6,.69,54,640]]){
+      const y=(sections[section][0]+sections[section+1][0])/2,b=Course.bounds(y,world);islands.push({x:b.left+(b.right-b.left)*fraction,y,rx,ry,section,riftStructure:true});
+    }
+    const nearIsland=(x,y,pad=0)=>islands.some(s=>Math.abs(y-s.y)<s.ry+pad&&Math.abs(x-s.x)<s.rx*Math.max(0,1-Math.abs(y-s.y)/s.ry)+pad);
+    const sidePass=(x,y)=>{const s=islands.find(s=>s.section===4);return Math.abs(y-s.y)<s.ry-80&&x<s.x-s.rx-20;};
+    for(let i=pins.length-1;i>=0;i--)if(nearIsland(pins[i].x,pins[i].y,pins[i].r+45)||sidePass(pins[i].x,pins[i].y))pins.splice(i,1);
+    for(let i=segments.length-1;i>=0;i--){const s=segments[i];if(Array.from({length:13},(_,k)=>k/12).some(t=>nearIsland(s.x1+(s.x2-s.x1)*t,s.y1+(s.y2-s.y1)*t,70)||sidePass(s.x1+(s.x2-s.x1)*t,s.y1+(s.y2-s.y1)*t)))segments.splice(i,1);}
+    for(let i=features.length-1;i>=0;i--)if(islands.some(s=>Math.abs(features[i].y-s.y)<s.ry+170))features.splice(i,1);
+    for(const s of islands){const corners=[[s.x,s.y-s.ry],[s.x+s.rx,s.y],[s.x,s.y+s.ry],[s.x-s.rx,s.y]];for(let i=0;i<4;i++){const a=corners[i],b=corners[(i+1)%4];segments.push({x1:a[0],y1:a[1],x2:b[0],y2:b[1],radius:4.5,sideWall:true,structuralWall:true,stellar:true,section:s.section});}}
+    world.riftIslands=islands;solids.push(...islands);
+    // A visible final chamber leads into three unequal corridors, with debris inside the wide routes.
+    const start=sections[7][0];
+    for(let k=0;k<4;k++){const y=start+130+k*140,b=Course.bounds(y,world);for(let j=0;j<5;j++){if(j===(k+1)%5)continue;const x=b.left+(b.right-b.left)*(.12+j*.19),r=10+(j+k)%3*5;pins.push({x,y,r,section:7,id:'rift-final-'+pins.length,stellar:true,bumper:true,...((k+j)%5===0?{kind:'power',kick:230}:{} )});}}
+    for(const [lane,g]of world.exitGates.entries())if(lane!==1)for(let k=0;k<4;k++){
+      const y=world.funnelY+180+k*190,b=atPath(g.points,y),width=b.right-b.left,x=b.left+width*(k%2?.72:.28);
+      pins.push({x,y,r:12+k%2*4,section:7,id:'rift-lane-'+lane+'-'+k,stellar:true,bumper:true});
+    }
+    // Resampling into narrow walls must not inherit pin-to-bank or pin-to-pin pockets.
+    const diameter=2*Math.max(5.2,Math.min(11.2,12.5-.72*Math.sqrt(count))),accepted=[];
+    for(const p of pins){const b=laneBounds(p.x,p.y,world)||Course.bounds(p.y,world);
+      if(p.x-p.r-b.left<diameter+14||b.right-p.x-p.r<diameter+14)continue;
+      if(accepted.some(q=>Math.hypot(p.x-q.x,p.y-q.y)<p.r+q.r+diameter+14))continue;
+      if(segments.some(s=>!s.sideWall&&distance(p.x,p.y,s)<p.r+(s.radius||5)+diameter+20))continue;
+      if(features.some(f=>['orbit','gate','press','stoneGate'].includes(f.kind)&&Math.abs(f.y-p.y)<(f.kind==='orbit'?150:100)))continue;
+      accepted.push(p);
+    }
+    pins.splice(0,pins.length,...accepted);
     return{pins,segments:[...segments,...sideWalls(world)],features,solids,chapters};
   }
   function dynamic(game,world,time){
@@ -97,9 +132,9 @@
     return result;
   }
   function goalkeepers(game,time,diameter,world){
-    const offset=Math.max(0,Course.keepers.findIndex(k=>k.id===game.keeper.id)),pairs=[[0,1],[2,3],[1,2]];
+    const offset=Math.max(0,Course.keepers.findIndex(k=>k.id===game.keeper.id)),pairs=[[0,1,3],[],[1,2]];
     return world.exitGates.flatMap((g,lane)=>pairs[lane].flatMap((kind,stage)=>{
-      const local={...world,finishLeft:g.left-g.center+500,finishRight:g.right-g.center+500,finishY:world.finishY-(stage?0:155)};
+      const local={...world,finishLeft:g.left-g.center+500,finishRight:g.right-g.center+500,finishY:world.finishY-(pairs[lane].length-1-stage)*75};
       return Course.goalkeeper(Course.keepers[(kind+offset)%4],time+lane*1.9+stage*.7,diameter,local).map(s=>({...s,x1:s.x1+g.center-500,x2:s.x2+g.center-500,...(s.cx!==undefined?{cx:s.cx+g.center-500}:{}),lane,stage,stellar:true}));
     }));
   }
@@ -108,7 +143,8 @@
     const top=Math.max(0,camera.top-100),end=Math.min(world.height,camera.top+camera.visibleHeight+100);ctx.save();
     for(let row=Math.floor(top/160);row*160<end;row++)for(let i=0;i<10;i++){const x=45+((row*71+i*139)%910),y=row*160+((i*53+row*31)%150);ctx.fillStyle=(row+i)%3?'#e1e3ff60':'#a0e4ed85';ctx.beginPath();ctx.arc(x,y,(i+row)%4===0?2.2:1,0,Math.PI*2);ctx.fill();}
     for(const [y]of definitions[game.map].sections.slice(1))if(y>top&&y<end){ctx.strokeStyle='#afa6ff55';ctx.lineWidth=10;ctx.beginPath();ctx.ellipse(500,y-25,340,50,0,0,Math.PI*2);ctx.stroke();ctx.lineWidth=2;ctx.strokeStyle='#d8d0ffbb';ctx.stroke();}
-    for(const y of [90,world.finishY-70])if(y>top&&y<end){ctx.strokeStyle='#aab4e965';ctx.lineWidth=3;ctx.beginPath();ctx.arc(500,y,95,Math.PI,0);ctx.lineTo(595,y+30);ctx.lineTo(405,y+30);ctx.closePath();ctx.stroke();ctx.beginPath();ctx.moveTo(470,y-50);ctx.lineTo(540,y-95);ctx.lineTo(550,y-80);ctx.lineTo(480,y-35);ctx.closePath();ctx.stroke();}
+    for(const s of game.static.solids||[])if(s.riftStructure&&s.y+s.ry>top&&s.y-s.ry<end){ctx.fillStyle='#121c36';ctx.strokeStyle='#a69ae9';ctx.lineWidth=9;ctx.beginPath();ctx.moveTo(s.x,s.y-s.ry);ctx.lineTo(s.x+s.rx,s.y);ctx.lineTo(s.x,s.y+s.ry);ctx.lineTo(s.x-s.rx,s.y);ctx.closePath();ctx.fill();ctx.stroke();ctx.lineWidth=2;ctx.strokeStyle='#e0d5ff99';ctx.stroke();}
+    const y=90;if(y>top&&y<end){ctx.strokeStyle='#aab4e965';ctx.lineWidth=3;ctx.beginPath();ctx.arc(500,y,95,Math.PI,0);ctx.lineTo(595,y+30);ctx.lineTo(405,y+30);ctx.closePath();ctx.stroke();ctx.beginPath();ctx.moveTo(470,y-50);ctx.lineTo(540,y-95);ctx.lineTo(550,y-80);ctx.lineTo(480,y-35);ctx.closePath();ctx.stroke();}
     ctx.restore();
   }
   function drawWorld(ctx,game,world,camera){
@@ -118,12 +154,17 @@
       const b=Course.bounds(f.y,world),x=b.left+(b.right-b.left)*(f.fraction||.5);
       if(f.kind==='orbit'){ctx.strokeStyle='#a6a6e96b';ctx.lineWidth=2;ctx.setLineDash([4,8]);ctx.beginPath();ctx.ellipse(x,f.y,f.range||90,(f.range||90)*.45,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);}
       if(f.kind==='whirlpool'){ctx.strokeStyle='#aa9de7a0';ctx.lineWidth=2;for(let arm=0;arm<3;arm++){ctx.beginPath();for(let k=0;k<=28;k++){const r=f.range*(1-k/30),a=k*.28*f.direction+game.time*.6+arm*Math.PI*2/3;k?ctx.lineTo(x+Math.cos(a)*r,f.y+Math.sin(a)*r):ctx.moveTo(x+Math.cos(a)*r,f.y+Math.sin(a)*r);}ctx.stroke();}}
-      if(f.kind==='current'){ctx.strokeStyle='#7fc9d95c';ctx.lineWidth=9;for(const lane of f.lanes){ctx.beginPath();for(let k=0;k<=10;k++){const y=f.y-f.height/2+f.height*k/10,c=Extra.channelAt(f,lane,y,world);k?ctx.lineTo(c.x,y):ctx.moveTo(c.x,y);}ctx.stroke();}}
+      if(f.kind==='current')for(const lane of f.lanes){
+        ctx.beginPath();for(let k=0;k<=16;k++){const y=f.y-f.height/2+f.height*k/16,c=Extra.channelAt(f,lane,y,world);k?ctx.lineTo(c.x-c.halfWidth,y):ctx.moveTo(c.x-c.halfWidth,y);}for(let k=16;k>=0;k--){const y=f.y-f.height/2+f.height*k/16,c=Extra.channelAt(f,lane,y,world);ctx.lineTo(c.x+c.halfWidth,y);}ctx.closePath();ctx.fillStyle='#70cfdf20';ctx.fill();
+        const sign=Extra.flowDirection(game,f);ctx.strokeStyle='#a0f0f4bb';ctx.lineWidth=3;
+        for(let k=0;k<5;k++){const u=((k/5+game.time*.24*sign)%1+1)%1,y=f.y+(u-.5)*f.height,c=Extra.channelAt(f,lane,y,world);ctx.save();ctx.translate(c.x,y);ctx.rotate(-Math.atan(c.slope)+(sign<0?Math.PI:0));ctx.beginPath();ctx.moveTo(-9,-7);ctx.lineTo(0,4);ctx.lineTo(9,-7);ctx.stroke();ctx.restore();}
+      }
     }ctx.restore();
   }
   function drawFinish(ctx,world){
     ctx.save();ctx.fillStyle=theme.bank;ctx.fillRect(0,world.funnelY,world.width,world.bottom-world.funnelY);
-    for(const g of world.exitGates){ctx.fillStyle='#413e68';ctx.beginPath();ctx.moveTo(g.startLeft,world.funnelY);ctx.lineTo(g.left,world.funnelKnee);ctx.lineTo(g.left,world.bottom);ctx.lineTo(g.right,world.bottom);ctx.lineTo(g.right,world.funnelKnee);ctx.lineTo(g.startRight,world.funnelY);ctx.closePath();ctx.fill();ctx.strokeStyle='#a9a3e1';ctx.lineWidth=3;ctx.stroke();
+    for(const g of world.exitGates){ctx.fillStyle='#29334e';ctx.beginPath();ctx.moveTo(g.points[0].left,g.points[0].y);for(const p of g.points.slice(1))ctx.lineTo(p.left,p.y);for(const p of [...g.points].reverse())ctx.lineTo(p.right,p.y);ctx.closePath();ctx.fill();ctx.strokeStyle=g.tone;ctx.lineWidth=9;ctx.lineJoin='round';ctx.stroke();ctx.lineWidth=2;ctx.strokeStyle='#e3e6ff99';ctx.stroke();
+      ctx.font='22px sans-serif';ctx.textAlign='center';ctx.fillStyle=g.tone;ctx.fillText(g.keepers?'◆'.repeat(g.keepers):'◇', (g.startLeft+g.startRight)/2,world.funnelY+65);
       for(let i=0;i<8;i++){ctx.fillStyle=i%2?'#dfe8ff':'#9776c4';ctx.fillRect(g.left+i*(g.right-g.left)/8,world.finishY,(g.right-g.left)/8,6);}}
     ctx.restore();
   }
@@ -137,9 +178,9 @@
     ctx.restore();return true;
   }
   const sequences={observatory:['ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','ArrowUp','ArrowDown',...'SUISEI'].map(x=>x.length===1?'Key'+x:x),rift:['ArrowUp','ArrowLeft','ArrowDown','ArrowRight','ArrowUp','ArrowLeft','ArrowDown','ArrowRight','ArrowUp','ArrowDown','ArrowUp','ArrowDown','Digit5',...'JIGEN'].map(x=>x.length===1?'Key'+x:x)};
-  const taps={observatory:['factory','factory','rapids','rapids','ruins','ruins','spinner','spinner','spinner'],rift:['fork','pinball','rapids','rapids','rapids','ruins','ruins','factory','factory','spinner','spinner','spinner','spinner','spinner']};
+  const taps={observatory:['factory','factory','rapids','rapids','ruins','ruins','spinner','spinner','spinner','random'],rift:['fork','pinball','rapids','rapids','rapids','ruins','ruins','factory','factory','spinner','spinner','spinner','spinner','spinner','random']};
   class HiddenMapCommand{
-    constructor({allowed,unlock,now=()=>performance.now(),mobile=()=>window.CometCommand.isMobileDevice()}){Object.assign(this,{allowed,onUnlock:unlock,now,mobile});this.observatory=false;this.rift=false;this.reset();}
+    constructor({allowed,unlock,randomSelected=()=>false,now=()=>performance.now(),mobile=()=>window.CometCommand.isMobileDevice()}){Object.assign(this,{allowed,onUnlock:unlock,randomSelected,now,mobile});this.observatory=false;this.rift=false;this.reset();}
     reset(){this.inputs=[];this.started=null;}
     unlock(id){if(id==='rift'&&!this.observatory||this[id])return false;this[id]=true;this.reset();this.onUnlock(id);return true;}
     feed(value,table){const now=this.now();if(this.started!==null&&now-this.started>30000)this.reset();if(this.started===null)this.started=now;this.inputs.push(value);
@@ -148,15 +189,15 @@
       if(!eligible.some(id=>this.inputs.length<table[id].length&&this.inputs.every((v,i)=>table[id][i]===v))){this.reset();if(eligible.some(id=>table[id][0]===value)){this.inputs=[value];this.started=now;}}
       return false;
     }
-    key(e){if(this.mobile()||!this.allowed()){this.reset();return false;}if(e.target?.closest?.('input,textarea,select,[contenteditable="true"]')){this.reset();return false;}if(e.repeat||e.ctrlKey||e.altKey||e.metaKey)return false;
+    key(e){if(this.mobile()||!this.allowed()||!this.randomSelected()){this.reset();return false;}if(e.target?.closest?.('input,textarea,select,[contenteditable="true"]')){this.reset();return false;}if(e.repeat||e.ctrlKey||e.altKey||e.metaKey)return false;
       let code=e.code||(/^[a-z]$/i.test(e.key||'')?'Key'+e.key.toUpperCase():e.key==='5'?'Digit5':e.key);if(code==='Numpad5')code='Digit5';
       if(['Shift','CapsLock','HangulMode','AltGraph'].includes(e.key))return false;
       if(['Process','Unidentified'].includes(e.key)&&(!e.code||['Process','Unidentified'].includes(e.code)))return false;
       return this.feed(code,sequences);
     }
     tap(id,e){if(!this.mobile()||!this.allowed()||e?.detail===0||e?.pointerType&& !['touch','pen'].includes(e.pointerType)){this.reset();return false;}return this.feed(id,taps);}
-    pick(random=Math.random){const r=clamp(random(),0,1-Number.EPSILON);if(r<.02){this.unlock('observatory');return'observatory';}return baseMaps[Math.min(5,Math.floor((r-.02)/.98*6))];}
+    pick(random=Math.random){const r=clamp(random(),0,1-Number.EPSILON);if(r<.02)return'observatory';return baseMaps[Math.min(5,Math.floor((r-.02)/.98*6))];}
   }
   window.HiddenMapCommand=HiddenMapCommand;
-  window.HiddenCourses={definitions,plans,has,configure,exits,laneBounds,inside,finishSegments,build:(map,w,s,n,sample)=>map==='rift'?buildRift(w,s,n,sample):buildObservatory(w,s,n),dynamic,goalkeepers,apply,drawTerrain,drawWorld,drawFinish,drawSegment};
+  window.HiddenCourses={definitions,plans,has,configure,exits,laneBounds,inside,outerPath,containStructure,finishSegments,build:(map,w,s,n,sample)=>map==='rift'?buildRift(w,s,n,sample):buildObservatory(w,s,n),dynamic,goalkeepers,apply,drawTerrain,drawWorld,drawFinish,drawSegment};
 })();

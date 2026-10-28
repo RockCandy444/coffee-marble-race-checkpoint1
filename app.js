@@ -54,6 +54,9 @@
   let modeWasBattle = false;
   let cometPending = false;
   let cometCard = null, cometFxTimer = null;
+  let mapFxTimer=null;
+  function hideMapFx(){clearTimeout(mapFxTimer);mapFxTimer=null;$('#mapUnlockFx').hidden=true;$('#mapUnlockFx').classList.remove('is-playing');}
+  function showMapFx(id){hideMapFx();const fx=$('#mapUnlockFx');fx.dataset.route=id;$('#mapUnlockFxTitle').textContent=id==='rift'?'차원의 틈이 열렸어요':'혜성 천문대를 발견했어요';fx.hidden=false;void fx.offsetWidth;fx.classList.add('is-playing');mapFxTimer=setTimeout(hideMapFx,2200);}
   function hideCometFx(){clearTimeout(cometFxTimer);cometFxTimer=null;$('#cometUnlockFx').hidden=true;$('#cometUnlockFx').classList.remove('is-playing');}
   function clearCometDiscovery(){hideCometFx();if(cometCard){cometCard.remove();cometCard=null;}}
   function showCometDiscovery(){
@@ -64,11 +67,12 @@
   const secretCommand = new window.CometCommand({allowed:()=>stage==='map'&&$('#battleGuide').open&&!document.hidden,
     arm:()=>{cometPending=true;normalGoldenEnabled=true;if($('#raceMode').value!=='battle')$('#goldenEnabled').checked=true;$('#cometReservation').hidden=false;showCometDiscovery();}});
   document.addEventListener('keydown',event=>{const ability=secretCommand.key(event),map=mapCommand.key(event);if(ability||map||(secretCommand.keys.length||mapCommand.inputs.length)&&event.code?.startsWith('Arrow'))event.preventDefault();});
-  const mapCommand=new window.HiddenMapCommand({allowed:()=>stage==='map'&&!$('#battleGuide').open&&!document.hidden,unlock:id=>{
+  const mapCommand=new window.HiddenMapCommand({allowed:()=>stage==='map'&&!$('#battleGuide').open&&!document.hidden,randomSelected:()=>randomMapSelected,unlock:id=>{
     $('#hiddenMapPanel').hidden=false;$('#chooseObservatory').hidden=!mapCommand.observatory;$('#chooseRift').hidden=!mapCommand.rift;
     $('#hiddenMapMessage').textContent=id==='rift'?'차원의 틈이 열렸어요. 두 숨겨진 코스를 선택할 수 있어요.':'혜성 천문대를 발견했어요. 숨겨진 항로를 선택해 보세요.';
     $('#hiddenMapPanel').classList.remove('just-unlocked');void $('#hiddenMapPanel').offsetWidth;$('#hiddenMapPanel').classList.add('just-unlocked');
     $('#hiddenMapPanel').scrollIntoView?.({block:'nearest',behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches?'auto':'smooth'});
+    showMapFx(id);
   }});
   window.addEventListener('blur',()=>{secretCommand.reset();mapCommand.reset();});
   document.addEventListener('visibilitychange',()=>{if(document.hidden){secretCommand.reset();mapCommand.reset();}});
@@ -129,6 +133,7 @@
   function setStage(next) {
     secretCommand.reset();
     mapCommand.reset();
+    if(next!=='map')hideMapFx();
     if(next!=='map')hideCometFx();
     if (next !== 'race') clearCameraGesture();
     stage = next;
@@ -249,7 +254,7 @@
   $('#editParticipants').addEventListener('click', () => setStage('setup'));
   document.querySelectorAll('.map-card').forEach((card) => card.addEventListener('click', event => {selectMap(card.dataset.map);mapCommand.tap(card.dataset.map,event);}));
   for(const id of ['chooseObservatory','chooseRift'])$('#'+id).addEventListener('click',()=>selectMap($('#'+id).dataset.hiddenMap));
-  $('#randomMap').addEventListener('click',()=>{randomMapSelected=true;mapCommand.reset();updateMapChoice();});
+  $('#randomMap').addEventListener('click',event=>{randomMapSelected=true;mapCommand.tap('random',event);updateMapChoice();});
   function updateMapChoice(){
     $('#randomMap').setAttribute('aria-pressed',String(randomMapSelected));
     $('#startRace').textContent=randomMapSelected?'랜덤 맵으로 경주 시작':'경주 시작하기';
@@ -262,7 +267,7 @@
     randomMapSelected=false;
     selectedMap = map;
     const descriptions={factory:'입고·압착·역주행·분류·교차·최종 검수, 구간마다 다른 설비를 통과해요.',rapids:'완만한 상류에서 분기·소용돌이·바위섬·합류를 거쳐 마지막 협곡으로 내려가요.',ruins:'석주 정원에서 붕괴 회랑·흔들다리·스위치 석문·낙석 신전을 지나 봉인 출구로 향해요.'};
-    const help=Hidden.has(map)?map==='rift'?'일곱 세계의 대표 구간을 지나 3갈래 이중 수문으로 향하는 25,000m 코스예요.':'공전 위성·별빛 관문·혜성 잔해와 성운이 이어지는 숨겨진 천문대예요.':descriptions[map];
+    const help=Hidden.has(map)?map==='rift'?'협곡·넓은 방·갈림길·샛길을 지나 난도가 다른 세 출구로 향하는 25,000m 코스예요.':'공전 위성·별빛 관문·혜성 잔해와 성운이 이어지는 숨겨진 천문대예요.':descriptions[map];
     $('#mapMechanicHelp').textContent=help||'';$('#mapMechanicHelp').hidden=!help;
     $('#sectionGuide').hidden=!Extra.has(map)&&!Hidden.has(map);$('#sectionPlanList').replaceChildren();$('#sectionGuideTitle').textContent=MAPS[map].sections.length+'구간 구성 보기';
     for(const [name,primary,secondary] of (Hidden.plans[map]||Extra.sectionPlans[map]||[])){const item=document.createElement('li'),title=document.createElement('strong'),text=document.createElement('span');title.textContent=name;text.textContent=primary+' · '+secondary;item.append(title,text);$('#sectionPlanList').append(item);}
@@ -407,20 +412,21 @@
 
   function setUpRace() {
     clearCameraGesture();
-    if(randomMapSelected){const chosen=mapCommand.pick();selectMap(chosen);randomMapSelected=true;updateMapChoice();}
-    WORLD.height = MAPS[selectedMap].height;
+    // The drawn map belongs to this race only; random discovery never grants a command unlock.
+    const raceMap=randomMapSelected?mapCommand.pick():selectedMap;
+    WORLD.height = MAPS[raceMap].height;
     WORLD.bottom = WORLD.height - 22;
     WORLD.finishY = WORLD.height - 60;
-    Course.configure(WORLD, selectedMap);
+    Course.configure(WORLD, raceMap);
     camera.reset();
     const n = participants.length;
     const radius = Math.max(5.2, Math.min(11.2, 12.5 - 0.72 * Math.sqrt(n)));
     WORLD.finishLeft = WORLD.width / 2 - radius * 2.5;
     WORLD.finishRight = WORLD.width / 2 + radius * 2.5;
-    Hidden.exits(WORLD,selectedMap,radius);
+    Hidden.exits(WORLD,raceMap,radius);
     const columns = Math.min(n, 24, Math.max(1, Math.ceil(Math.sqrt(n * 4))));
     const rows = Math.ceil(n / columns);
-    const xSpacing = columns === 1 ? 0 : Math.min(42, (selectedMap==='rapids'?650:840) / (columns - 1));
+    const xSpacing = columns === 1 ? 0 : Math.min(42, (raceMap==='rapids'?650:840) / (columns - 1));
     const ySpacing = rows === 1 ? 0 : Math.max(radius * 2 + 2, 12.5);
     const totalWidth = xSpacing * (columns - 1);
     const xStart = (WORLD.width - totalWidth) / 2;
@@ -441,8 +447,8 @@
       };
     });
     game = {
-      map: selectedMap, balls, order: [], time: 0, watchdogTime: 0, paused: false, autoPaused: false,
-      keeper: Course.chooseKeeper(), static: makeStaticObstacles(selectedMap), lastUiUpdate: 0, stuckCount: 0, selectedBall: null
+      map: raceMap, balls, order: [], time: 0, watchdogTime: 0, paused: false, autoPaused: false,
+      keeper: Course.chooseKeeper(), static: makeStaticObstacles(raceMap), lastUiUpdate: 0, stuckCount: 0, selectedBall: null
     };
     game.collisionBuckets = Course.buckets(game.static);
     game.mode = $('#raceMode').value === 'battle' ? 'battle' : 'normal';
@@ -477,9 +483,9 @@
       camera.mode = 'ball:' + golden.ball.id; cameraSelect.value = camera.mode;
       game.selectedBall = golden.ball.id;
     }
-    $('#keeperLabel').textContent = WORLD.exitGates?'3갈래 출구 · 이중 수문':'이번 골키퍼 · '+game.keeper.name;
+    $('#keeperLabel').textContent = WORLD.exitGates?'3갈래 출구 · 삼중 / 무수문 / 이중':'이번 골키퍼 · '+game.keeper.name;
     $('#hazardKey').textContent=Hidden.has(game.map)?'✦ 궤도 · ◇ 별빛 관문 · ↻ 성운 · ◆ 수문':game.map==='factory'?'⇄ 순방향·역방향 벨트 · Ⓜ 자석 · ▣ 압착판 · ◀▶ 분류문':game.map==='rapids'?'↔ 급류 · ↻ 소용돌이 · Ⓜ 자석 · ● 바위섬':game.map==='ruins'?'▱ 석벽 · Ⓜ 자석 · ▼ 낙석 · ⌁ 흔들다리 · ◆ 스위치':'⚡ 파워 범퍼 · Ⓜ 자석 · ↔ 바람 · ◆ 수비수';
-    $('#raceTitle').textContent = MAPS[selectedMap].title+(game.mode==='battle'?' · 능력 배틀':'');
+    $('#raceTitle').textContent = MAPS[raceMap].title+(game.mode==='battle'?' · 능력 배틀':'');
     $('#openBattleAbilities').hidden=!game.battle;$('#battleFeed').hidden=!game.battle;
     $('#battleFeed').textContent=game.battle?(game.mode==='battle'?'⚔ 능력 배틀':'★ 황금구슬 능력')+' · 구슬을 눌러 능력 확인':'';
     $('#raceProgress').textContent = `0 / ${n} 도착`;
@@ -798,7 +804,7 @@
     $('#raceStatus').textContent = '모든 구슬이 결승선을 통과했어요!';
     const loser = game.order[game.order.length - 1];
     $('#coffeeWinner').textContent = `#${loser.id} ${loser.label}`;
-    $('#resultSubtitle').textContent = `${new Set(game.balls.map(ball => ball.name)).size}명 · 구슬 ${game.order.length}개 모두 완주한 ${MAPS[game.map].label}${game.mode==='battle'?' 능력 배틀':''} 경기 · ${WORLD.exitGates ? '3갈래 이중 수문' : game.keeper.name}의 마지막 통과자예요.`;
+    $('#resultSubtitle').textContent = `${new Set(game.balls.map(ball => ball.name)).size}명 · 구슬 ${game.order.length}개 모두 완주한 ${MAPS[game.map].label}${game.mode==='battle'?' 능력 배틀':''} 경기 · ${WORLD.exitGates ? '삼중 차원 출구' : game.keeper.name}의 마지막 통과자예요.`;
     $('#resultMapLabel').textContent = MAPS[game.map].label;
     $('#goldenResult').hidden = !game.reveal;
     if (game.reveal) $('#goldenResult').textContent = (game.comet?'☄ 이번 히든 혜성 · #':'★ 이번 황금구슬 · #') + game.reveal.ball.id + ' ' + (game.reveal.ball.originalLabel||game.reveal.ball.label) + ' · ' + game.reveal.ability.name;
