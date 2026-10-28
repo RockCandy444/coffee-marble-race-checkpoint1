@@ -19,8 +19,10 @@
   const chooseKeeper = (random = Math.random) => keepers[Math.min(3, Math.floor(random() * 4))];
 
   function configure(world, map) {
+    world.exitGates=null;
     world.funnelY = world.height - 1120;
     world.funnelKnee = world.height - 170;
+    if(window.HiddenCourses?.has(map)){window.HiddenCourses.configure(world,map);return;}
     if(window.ExtraCourses?.has(map)){window.ExtraCourses.configure(world,map);return;}
     world.sideProfile = Array.from({ length: 25 }, (_, i) => {
       const t = i / 24, y = world.funnelY * t;
@@ -45,7 +47,7 @@
       leftSlope: (b.left - a.left) / (b.y - a.y), rightSlope: (b.right - a.right) / (b.y - a.y) };
   }
   function contain(ball, world) {
-    const b = bounds(ball.y, world);
+    const b = window.HiddenCourses?.laneBounds(ball.x,ball.y,world)||bounds(ball.y, world);
     if (ball.x - ball.r < b.left) {
       ball.x = b.left + ball.r;
       const length = Math.hypot(1, b.leftSlope), nx = 1 / length, ny = -b.leftSlope / length;

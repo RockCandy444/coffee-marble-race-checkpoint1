@@ -117,13 +117,18 @@
           <span class="map-card-copy"><strong>붕괴하는 유적</strong><small>석주·붕괴 회랑·낙석 · 6구간 · 12,900m</small></span><span class="map-check" aria-hidden="true">✓</span>
         </button>
       </div>
+      <button id="randomMap" class="random-map" type="button" aria-pressed="false">🎲 랜덤 맵 <span>경주 시작 때 코스를 추첨해요</span></button>
+      <section id="hiddenMapPanel" class="hidden-map-panel" aria-label="숨겨진 항로" hidden>
+        <div><span aria-hidden="true">✦</span><h3>숨겨진 항로</h3><p id="hiddenMapMessage" role="status" aria-live="polite"></p></div>
+        <div class="hidden-map-options"><button id="chooseObservatory" data-hidden-map="observatory" type="button" aria-pressed="false" hidden><strong>🌠 혜성 천문대</strong><span>공전·별빛 관문·혜성 잔해 · 6구간 · 13,500m</span></button><button id="chooseRift" data-hidden-map="rift" type="button" aria-pressed="false" hidden><strong>🌌 차원의 틈</strong><span>일곱 세계와 3갈래 이중 수문 · 8구간 · 25,000m</span></button></div>
+      </section>
       <div class="mode-settings">
         <label for="raceMode">플레이 모드</label>
         <select id="raceMode"><option value="normal">일반 경주</option><option value="battle">능력 배틀 · 50종</option></select>
         <p id="modeHelp">기존 규칙으로 달리고, 황금구슬 이벤트를 선택할 수 있어요.</p>
       </div>
       <p id="mapMechanicHelp" class="field-note" hidden></p>
-      <details id="sectionGuide" class="section-guide" hidden><summary>6구간 구성 보기</summary><ol id="sectionPlanList"></ol></details>
+      <details id="sectionGuide" class="section-guide" hidden><summary id="sectionGuideTitle">6구간 구성 보기</summary><ol id="sectionPlanList"></ol></details>
       <details id="battleGuide" class="battle-guide" hidden>
         <summary>배틀 규칙과 능력 50종 보기</summary>
         <p>배틀은 구슬마다 능력 하나를 받아 자동 발동해요. 일반 경주는 황금구슬이 선택되면 능력을 받아요. 방해 뒤에는 잠깐 보호돼요. 결승선 바로 앞은 안전 구간으로, 방해·위치 이동·크기 변경·장애물 통과를 제한해요.</p>
@@ -262,6 +267,7 @@
   <script src="battle.js"></script>
   <script src="maps.js"></script>
   <script src="secret.js"></script>
+  <script src="hidden.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

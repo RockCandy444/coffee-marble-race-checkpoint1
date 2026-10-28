@@ -9,6 +9,7 @@
   };
   const MAPS = {
     ...window.ExtraCourses.definitions,
+    ...window.HiddenCourses.definitions,
     pinball: { title: '핀볼 코스', label: '핀볼', height: 3600, sections: [[180, '핀 숲'], [800, '범퍼 정원'], [1400, '지그재그 슬라이드'], [2050, '링 범퍼'], [2630, '스윙 브리지'], [3030, '골키퍼 게이트']] },
     spinner: { title: '회전 장애물 코스', label: '회전 장애물', height: 3900, sections: [[190, '회전 날개'], [850, '엇갈린 회전문'], [1550, '더블 게이트'], [2150, '슬라이딩 블록'], [2800, '삼중 회전문'], [3330, '골키퍼 게이트']] },
     fork: { title: '갈림길 코스', label: '갈림길', height: 4200, sections: [[190, '첫 번째 갈림길'], [1050, '교차 합류'], [1650, '마지막 선택'], [2350, '다이아몬드 미로'], [3000, '움직이는 징검다리'], [3630, '골키퍼 게이트']] }
@@ -18,6 +19,7 @@
   const Golden = window.GoldenMarble;
   const Battle = window.MarbleBattle;
   const Extra = window.ExtraCourses;
+  const Hidden = window.HiddenCourses;
   Object.values(MAPS).forEach(map => { map.height *= Course.verticalScale; map.sections = map.sections.map(([y, name]) => [y * Course.verticalScale, name]); });
   const $ = (selector) => document.querySelector(selector);
   const setupView = $('#setupView');
@@ -33,6 +35,7 @@
   const defaultNames = '참가자 1 * 5\n참가자 2 * 5\n참가자 3 * 5';
   let participants = Roster.parse(defaultNames).names;
   let selectedMap = 'pinball';
+  let randomMapSelected = false;
   let customNamesEdited = false;
   let lastGeneratedNames = defaultNames;
   let displayedRosterValue = null;
@@ -60,10 +63,16 @@
   }
   const secretCommand = new window.CometCommand({allowed:()=>stage==='map'&&$('#battleGuide').open&&!document.hidden,
     arm:()=>{cometPending=true;normalGoldenEnabled=true;if($('#raceMode').value!=='battle')$('#goldenEnabled').checked=true;$('#cometReservation').hidden=false;showCometDiscovery();}});
-  document.addEventListener('keydown',event=>{if(secretCommand.key(event)||secretCommand.keys.length&&event.code?.startsWith('Arrow'))event.preventDefault();});
-  window.addEventListener('blur',()=>secretCommand.reset());
-  document.addEventListener('visibilitychange',()=>{if(document.hidden)secretCommand.reset();});
-  $('#battleGuide').addEventListener('toggle',()=>{if(!$('#battleGuide').open)secretCommand.reset();});
+  document.addEventListener('keydown',event=>{const ability=secretCommand.key(event),map=mapCommand.key(event);if(ability||map||(secretCommand.keys.length||mapCommand.inputs.length)&&event.code?.startsWith('Arrow'))event.preventDefault();});
+  const mapCommand=new window.HiddenMapCommand({allowed:()=>stage==='map'&&!$('#battleGuide').open&&!document.hidden,unlock:id=>{
+    $('#hiddenMapPanel').hidden=false;$('#chooseObservatory').hidden=!mapCommand.observatory;$('#chooseRift').hidden=!mapCommand.rift;
+    $('#hiddenMapMessage').textContent=id==='rift'?'차원의 틈이 열렸어요. 두 숨겨진 코스를 선택할 수 있어요.':'혜성 천문대를 발견했어요. 숨겨진 항로를 선택해 보세요.';
+    $('#hiddenMapPanel').classList.remove('just-unlocked');void $('#hiddenMapPanel').offsetWidth;$('#hiddenMapPanel').classList.add('just-unlocked');
+    $('#hiddenMapPanel').scrollIntoView?.({block:'nearest',behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches?'auto':'smooth'});
+  }});
+  window.addEventListener('blur',()=>{secretCommand.reset();mapCommand.reset();});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden){secretCommand.reset();mapCommand.reset();}});
+  $('#battleGuide').addEventListener('toggle',()=>{mapCommand.reset();if(!$('#battleGuide').open)secretCommand.reset();});
   $('#cancelComet').addEventListener('click',()=>{cometPending=false;$('#cometReservation').hidden=true;secretCommand.reset();clearCometDiscovery();});
   $('#goldenEnabled').addEventListener('change',()=>{if(!$('#goldenEnabled').checked&&$('#raceMode').value!=='battle'){cometPending=false;$('#cometReservation').hidden=true;clearCometDiscovery();}});
   function updateMode() {
@@ -119,6 +128,7 @@
 
   function setStage(next) {
     secretCommand.reset();
+    mapCommand.reset();
     if(next!=='map')hideCometFx();
     if (next !== 'race') clearCameraGesture();
     stage = next;
@@ -237,19 +247,31 @@
   });
 
   $('#editParticipants').addEventListener('click', () => setStage('setup'));
-  document.querySelectorAll('.map-card').forEach((card) => card.addEventListener('click', () => selectMap(card.dataset.map)));
+  document.querySelectorAll('.map-card').forEach((card) => card.addEventListener('click', event => {selectMap(card.dataset.map);mapCommand.tap(card.dataset.map,event);}));
+  for(const id of ['chooseObservatory','chooseRift'])$('#'+id).addEventListener('click',()=>selectMap($('#'+id).dataset.hiddenMap));
+  $('#randomMap').addEventListener('click',()=>{randomMapSelected=true;mapCommand.reset();updateMapChoice();});
+  function updateMapChoice(){
+    $('#randomMap').setAttribute('aria-pressed',String(randomMapSelected));
+    $('#startRace').textContent=randomMapSelected?'랜덤 맵으로 경주 시작':'경주 시작하기';
+    document.querySelectorAll('.map-card').forEach(card=>{const selected=!randomMapSelected&&card.dataset.map===selectedMap;card.classList.toggle('selected',selected);card.setAttribute('aria-checked',String(selected));});
+    for(const [id,map]of [['chooseObservatory','observatory'],['chooseRift','rift']])$('#'+id).setAttribute('aria-pressed',String(!randomMapSelected&&selectedMap===map));
+    if(randomMapSelected){$('#mapMechanicHelp').hidden=false;$('#mapMechanicHelp').textContent='경주 시작 때 코스를 한 번 추첨해요.';$('#sectionGuide').hidden=true;}
+  }
   function selectMap(map) {
-    if (!MAPS[map]) return;
+    if (!MAPS[map]||Hidden.has(map)&&!mapCommand[map]) return;
+    randomMapSelected=false;
     selectedMap = map;
     const descriptions={factory:'입고·압착·역주행·분류·교차·최종 검수, 구간마다 다른 설비를 통과해요.',rapids:'완만한 상류에서 분기·소용돌이·바위섬·합류를 거쳐 마지막 협곡으로 내려가요.',ruins:'석주 정원에서 붕괴 회랑·흔들다리·스위치 석문·낙석 신전을 지나 봉인 출구로 향해요.'};
-    $('#mapMechanicHelp').textContent=descriptions[map]||'';$('#mapMechanicHelp').hidden=!descriptions[map];
-    $('#sectionGuide').hidden=!Extra.has(map);$('#sectionPlanList').replaceChildren();
-    for(const [name,primary,secondary] of Extra.sectionPlans[map]||[]){const item=document.createElement('li'),title=document.createElement('strong'),text=document.createElement('span');title.textContent=name;text.textContent=primary+' · '+secondary;item.append(title,text);$('#sectionPlanList').append(item);}
+    const help=Hidden.has(map)?map==='rift'?'일곱 세계의 대표 구간을 지나 3갈래 이중 수문으로 향하는 25,000m 코스예요.':'공전 위성·별빛 관문·혜성 잔해와 성운이 이어지는 숨겨진 천문대예요.':descriptions[map];
+    $('#mapMechanicHelp').textContent=help||'';$('#mapMechanicHelp').hidden=!help;
+    $('#sectionGuide').hidden=!Extra.has(map)&&!Hidden.has(map);$('#sectionPlanList').replaceChildren();$('#sectionGuideTitle').textContent=MAPS[map].sections.length+'구간 구성 보기';
+    for(const [name,primary,secondary] of (Hidden.plans[map]||Extra.sectionPlans[map]||[])){const item=document.createElement('li'),title=document.createElement('strong'),text=document.createElement('span');title.textContent=name;text.textContent=primary+' · '+secondary;item.append(title,text);$('#sectionPlanList').append(item);}
     document.querySelectorAll('.map-card').forEach((card) => {
       const selected = card.dataset.map === map;
       card.classList.toggle('selected', selected);
       card.setAttribute('aria-checked', String(selected));
     });
+    updateMapChoice();
   }
   function shuffle(list) {
     for (let i = list.length - 1; i > 0; i--) {
@@ -259,20 +281,25 @@
     return list;
   }
 
-  function finishFunnelSegments() {
+  function finishFunnelSegments(courseWorld = WORLD) {
+    if(courseWorld.exitGates)return Hidden.finishSegments(courseWorld);
     // Segment radius is 4.5: the clear gap between inner faces is exactly 2.5 diameters.
-    const leftGate = WORLD.finishLeft - 4.5;
-    const rightGate = WORLD.finishRight + 4.5;
+    const leftGate = courseWorld.finishLeft - 4.5;
+    const rightGate = courseWorld.finishRight + 4.5;
     return [
-      { x1: Course.bounds(WORLD.funnelY, WORLD).left, y1: WORLD.funnelY, x2: leftGate, y2: WORLD.funnelKnee, funnel: true },
-      { x1: leftGate, y1: WORLD.funnelKnee, x2: leftGate, y2: WORLD.bottom, funnel: true },
-      { x1: Course.bounds(WORLD.funnelY, WORLD).right, y1: WORLD.funnelY, x2: rightGate, y2: WORLD.funnelKnee, funnel: true },
-      { x1: rightGate, y1: WORLD.funnelKnee, x2: rightGate, y2: WORLD.bottom, funnel: true }
+      { x1: Course.bounds(courseWorld.funnelY, courseWorld).left, y1: courseWorld.funnelY, x2: leftGate, y2: courseWorld.funnelKnee, funnel: true },
+      { x1: leftGate, y1: courseWorld.funnelKnee, x2: leftGate, y2: courseWorld.bottom, funnel: true },
+      { x1: Course.bounds(courseWorld.funnelY, courseWorld).right, y1: courseWorld.funnelY, x2: rightGate, y2: courseWorld.funnelKnee, funnel: true },
+      { x1: rightGate, y1: courseWorld.funnelKnee, x2: rightGate, y2: courseWorld.bottom, funnel: true }
     ];
   }
 
-  function makeStaticObstacles(map) {
-    if(Extra.has(map)) {const result=Extra.build(map,WORLD,MAPS[map].sections,participants.length);result.segments.push(...finishFunnelSegments());return result;}
+  function makeStaticObstacles(map, courseWorld = WORLD) {
+    if(Hidden.has(map)) {
+      const sample=source=>{const sw={...courseWorld,height:MAPS[source].height,bottom:MAPS[source].height-22,finishY:MAPS[source].height-60};Course.configure(sw,source);const radius=Math.max(5.2,Math.min(11.2,12.5-.72*Math.sqrt(participants.length)));sw.finishLeft=500-radius*2.5;sw.finishRight=500+radius*2.5;return{world:sw,sections:MAPS[source].sections,static:makeStaticObstacles(source,sw)};};
+      const result=Hidden.build(map,courseWorld,MAPS[map].sections,participants.length,sample);result.segments.push(...finishFunnelSegments(courseWorld));return result;
+    }
+    if(Extra.has(map)) {const result=Extra.build(map,courseWorld,MAPS[map].sections,participants.length);result.segments.push(...finishFunnelSegments(courseWorld));return result;}
     const pins = [];
     const segments = [];
     if (map === 'pinball') {
@@ -317,9 +344,9 @@
     }
     // Fixed partition boards share the outer walls' thickness; moving hazards keep their own sizes.
     segments.forEach(segment => { segment.radius = Course.wallRadius; });
-    Course.enrich(pins, segments, map, WORLD, MAPS[map].sections);
+    Course.enrich(pins, segments, map, courseWorld, MAPS[map].sections);
     // 세 맵 모두 결승선은 한 곳뿐이며, 넓은 트랙을 하나의 결승 통로로 모읍니다.
-    segments.push(...finishFunnelSegments());
+    segments.push(...finishFunnelSegments(courseWorld));
     const solids=map==='fork'?[[260,2500,65],[740,2540,90],[470,2780,75]].map(([x,y,r])=>({x,y:y*Course.verticalScale,rx:r,ry:r*Course.verticalScale})):[];
     return { pins, segments, solids };
   }
@@ -350,6 +377,7 @@
   }
 
   function movingPins(time) {
+    if(Hidden.has(game.map))return Hidden.dynamic(game,WORLD,time).pins;
     if(Extra.has(game.map))return Extra.dynamic(game,WORLD,time).pins;
     if (game.map !== 'fork') return [];
     return [
@@ -361,6 +389,7 @@
 
   function movingSegments(time) {
     const result = rotatingSegments(time);
+    if(Hidden.has(game.map))result.push(...Hidden.dynamic(game,WORLD,time).segments);
     if(Extra.has(game.map))result.push(...Extra.dynamic(game,WORLD,time).segments);
     if (game.map === 'spinner') {
       for (const [y, center, length, radius, phase] of [[2280, 310, 190, 13, 0], [2530, 690, 290, 8, 1.8]]) {
@@ -370,14 +399,15 @@
       }
     }
     const diameter = (game.balls[0].baseR ?? game.balls[0].r) * 2;
-    if(!Extra.has(game.map))result.push(...Course.defenders(time,WORLD));
-    result.push(...Course.goalkeeper(game.keeper, time, diameter, WORLD));
+    if(!Extra.has(game.map)&&!Hidden.has(game.map))result.push(...Course.defenders(time,WORLD));
+    result.push(...(WORLD.exitGates?Hidden.goalkeepers(game,time,diameter,WORLD):Course.goalkeeper(game.keeper,time,diameter,WORLD)));
     result.push(...Battle.temporarySegments(game));
     return result;
   }
 
   function setUpRace() {
     clearCameraGesture();
+    if(randomMapSelected){const chosen=mapCommand.pick();selectMap(chosen);randomMapSelected=true;updateMapChoice();}
     WORLD.height = MAPS[selectedMap].height;
     WORLD.bottom = WORLD.height - 22;
     WORLD.finishY = WORLD.height - 60;
@@ -387,6 +417,7 @@
     const radius = Math.max(5.2, Math.min(11.2, 12.5 - 0.72 * Math.sqrt(n)));
     WORLD.finishLeft = WORLD.width / 2 - radius * 2.5;
     WORLD.finishRight = WORLD.width / 2 + radius * 2.5;
+    Hidden.exits(WORLD,selectedMap,radius);
     const columns = Math.min(n, 24, Math.max(1, Math.ceil(Math.sqrt(n * 4))));
     const rows = Math.ceil(n / columns);
     const xSpacing = columns === 1 ? 0 : Math.min(42, (selectedMap==='rapids'?650:840) / (columns - 1));
@@ -446,8 +477,8 @@
       camera.mode = 'ball:' + golden.ball.id; cameraSelect.value = camera.mode;
       game.selectedBall = golden.ball.id;
     }
-    $('#keeperLabel').textContent = '이번 골키퍼 · ' + game.keeper.name;
-    $('#hazardKey').textContent=game.map==='factory'?'⇄ 순방향·역방향 벨트 · Ⓜ 자석 · ▣ 압착판 · ◀▶ 분류문':game.map==='rapids'?'↔ 급류 · ↻ 소용돌이 · Ⓜ 자석 · ● 바위섬':game.map==='ruins'?'▱ 석벽 · Ⓜ 자석 · ▼ 낙석 · ⌁ 흔들다리 · ◆ 스위치':'⚡ 파워 범퍼 · Ⓜ 자석 · ↔ 바람 · ◆ 수비수';
+    $('#keeperLabel').textContent = WORLD.exitGates?'3갈래 출구 · 이중 수문':'이번 골키퍼 · '+game.keeper.name;
+    $('#hazardKey').textContent=Hidden.has(game.map)?'✦ 궤도 · ◇ 별빛 관문 · ↻ 성운 · ◆ 수문':game.map==='factory'?'⇄ 순방향·역방향 벨트 · Ⓜ 자석 · ▣ 압착판 · ◀▶ 분류문':game.map==='rapids'?'↔ 급류 · ↻ 소용돌이 · Ⓜ 자석 · ● 바위섬':game.map==='ruins'?'▱ 석벽 · Ⓜ 자석 · ▼ 낙석 · ⌁ 흔들다리 · ◆ 스위치':'⚡ 파워 범퍼 · Ⓜ 자석 · ↔ 바람 · ◆ 수비수';
     $('#raceTitle').textContent = MAPS[selectedMap].title+(game.mode==='battle'?' · 능력 배틀':'');
     $('#openBattleAbilities').hidden=!game.battle;$('#battleFeed').hidden=!game.battle;
     $('#battleFeed').textContent=game.battle?(game.mode==='battle'?'⚔ 능력 배틀':'★ 황금구슬 능력')+' · 구슬을 눌러 능력 확인':'';
@@ -570,7 +601,7 @@
       ball.prevY = ball.y;
       const fields = game.collisionBuckets.get(Math.floor(ball.y / 160))?.fields ?? [];
       ball.magnetGrace = Math.max(0, (ball.magnetGrace ?? 0) - dt);
-      Extra.apply(ball,game,WORLD,dt);
+      if(Hidden.has(game.map))Hidden.apply(ball,game,WORLD,dt);else Extra.apply(ball,game,WORLD,dt);
       for (const source of fields) { if(game.battle)Battle.field(game,ball,source,dt);else Course.field(ball, source, dt); }
       ball.vy += 178 * (ball.gravityScale ?? 1) * dt;
       ball.vx += Math.sin(game.time * 1.2 + ball.id * 2.1) * 3.5 * dt;
@@ -612,7 +643,10 @@
         const travel = ball.y - ball.prevY;
         const fraction = travel > 0 ? Math.max(0, Math.min(1, (WORLD.finishY - ball.prevY) / travel)) : 1;
         const crossingX = ball.prevX + (ball.x - ball.prevX) * fraction;
-        if (crossingX - ball.r >= WORLD.finishLeft - 0.01 && crossingX + ball.r <= WORLD.finishRight + 0.01) {
+        const gates=WORLD.exitGates||[{left:WORLD.finishLeft,right:WORLD.finishRight}];
+        const exit=gates.findIndex(g=>crossingX-ball.r>=g.left-.01&&crossingX+ball.r<=g.right+.01);
+        if (exit>=0) {
+          ball.exitLane=exit;
           crossed.push({ ball, fraction });
           continue;
         }
@@ -764,7 +798,7 @@
     $('#raceStatus').textContent = '모든 구슬이 결승선을 통과했어요!';
     const loser = game.order[game.order.length - 1];
     $('#coffeeWinner').textContent = `#${loser.id} ${loser.label}`;
-    $('#resultSubtitle').textContent = `${new Set(game.balls.map(ball => ball.name)).size}명 · 구슬 ${game.order.length}개 모두 완주한 ${MAPS[game.map].label}${game.mode==='battle'?' 능력 배틀':''} 경기 · ${game.keeper.name}의 마지막 통과자예요.`;
+    $('#resultSubtitle').textContent = `${new Set(game.balls.map(ball => ball.name)).size}명 · 구슬 ${game.order.length}개 모두 완주한 ${MAPS[game.map].label}${game.mode==='battle'?' 능력 배틀':''} 경기 · ${WORLD.exitGates ? '3갈래 이중 수문' : game.keeper.name}의 마지막 통과자예요.`;
     $('#resultMapLabel').textContent = MAPS[game.map].label;
     $('#goldenResult').hidden = !game.reveal;
     if (game.reveal) $('#goldenResult').textContent = (game.comet?'☄ 이번 히든 혜성 · #':'★ 이번 황금구슬 · #') + game.reveal.ball.id + ' ' + (game.reveal.ball.originalLabel||game.reveal.ball.label) + ' · ' + game.reveal.ability.name;
@@ -1033,7 +1067,7 @@
       ctx.fillStyle = (MAPS[game.map].colors||['#edf7ef', '#fff0dc', '#eef1fb', '#f9edfa', '#e6f4f3', '#fff1e8'])[index];
       ctx.fillRect(22, y, 956, (MAPS[game.map].sections[index + 1]?.[0] ?? WORLD.bottom) - y);
     });
-    Extra.drawTerrain(ctx,game,WORLD,camera);
+    if(Hidden.has(game.map))Hidden.drawTerrain(ctx,game,WORLD,camera);else Extra.drawTerrain(ctx,game,WORLD,camera);
     ctx.fillStyle = theme?.bank||'#ecdfca';
     for (const side of ['left', 'right']) {
       const edge = side === 'left' ? 0 : WORLD.width;
@@ -1071,6 +1105,7 @@
     }
     ctx.restore();
 
+    if(WORLD.exitGates)Hidden.drawFinish(ctx,WORLD);else {
     // 세 코스 공통의 단일 결승 통로.
     ctx.fillStyle = theme?.finish||'rgba(252,218,158,.22)';
     ctx.beginPath();
@@ -1088,6 +1123,7 @@
       ctx.fillStyle = i % 2 ? '#fff' : '#e98654';
       ctx.fillRect(WORLD.finishLeft + i * ((WORLD.finishRight - WORLD.finishLeft) / 12), WORLD.finishY, (WORLD.finishRight - WORLD.finishLeft) / 12, 6);
     }
+    }
     ctx.fillStyle = '#5d9865'; ctx.font = '700 11px sans-serif'; ctx.fillText('START', 28, 39);
 
     // Clip every obstacle, field and marble to the same inner boundary used by containment.
@@ -1097,7 +1133,7 @@
     ctx.beginPath(); ctx.moveTo(outline[0].x, outline[0].y);
     outline.slice(1).forEach(point => ctx.lineTo(point.x, point.y));
     ctx.closePath(); ctx.clip();
-    Extra.drawWorld(ctx,game,WORLD,camera);
+    if(Hidden.has(game.map))Hidden.drawWorld(ctx,game,WORLD,camera);else Extra.drawWorld(ctx,game,WORLD,camera);
     {
       for (const pin of game.static.pins.concat(movingPins(game.time))) {
         if (pin.y + pin.r < camera.top || pin.y - pin.r > camera.top + camera.visibleHeight) continue;
@@ -1105,7 +1141,7 @@
         ctx.beginPath(); ctx.arc(pin.x + 1, pin.y + 2, pin.r + 1.2, 0, Math.PI * 2); ctx.fillStyle = 'rgba(96,65,36,.12)'; ctx.fill();
         ctx.beginPath(); ctx.arc(pin.x, pin.y, pin.r, 0, Math.PI * 2);
         const grad = ctx.createRadialGradient(pin.x - 2, pin.y - 2, 1, pin.x, pin.y, pin.r);
-        const tones = Battle.converted(game,pin)?['#fff2b3','#a56ae0']:Extra.pinTones(game.map,pin)||(pin.kind === 'power' ? ['#fff6a8', '#ee7743'] : pin.kind === 'magnet' ? ['#ddd0ff', '#8160b4'] : pin.kind === 'wind' ? ['#c6f2f4', '#338c9f'] : pin.piston?['#d5e1e9','#52687a']:pin.riverRock?['#bfd9d7','#638a8a']:pin.ancient?['#dfd5ac','#8a9471']:pin.defender ? ['#b9d7ef', '#4a739a'] : pin.bumper ? ['#b8e6db', '#4f9483'] : ['#ffe6aa', '#bc8450']);
+        const tones = Battle.converted(game,pin)?['#fff2b3','#a56ae0']:Hidden.has(game.map)?(pin.kind==='power'?['#fff1c2','#d5948f']:pin.kind==='magnet'?['#e4dfff','#8c79c4']:['#d8e6ff','#7288bb']):Extra.pinTones(game.map,pin)||(pin.kind === 'power' ? ['#fff6a8', '#ee7743'] : pin.kind === 'magnet' ? ['#ddd0ff', '#8160b4'] : pin.kind === 'wind' ? ['#c6f2f4', '#338c9f'] : pin.piston?['#d5e1e9','#52687a']:pin.riverRock?['#bfd9d7','#638a8a']:pin.ancient?['#dfd5ac','#8a9471']:pin.defender ? ['#b9d7ef', '#4a739a'] : pin.bumper ? ['#b8e6db', '#4f9483'] : ['#ffe6aa', '#bc8450']);
         grad.addColorStop(0, tones[0]); grad.addColorStop(1, tones[1]); ctx.fillStyle = grad; ctx.fill();
         if (pin.ring || pin.moving) { ctx.strokeStyle = pin.moving ? '#4d6fa4' : '#a976b3'; ctx.lineWidth = 4; ctx.stroke(); }
         Course.drawPinSymbol(ctx, pin, game.time);
@@ -1117,6 +1153,7 @@
     for (const segment of segments) {
       if (segment.sideWall || segment.funnel || segment.temporary) continue;
       if (Math.max(segment.y1, segment.y2) + segment.radius < camera.top || Math.min(segment.y1, segment.y2) - segment.radius > camera.top + camera.visibleHeight) continue;
+      if(Hidden.has(game.map)&&Hidden.drawSegment(ctx,segment,game.time,WORLD))continue;
       if(Extra.drawSegment(ctx,segment,game.time,game.map))continue;
       if (segment.circle) {
         ctx.strokeStyle = '#aa6a75'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(500, WORLD.finishY - 120); ctx.lineTo(segment.x1, segment.y1); ctx.stroke();
@@ -1178,7 +1215,7 @@
     }
     ctx.restore();
     drawOuterWalls();
-    if (game.paused) { ctx.fillStyle = 'rgba(255,251,242,.24)'; ctx.fillRect(0, 0, WORLD.width, WORLD.height); }
+    if (game.paused) { ctx.fillStyle = Hidden.has(game.map)?'rgba(200,205,255,.06)':'rgba(255,251,242,.24)'; ctx.fillRect(0, 0, WORLD.width, WORLD.height); }
     drawMiniMap();
   }
 

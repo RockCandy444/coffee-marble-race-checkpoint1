@@ -220,3 +220,23 @@ body.race-active .race-information .hazard-key { bottom: 55px; }
   body.race-active .canvas-wrap .keeper-label { top: 32px; left: 7px; max-width: calc(100% - 70px); padding: 4px 6px; font-size: 9px; }
   body.race-active .canvas-wrap .hazard-key { bottom: 7px; left: 7px; max-width: calc(100% - 14px); padding: 4px 6px; font-size: 8px; white-space: nowrap; }
 }
+
+/* Hidden routes sit below the unchanged six-card map grid. */
+.random-map { display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:8px; width:100%; margin:12px 0; padding:12px; border:1px dashed #b8a5cf; border-radius:12px; background:#f6f0fc; color:#71558c; font:inherit; font-size:13px; font-weight:700; cursor:pointer; }
+.random-map span { font-size:11px; font-weight:400; color:#93819e; }
+.random-map[aria-pressed="true"] { background:#ede2fa; border-style:solid; border-color:#9474b2; box-shadow:0 0 0 2px #bc9bd733; }
+.hidden-map-panel { margin:14px 0; padding:18px; border:1px solid #7975af; border-radius:16px; color:#e8e4ff; background:radial-gradient(ellipse at 95% 0,#7760a666,transparent 70%),radial-gradient(ellipse at 0 100%,#3b749266,transparent 70%),#292741; }
+.hidden-map-panel[hidden] { display:none; }
+.hidden-map-panel > div:first-child { display:grid; grid-template-columns:28px 1fr; gap:3px 8px; align-items:center; }
+.hidden-map-panel h3 { margin:0; font-size:16px; font-weight:700; }
+.hidden-map-panel p { grid-column:2; margin:4px 0 12px; font-size:12px; line-height:1.6; color:#bfc3e6; }
+.hidden-map-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+.hidden-map-options button { display:grid; gap:5px; min-width:0; padding:14px; text-align:left; border:1px solid #737498; border-radius:11px; background:#ffffff0b; color:#dfdffa; font:inherit; cursor:pointer; }
+.hidden-map-options button[hidden] { display:none; }
+.hidden-map-options button[aria-pressed="true"] { background:#a49dd22b; border-color:#c5d0ff; box-shadow:0 0 16px #a5bdf52b; }
+.hidden-map-options strong { font-size:14px; }.hidden-map-options span { font-size:11px; line-height:1.6; color:#b4b9db; }
+.hidden-map-panel.just-unlocked { animation:rift-discover 1.2s ease-out; }
+@keyframes rift-discover { 0% {box-shadow:0 0 0 0 #a4a4ed99;filter:brightness(1.5)} 100% {box-shadow:0 0 0 18px #a4a4ed00;filter:brightness(1)} }
+@media(max-width:600px){.hidden-map-panel{padding:13px}.hidden-map-options{grid-template-columns:1fr}.random-map{padding:11px}.random-map span{font-size:10px}}
+@media(prefers-reduced-motion:reduce){.hidden-map-panel.just-unlocked{animation:none}}
+.map-card,.random-map,.hidden-map-options button { touch-action:manipulation; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }

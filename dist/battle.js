@@ -125,6 +125,7 @@
   }
   function clearAt(ball,x,y,game,env,ignore=new Set(),radius=ball.r) {
     const world=game.battle.world;
+    if(window.HiddenCourses&&!window.HiddenCourses.inside(x,y,radius,world))return false;
     if(y-radius<world.top+2||y+radius>=world.finishY-240)return false;
     const bounds=window.MarbleCourse.bounds(y,world);
     if(x-radius<=bounds.left+3||x+radius>=bounds.right-3)return false;
@@ -260,7 +261,7 @@
       if((clock.modLock||0)>now)continue;clock.rate=kind==='machinefast'?1.65:-1;clock.modUntil=now+1.6;clock.modLock=now+4.5;changed=true;
     }
     for(const pin of game.static.pins)if(['wind','magnet'].includes(pin.kind)&&pin.id&&Math.hypot(pin.x-ball.x,pin.y-ball.y)<200&&(b.fieldMods.get(pin.id)?.lock||0)<=now){b.fieldMods.set(pin.id,{kind,until:now+1.6,lock:now+4.5});changed=true;}
-    if(kind==='machinereverse'&&game.map==='rapids')for(const f of game.static.features||[]){
+    if(kind==='machinereverse')for(const f of game.static.features||[]){
       if(!['current','whirlpool'].includes(f.kind)||(b.fieldMods.get(f.key)?.lock||0)>now)continue;
       const bounds=window.MarbleCourse.bounds(f.y,b.world),cx=bounds.left+(bounds.right-bounds.left)*(f.fraction||.5);
       const near=f.kind==='whirlpool'?Math.hypot(ball.x-cx,ball.y-f.y)<f.range+100:
