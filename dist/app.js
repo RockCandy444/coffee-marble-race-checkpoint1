@@ -705,15 +705,9 @@
   }
   function resolvePin(ball, pin) {
     if(game.battle&&Battle.skipObstacle(ball,pin,game))return;
-    const dx = ball.x - pin.x;
-    const dy = ball.y - pin.y;
-    const min = ball.r + pin.r;
-    const d2 = dx * dx + dy * dy;
-    if (d2 >= min * min) return;
-    const distance = Math.sqrt(d2) || 0.001;
-    const nx = dx / distance;
-    const ny = dy / distance;
-    const overlap = min - distance;
+    const contact=Course.pinContact(ball,pin);
+    if(!contact)return;
+    const {nx,ny,depth:overlap}=contact;
     ball.x += nx * overlap;
     ball.y += ny * overlap;
     const toward = (ball.vx - (pin.vx || 0)) * nx + (ball.vy - (pin.vy || 0)) * ny;
@@ -1144,11 +1138,12 @@
       for (const pin of game.static.pins.concat(movingPins(game.time))) {
         if (pin.y + pin.r < camera.top || pin.y - pin.r > camera.top + camera.visibleHeight) continue;
         Course.drawField(ctx, pin, game.time);
-        ctx.beginPath(); ctx.arc(pin.x + 1, pin.y + 2, pin.r + 1.2, 0, Math.PI * 2); ctx.fillStyle = 'rgba(96,65,36,.12)'; ctx.fill();
-        ctx.beginPath(); ctx.arc(pin.x, pin.y, pin.r, 0, Math.PI * 2);
+        Course.pinPath(ctx,pin,1,2,(pin.r+1.2)/pin.r); ctx.fillStyle = 'rgba(96,65,36,.12)'; ctx.fill();
+        Course.pinPath(ctx,pin);
         const grad = ctx.createRadialGradient(pin.x - 2, pin.y - 2, 1, pin.x, pin.y, pin.r);
         const tones = Battle.converted(game,pin)?['#fff2b3','#a56ae0']:Hidden.has(game.map)?(pin.kind==='power'?['#fff1c2','#d5948f']:pin.kind==='magnet'?['#e4dfff','#8c79c4']:['#d8e6ff','#7288bb']):Extra.pinTones(game.map,pin)||(pin.kind === 'power' ? ['#fff6a8', '#ee7743'] : pin.kind === 'magnet' ? ['#ddd0ff', '#8160b4'] : pin.kind === 'wind' ? ['#c6f2f4', '#338c9f'] : pin.piston?['#d5e1e9','#52687a']:pin.riverRock?['#bfd9d7','#638a8a']:pin.ancient?['#dfd5ac','#8a9471']:pin.defender ? ['#b9d7ef', '#4a739a'] : pin.bumper ? ['#b8e6db', '#4f9483'] : ['#ffe6aa', '#bc8450']);
         grad.addColorStop(0, tones[0]); grad.addColorStop(1, tones[1]); ctx.fillStyle = grad; ctx.fill();
+        if(pin.star){ctx.strokeStyle='#e5e5ff99';ctx.lineWidth=.8;ctx.stroke();}
         if (pin.ring || pin.moving) { ctx.strokeStyle = pin.moving ? '#4d6fa4' : '#a976b3'; ctx.lineWidth = 4; ctx.stroke(); }
         Course.drawPinSymbol(ctx, pin, game.time);
         Extra.drawPin(ctx,pin,game.time);

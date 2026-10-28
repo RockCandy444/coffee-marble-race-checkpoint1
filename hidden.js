@@ -67,6 +67,7 @@
         pins.push({x,y,r,section,id:'observatory-pin-'+pins.length,stellar:true,...((row+col)%19===0?{kind:'power',range:0,kick:210}:{}),...((row*7+col+section)%43===0?{kind:'magnet',range:120,strength:420,r:16}:{} )});
       }
     });
+    starPins(pins);
     return{pins,segments:[...segments,...sideWalls(world)],features,solids:[],chapters:sections.map((_,i)=>({source:'observatory',section:i}))};
   }
   function buildRift(world,sections,count,sample){
@@ -118,9 +119,10 @@
       if(features.some(f=>['orbit','gate','press','stoneGate'].includes(f.kind)&&Math.abs(f.y-p.y)<(f.kind==='orbit'?150:100)))continue;
       accepted.push(p);
     }
-    pins.splice(0,pins.length,...accepted);
+    pins.splice(0,pins.length,...accepted);starPins(pins);
     return{pins,segments:[...segments,...sideWalls(world)],features,solids,chapters};
   }
+  function starPins(pins){for(const p of pins)if(!p.kind&&!p.switchFor&&!p.island&&!p.pillar&&!p.boulder&&!p.moving){p.star=true;p.starAngle=-Math.PI/2+((p.section||0)%3-1)*.16;}}
   function dynamic(game,world,time){
     const result=Extra.dynamic(game,world,time),Battle=window.MarbleBattle;
     for(const f of game.static.features||[])if(f.kind==='orbit'){

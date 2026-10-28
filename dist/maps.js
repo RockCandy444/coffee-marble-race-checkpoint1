@@ -78,7 +78,7 @@
           feature('current',fraction,{height:section===0?350:section===1?400:section===4?360:240,strength:[300,440,0,260,500,0][section],direction,phase:k*.8+section,pulsed:section===4,period:4.8+k*.4,onTime:2.8,offset:k*1.3,lanes});
         }
         if(section===2)for(let k=0;k<5;k++)feature('whirlpool',.13+k*.18,{range:165+unit(k)*20,direction:k%2?1:-1,fraction:k%2?.67:.33,power:1.1});
-        if(section===0)feature('calm',.53,{height:180});
+        if(section===0){feature('calm',.53,{height:180});for(let k=0;k<8;k++)landmark(start+180+(span-400)*k/7,.5+[-.06,.04,0,.07,-.035,.055,-.02,0][k],10+k%3*2,{section,riverRock:true,upstreamCenter:true});}
         if(section===1){landmark(start+span*.30,.42,50,{section,riverRock:true,island:true});landmark(start+span*.64,.60,55,{section,riverRock:true,island:true});}
         if(section===3){feature('calm',.5,{height:span*.56});for(let k=0;k<6;k++)landmark(start+span*(.14+k*.14),k%2?.7:.3,48+k%3*5,{section,riverRock:true,island:true});}
         if(section===5)for(let k=0;k<3;k++)addShelf(start+100+k*(span-330)/2,k%2===0,Math.max(100,(Course.bounds(start+100+k*(span-330)/2,world).right-Course.bounds(start+100+k*(span-330)/2,world).left)*.25),{riverLog:true,section,drop:65});
@@ -205,12 +205,12 @@
         // Bank eddies curl inward gently while the main current loses force at the edge.
         bankReturn+=(ball.x<(banks.left+banks.right)/2?1:-1)*f.strength*.13*pulse*Math.sin(u*Math.PI)*(1-bankFade);
         for(const lane of f.lanes){const c=channelAt(f,lane,ball.y,world),offset=(c.x-ball.x)/c.halfWidth;if(Math.abs(offset)>=1)continue;
-          const envelope=(1-offset*offset)*Math.sin(u*Math.PI),strength=f.strength*pulse*envelope;
-          ax+=(c.slope*.65+offset*.3)*strength*sign;ay+=strength*.32*sign;
+          const envelope=(1-offset*offset)*Math.sin(u*Math.PI),strength=f.strength*pulse*envelope*1.8;
+          ax+=(c.slope*.85+offset*.45)*strength*sign;ay+=strength*.35*sign;
         }
       } else if(f.kind==='whirlpool'&&Math.abs(ball.y-f.y)<f.range) {
         const b=Course.bounds(f.y,world),cx=b.left+(b.right-b.left)*(f.fraction||.5),dx=ball.x-cx,dy=ball.y-f.y,d=Math.hypot(dx,dy);
-        if(d>1&&d<f.range){const factor=(1-d/f.range)*(f.power||1);ax+=(-dy/d*f.direction*sign*330-dx/d*65)*factor;ay+=(dx/d*f.direction*sign*100+110)*factor;}
+        if(d>1&&d<f.range){const factor=(1-d/f.range)*(f.power||1);ax+=(-dy/d*f.direction*sign*600-dx/d*90)*factor;ay+=(dx/d*f.direction*sign*190+110)*factor;}
       }
     }
     // Flow loses force at solid board surfaces, allowing gravity to release a marble
@@ -220,7 +220,7 @@
       if(s.sideWall||s.funnel||s.broken)continue;
       surfaceFade=Math.min(surfaceFade,Math.max(0,Math.min(1,(distance(ball.x,ball.y,s)-(ball.r||0)-(s.radius||4.5))/45)));
     }
-    ball.vx+=(clamp(ax,-380,380)*bankFade+clamp(bankReturn,-85,85))*surfaceFade*dt;ball.vy+=clamp(ay,-220,220)*surfaceFade*bankFade*dt;
+    ball.vx+=(clamp(ax,-620,620)*bankFade+clamp(bankReturn,-85,85))*surfaceFade*dt;ball.vy+=clamp(ay,-300,300)*surfaceFade*bankFade*dt;
   }
   function flowDirection(game,feature){const mod=game.battle?.fieldMods?.get(feature.key);return mod?.kind==='machinereverse'&&mod.until>game.time?-1:1;}
   function onContact(segment,ball,game,toward) {

@@ -70,6 +70,34 @@
     const t = clamp(((x - s.x1) * dx + (y - s.y1) * dy) / (dx * dx + dy * dy || 1), 0, 1);
     return Math.hypot(x - s.x1 - t * dx, y - s.y1 - t * dy);
   }
+  const starGeometry=new WeakMap();
+  function starVertices(pin){
+    const angle=pin.starAngle??-Math.PI/2,inner=pin.starInner??.48,cached=starGeometry.get(pin);
+    if(cached&&cached.r===pin.r&&cached.angle===angle&&cached.inner===inner)return cached.points;
+    const points=Array.from({length:10},(_,i)=>{const a=angle+i*Math.PI/5,r=pin.r*(i%2?inner:1);return{x:Math.cos(a)*r,y:Math.sin(a)*r};});
+    starGeometry.set(pin,{r:pin.r,angle,inner,points});return points;
+  }
+  function pinPath(ctx,pin,ox=0,oy=0,scale=1){
+    ctx.beginPath();
+    if(!pin.star){ctx.arc(pin.x+ox,pin.y+oy,pin.r*scale,0,Math.PI*2);return;}
+    starVertices(pin).forEach((p,i)=>{const x=pin.x+ox+p.x*scale,y=pin.y+oy+p.y*scale;i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.closePath();
+  }
+  // Circle vs the actual concave star outline. The outer radius is only a broad phase.
+  function pinContact(ball,pin){
+    const x=ball.x-pin.x,y=ball.y-pin.y,sum=ball.r+pin.r;
+    if(Math.abs(x)>=sum||Math.abs(y)>=sum)return null;
+    const d=Math.hypot(x,y);if(d>=sum)return null;
+    if(!pin.star){return{nx:d?x/d:0,ny:d?y/d:-1,depth:ball.r+pin.r-d};}
+    const points=starVertices(pin);let inside=false,best=Infinity,px=0,py=0,edgeX=0,edgeY=0;
+    for(let i=0,j=9;i<10;j=i++){
+      const a=points[j],b=points[i],dx=b.x-a.x,dy=b.y-a.y,t=clamp(((x-a.x)*dx+(y-a.y)*dy)/(dx*dx+dy*dy),0,1),qx=a.x+dx*t,qy=a.y+dy*t,distance=Math.hypot(x-qx,y-qy);
+      if((a.y>y)!==(b.y>y)&&x<(b.x-a.x)*(y-a.y)/(b.y-a.y)+a.x)inside=!inside;
+      if(distance<best){best=distance;px=qx;py=qy;edgeX=dx;edgeY=dy;}
+    }
+    if(!inside&&best>=ball.r)return null;
+    if(best<1e-9){const length=Math.hypot(edgeX,edgeY);return{nx:edgeY/length,ny:-edgeX/length,depth:ball.r};}
+    return{nx:(inside?px-x:x-px)/best,ny:(inside?py-y:y-py)/best,depth:inside?ball.r+best:ball.r-best};
+  }
   function enrich(pins, segments, map, world, sections) {
     pins.forEach(pin => { pin.y *= verticalScale; });
     segments.forEach(segment => { segment.y1 *= verticalScale; segment.y2 *= verticalScale; });
@@ -244,5 +272,5 @@
       ctx.restore();
     } else if (pin.defender) { ctx.strokeStyle = '#426a91'; ctx.lineWidth = 2.5; ctx.stroke(); }
   }
-  window.MarbleCourse = { wallRadius, verticalScale, wallPath, outline, keepers, chooseKeeper, configure, bounds, contain, enrich, buckets, field, kick, rescue, goalkeeper, defenders, drawField, drawPinSymbol };
+  window.MarbleCourse = { wallRadius, verticalScale, wallPath, outline, keepers, chooseKeeper, configure, bounds, contain, starVertices, pinPath, pinContact, enrich, buckets, field, kick, rescue, goalkeeper, defenders, drawField, drawPinSymbol };
 })();
