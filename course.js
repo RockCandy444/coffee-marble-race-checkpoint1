@@ -3,6 +3,12 @@
   const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
   const wallRadius = 4.5;
   const verticalScale = 3;
+  const waterTuning=Object.freeze({currentGain:2.2,vortexX:630,vortexY:200,vortexPull:95,vortexDown:110,lateralCap:620,verticalCap:300});
+  function vortexAcceleration(dx,dy,range,direction,power=1.1){
+    const d=Math.hypot(dx,dy);if(d<1||d>=range)return{x:0,y:0};
+    const factor=(1-d/range)*power;
+    return{x:(-dy/d*direction*waterTuning.vortexX-dx/d*waterTuning.vortexPull)*factor,y:(dx/d*direction*waterTuning.vortexY+waterTuning.vortexDown)*factor};
+  }
   function wallPath(world, side, radius = wallRadius) {
     if(world.exitGates)return window.HiddenCourses.outerPath(world,side,radius);
     const offset = side === 'left' ? -radius : radius;
@@ -272,5 +278,5 @@
       ctx.restore();
     } else if (pin.defender) { ctx.strokeStyle = '#426a91'; ctx.lineWidth = 2.5; ctx.stroke(); }
   }
-  window.MarbleCourse = { wallRadius, verticalScale, wallPath, outline, keepers, chooseKeeper, configure, bounds, contain, starVertices, pinPath, pinContact, enrich, buckets, field, kick, rescue, goalkeeper, defenders, drawField, drawPinSymbol };
+  window.MarbleCourse = { wallRadius, verticalScale, waterTuning, vortexAcceleration, wallPath, outline, keepers, chooseKeeper, configure, bounds, contain, starVertices, pinPath, pinContact, enrich, buckets, field, kick, rescue, goalkeeper, defenders, drawField, drawPinSymbol };
 })();

@@ -205,12 +205,12 @@
         // Bank eddies curl inward gently while the main current loses force at the edge.
         bankReturn+=(ball.x<(banks.left+banks.right)/2?1:-1)*f.strength*.13*pulse*Math.sin(u*Math.PI)*(1-bankFade);
         for(const lane of f.lanes){const c=channelAt(f,lane,ball.y,world),offset=(c.x-ball.x)/c.halfWidth;if(Math.abs(offset)>=1)continue;
-          const envelope=(1-offset*offset)*Math.sin(u*Math.PI),strength=f.strength*pulse*envelope*1.8;
+          const envelope=(1-offset*offset)*Math.sin(u*Math.PI),strength=f.strength*pulse*envelope*Course.waterTuning.currentGain;
           ax+=(c.slope*.85+offset*.45)*strength*sign;ay+=strength*.35*sign;
         }
       } else if(f.kind==='whirlpool'&&Math.abs(ball.y-f.y)<f.range) {
         const b=Course.bounds(f.y,world),cx=b.left+(b.right-b.left)*(f.fraction||.5),dx=ball.x-cx,dy=ball.y-f.y,d=Math.hypot(dx,dy);
-        if(d>1&&d<f.range){const factor=(1-d/f.range)*(f.power||1);ax+=(-dy/d*f.direction*sign*600-dx/d*90)*factor;ay+=(dx/d*f.direction*sign*190+110)*factor;}
+        if(d>1&&d<f.range){const force=Course.vortexAcceleration(dx,dy,f.range,f.direction*sign,f.power||1);ax+=force.x;ay+=force.y;}
       }
     }
     // Flow loses force at solid board surfaces, allowing gravity to release a marble
@@ -220,7 +220,7 @@
       if(s.sideWall||s.funnel||s.broken)continue;
       surfaceFade=Math.min(surfaceFade,Math.max(0,Math.min(1,(distance(ball.x,ball.y,s)-(ball.r||0)-(s.radius||4.5))/45)));
     }
-    ball.vx+=(clamp(ax,-620,620)*bankFade+clamp(bankReturn,-85,85))*surfaceFade*dt;ball.vy+=clamp(ay,-300,300)*surfaceFade*bankFade*dt;
+    ball.vx+=(clamp(ax,-Course.waterTuning.lateralCap,Course.waterTuning.lateralCap)*bankFade+clamp(bankReturn,-85,85))*surfaceFade*dt;ball.vy+=clamp(ay,-Course.waterTuning.verticalCap,Course.waterTuning.verticalCap)*surfaceFade*bankFade*dt;
   }
   function flowDirection(game,feature){const mod=game.battle?.fieldMods?.get(feature.key);return mod?.kind==='machinereverse'&&mod.until>game.time?-1:1;}
   function onContact(segment,ball,game,toward) {

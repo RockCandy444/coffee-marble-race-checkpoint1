@@ -31,7 +31,7 @@
     ['swap','자리 교환','🔀','변수',13,0,'가까운 앞쪽 구슬과 안전할 때 자리를 바꿔요.'],
     ['catchup','역전 본능','🔥','변수',0,0,'후미에 있을 때 하강력이 조금 강해져요.'],
     ['charge','충전 구슬','🔋','변수',4,0,'충돌 에너지를 모아 부스터로 방출해요.'],
-    ['shortcut','지름길','⏩','이동',0,0,'첫 구간을 건너뛰고 2구간에서 출발해요. 이후에는 추가 효과가 없어요.'],
+    ['shortcut','지름길','⏩','이동',0,0,'첫 구간을 건너뛰고 2구간 시작부의 좌우 무작위 위치에서 출발해요. 이후에는 추가 효과가 없어요.'],
     ['wallride','벽타기','🧗','이동',8,1.8,'잠깐 벽에 붙으면 튕기지 않고 벽을 따라 빠르게 내려가요.'],
     ['swing','고무줄 스윙','🪢','이동',8,1.5,'가까운 핀에 줄을 걸고 주위를 돌아 빠져나와요.'],
     ['springball','스프링볼','🏀','이동',8,1.6,'잠깐 탄성이 높아져 크게 튕겨요. 방향에 따라 손해도 봐요.'],
@@ -103,7 +103,7 @@
   function placeShortcuts(game,env) {
     for(const ball of game.balls)if(ball.battle?.startPending) {
       const p=window.GoldenMarble.shortcutStart(ball,game.battle.world,game.battle.sections,
-        {pins:game.static.pins.concat(env.pins),segments:game.static.segments.concat(env.segments)},game.balls);
+        {pins:game.static.pins.concat(env.pins),segments:game.static.segments.concat(env.segments),solids:game.static.solids||[]},game.balls);
       if(p){move(ball,p);ball.vx=0;ball.vy=0;ball.battle.section=2;ball.battle.startPending=false;}
     }
   }
@@ -219,16 +219,16 @@
       entry={until:now+.75};trap.targets.set(target.id,entry);
     }
     if(state.guardUntil>now||state.shield||active(target,'reflect',now)){entry.until=now;return;}
-    const distance=d||1,factor=1-d/trap.range,bounds=window.MarbleCourse.bounds(target.y,game.battle.world);
+    const Course=window.MarbleCourse,bounds=Course.bounds(target.y,game.battle.world);
     const bankFade=clamp((Math.min(target.x-bounds.left,bounds.right-target.x)-target.r)/45,.1,1);
     let surfaceFade=1;
     for(const segment of game.collisionBuckets?.get(Math.floor(target.y/160))?.segments||game.static.segments.concat(env.segments)){
       if(segment.sideWall||segment.funnel||segment.broken)continue;
       surfaceFade=Math.min(surfaceFade,clamp((segmentDistance(target.x,target.y,segment)-target.r-(segment.radius||4.5))/30,0,1));
     }
-    const scale=factor*bankFade*surfaceFade*dt/(target.mass||1);
-    target.vx+=clamp(-dy/distance*trap.direction*440-dx/distance*100,-400,400)*scale;
-    target.vy+=clamp(dx/distance*trap.direction*220+120,-100,300)*scale;
+    const force=Course.vortexAcceleration(dx,dy,trap.range,trap.direction),scale=bankFade*surfaceFade*dt/(target.mass||1);
+    target.vx+=clamp(force.x,-Course.waterTuning.lateralCap,Course.waterTuning.lateralCap)*scale;
+    target.vy+=clamp(force.y,-Course.waterTuning.verticalCap,Course.waterTuning.verticalCap)*scale;
   }
   function temporarySegments(game){return (game.battle?.structures||[]).filter(o=>o.kind==='ramp'&&o.until>game.time).map(o=>o.segment);}
   function makeStructure(game,ball,kind,env){
