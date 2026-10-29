@@ -65,15 +65,15 @@
   function animateMode(enabled){
     const fx=document.querySelector('#beanFx'),wash=document.querySelector('#coffeeDye'),reduce=window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
     if(!fx||reduce){switcher.commit(enabled);update();switcher.finish();return;}
-    fx.hidden=false;fx.className='bean-fx '+(enabled?'bean-arriving':'bean-cleaning');fx.replaceChildren();wash.hidden=false;
+    fx.hidden=false;fx.className='bean-fx '+(enabled?'bean-arriving':'bean-cleaning');fx.replaceChildren();wash.hidden=enabled;
     const finish=()=>{fx.hidden=true;fx.replaceChildren();wash.hidden=true;wash.className='coffee-dye';switcher.finish();update();};
     if(enabled){
       const source=document.querySelector('#beanTrigger').getBoundingClientRect(),cup=document.querySelector('.brand-coffee').getBoundingClientRect(),x=source.x+source.width/2,y=source.y+source.height/2,ex=cup.x+cup.width/2,ey=cup.y+cup.height/2;
       const flying=document.createElement('div');flying.className='flying-bean';const svg=document.querySelector('#beanTrigger svg').cloneNode(true);svg.querySelector('defs')?.remove();flying.append(svg);fx.append(flying);
-      const keys=Array.from({length:25},(_,i)=>{const t=i/24;return{transform:'translate('+(x+(ex-x)*t-24)+'px,'+(y+(ey-y)*t-180*4*t*(1-t)-24)+'px) rotate('+(t*460)+'deg) scale('+(1-t*.65)+')'};});flying.animate(keys,{duration:950,easing:'linear',fill:'forwards'});
+      const arc=Math.max(18,Math.min(90,Math.min(y,ey)-16));const keys=Array.from({length:25},(_,i)=>{const t=i/24;return{transform:'translate('+(x+(ex-x)*t-24)+'px,'+(y+(ey-y)*t-arc*4*t*(1-t)-24)+'px) rotate('+(t*460)+'deg) scale('+(1-t*.65)+')'};});flying.animate(keys,{duration:950,easing:'linear',fill:'forwards'});
       setTimeout(()=>{flying.hidden=true;document.querySelector('.brand-coffee').animate([{transform:'scale(1)'},{transform:'scale(1.3) rotate(-12deg)'},{transform:'scale(1)'}],{duration:400});
         for(let i=0;i<18;i++){const drop=document.createElement('i'),a=i*Math.PI*2/18;drop.className='coffee-drop';drop.style.left=ex+'px';drop.style.top=ey+'px';drop.style.setProperty('--dx',Math.cos(a)*(60+i*9)+'px');drop.style.setProperty('--dy',Math.sin(a)*(55+i*7)+80+'px');fx.append(drop);}
-        wash.className='coffee-dye spreading';wash.style.setProperty('--origin',ex+'px '+ey+'px');switcher.commit(true);update();setTimeout(finish,1500);
+        wash.hidden=false;wash.className='coffee-dye spreading';wash.style.setProperty('--origin',ex+'px '+ey+'px');switcher.commit(true);update();setTimeout(finish,1500);
       },950);
     }else{
       wash.className='coffee-dye wiping';const cloth=document.createElement('div');cloth.className='flying-cloth';cloth.innerHTML=document.querySelector('#beanWipe').innerHTML;fx.append(cloth);
