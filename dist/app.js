@@ -33,6 +33,7 @@
   const countInput = $('#countInput');
   const ballsPerPersonInput = $('#ballsPerPerson');
   const setupError = $('#setupError');
+  const winnerMode = $('#winnerMode'), winnerRank = $('#winnerRank');
   const defaultNames = '참가자 1 * 5\n참가자 2 * 5\n참가자 3 * 5';
   let participants = Roster.parse(defaultNames).names;
   let selectedMap = 'pinball';
@@ -130,6 +131,22 @@
   namesInput.value = defaultNames;
   countInput.value = '3';
   ballsPerPersonInput.value = '5';
+  winnerMode.value = 'last'; winnerRank.value = '1';
+
+  function winningRule(total) {
+    const rank = winnerMode.value === 'first' ? 1 : winnerMode.value === 'custom' ? Number(winnerRank.value) : total;
+    const error = !Number.isInteger(rank) || rank < 1 || rank > total ? `당첨 등수는 1~${total}등 사이의 정수로 입력해 주세요.` : '';
+    const label = winnerMode.value === 'last' ? `꼴찌 (${total}등)` : `${rank}등`;
+    return { rank, label, error };
+  }
+  function updateWinningRule(total) {
+    winnerRank.max = String(Math.max(1, total));
+    $('#winnerRankLabel').hidden = winnerMode.value !== 'custom';
+    const rule = winningRule(total);
+    $('#winningRankHelp').textContent = total < 2 ? '참가 구슬을 2개 이상 입력해 주세요.' : rule.error || `${rule.label}으로 도착한 구슬의 주인이 당첨돼요.`;
+    $('#mapWinningSummary').textContent = '☕ 당첨 등수 · ' + rule.label;
+    return rule;
+  }
 
   function setStage(next) {
     secretCommand.reset();
@@ -162,6 +179,7 @@
     const summary = `${groups.length}명 · 구슬 ${names.length}개`;
     $('#participantCount').textContent = summary;
     $('#mapParticipantSummary').textContent = summary;
+    updateWinningRule(names.length);
     $('#rosterSummary').textContent = names.length ? `${summary} 준비됐어요` : '명단을 입력하면 이름별 구슬 수를 확인할 수 있어요.';
     $('#rosterPreview').replaceChildren();
     groups.forEach(ball => {
@@ -176,12 +194,13 @@
     return Roster.parse(namesInput.value);
   }
   function syncSetupRoster() {
-    if (displayedRosterValue === namesInput.value) return;
-    displayedRosterValue = namesInput.value;
+    const signature = [namesInput.value, winnerMode.value, winnerRank.value].join('\0');
+    if (displayedRosterValue === signature) return;
+    displayedRosterValue = signature;
     customNamesEdited = namesInput.value !== lastGeneratedNames;
     const parsed = parsedNames();
     updateCountBadge(parsed.names);
-    setupError.textContent = parsed.error || (parsed.names.length < 2 ? '전체 구슬이 2개 이상이 되도록 입력해 주세요.' : '');
+    setupError.textContent = parsed.error || (parsed.names.length < 2 ? '전체 구슬이 2개 이상이 되도록 입력해 주세요.' : winningRule(parsed.names.length).error);
     $('#confirmParticipants').disabled = !!setupError.textContent;
     if (parsed.error) $('#rosterSummary').textContent = '입력한 이름과 구슬 수를 확인해 주세요.';
   }
@@ -205,14 +224,14 @@
   document.addEventListener('visibilitychange', () => { if (!document.hidden) queueSetupSync(); });
   function generateNames() {
     const count = Number(countInput.value), copies = Number(ballsPerPersonInput.value);
-    if (![count, copies].every(n => Number.isInteger(n) && n >= 1 && n <= 100)) {
-      setupError.textContent = '참가 인원과 1인당 구슬 수는 1~100의 정수로 입력해 주세요.';
+    if (![count, copies].every(n => Number.isInteger(n) && n >= 1 && n <= Roster.MAX)) {
+      setupError.textContent = '참가 인원과 1인당 구슬 수는 1~1,000의 정수로 입력해 주세요.';
       $('#confirmParticipants').disabled = true;
       return;
     }
     const total = count * copies;
-    if (total < 2 || total > 100) {
-      setupError.textContent = `${count}명 × ${copies}개는 구슬 ${total}개예요. 전체 구슬이 2~100개가 되도록 조절해 주세요.`;
+    if (total < 2 || total > Roster.MAX) {
+      setupError.textContent = `${count}명 × ${copies}개는 구슬 ${total}개예요. 전체 구슬이 2~1,000개가 되도록 조절해 주세요.`;
       $('#confirmParticipants').disabled = true;
       return;
     }
@@ -227,7 +246,7 @@
     if (!customNamesEdited) generateNames();
   });
   $('#countUp').addEventListener('click', () => {
-    countInput.value = String(Math.min(100, (Number.parseInt(countInput.value, 10) || 3) + 1));
+    countInput.value = String(Math.min(Roster.MAX, (Number.parseInt(countInput.value, 10) || 3) + 1));
     if (!customNamesEdited) generateNames();
   });
   namesInput.addEventListener('input', syncSetupRoster);
@@ -236,17 +255,33 @@
     syncSetupRoster();
     if (!customNamesEdited) generateNames();
   }
+  function copiesChanged() {
+    syncSetupRoster();
+    if (!customNamesEdited) { generateNames(); return; }
+    const next = Roster.withCopies(namesInput.value, Number(ballsPerPersonInput.value));
+    if (next.error) { setupError.textContent = next.error; $('#confirmParticipants').disabled = true; return; }
+    namesInput.value = next.text;
+    displayedRosterValue = null;
+    syncSetupRoster();
+  }
+  for (const [id, delta] of [['copiesDown', -1], ['copiesUp', 1]]) $('#' + id).addEventListener('click', () => {
+    ballsPerPersonInput.value = String(Math.max(1, Math.min(Roster.MAX, (Number.parseInt(ballsPerPersonInput.value, 10) || 1) + delta)));
+    copiesChanged();
+  });
   for (const type of ['input', 'change']) {
     countInput.addEventListener(type, quickSettingsChanged);
-    ballsPerPersonInput.addEventListener(type, quickSettingsChanged);
+    ballsPerPersonInput.addEventListener(type, copiesChanged);
+    winnerMode.addEventListener(type, () => { displayedRosterValue = null; syncSetupRoster(); });
+    winnerRank.addEventListener(type, () => { displayedRosterValue = null; syncSetupRoster(); });
   }
   $('#confirmParticipants').addEventListener('click', () => {
     const {names, error} = parsedNames();
     if (error) { setupError.textContent = error; return; }
-    if (names.length < 2 || names.length > 100) {
-      setupError.textContent = '전체 구슬이 2개 이상 100개 이하가 되도록 입력해 주세요.';
+    if (names.length < 2 || names.length > Roster.MAX) {
+      setupError.textContent = '전체 구슬이 2개 이상 1,000개 이하가 되도록 입력해 주세요.';
       return;
     }
+    if (winningRule(names.length).error) { setupError.textContent = winningRule(names.length).error; return; }
     participants = names;
     updateCountBadge(names);
     setupError.textContent = '';
@@ -414,6 +449,8 @@
 
   function setUpRace() {
     if(Beans.busy)return;
+    const rule = winningRule(participants.length);
+    if (rule.error) { displayedRosterValue = null; setStage('setup'); return; }
     clearCameraGesture();
     // The drawn map belongs to this race only; random discovery never grants a command unlock.
     const raceMap=randomMapSelected?mapCommand.pick():selectedMap;
@@ -427,9 +464,12 @@
     WORLD.finishLeft = WORLD.width / 2 - radius * 2.5;
     WORLD.finishRight = WORLD.width / 2 + radius * 2.5;
     Hidden.exits(WORLD,raceMap,radius);
-    const columns = Math.min(n, 24, Math.max(1, Math.ceil(Math.sqrt(n * 4))));
+    // Large grids remain inside every map's changing side walls, before chapter one.
+    const spawnWidth = n > 100 ? 650 : raceMap === 'rapids' ? 650 : 840;
+    const capacity = n > 100 ? Math.floor(spawnWidth / (radius * 2 + 3.2)) + 1 : 24;
+    const columns = Math.min(n, capacity, Math.max(1, Math.ceil(Math.sqrt(n * 4))));
     const rows = Math.ceil(n / columns);
-    const xSpacing = columns === 1 ? 0 : Math.min(42, (raceMap==='rapids'?650:840) / (columns - 1));
+    const xSpacing = columns === 1 ? 0 : Math.min(42, spawnWidth / (columns - 1));
     const ySpacing = rows === 1 ? 0 : Math.max(radius * 2 + 2, 12.5);
     const totalWidth = xSpacing * (columns - 1);
     const xStart = (WORLD.width - totalWidth) / 2;
@@ -450,7 +490,7 @@
       };
     });
     game = {
-      map: raceMap, balls, order: [], time: 0, watchdogTime: 0, paused: false, autoPaused: false,
+      map: raceMap, balls, order: [], winningRank: rule.rank, winningLabel: rule.label, time: 0, watchdogTime: 0, paused: false, autoPaused: false,
       keeper: Course.chooseKeeper(), static: makeStaticObstacles(raceMap), lastUiUpdate: 0, stuckCount: 0, selectedBall: null
     };
     game.collisionBuckets = Course.buckets(game.static);
@@ -489,6 +529,7 @@
     $('#keeperLabel').textContent = WORLD.exitGates?'3갈래 출구 · 삼중 / 무수문 / 이중':'이번 골키퍼 · '+game.keeper.name;
     $('#hazardKey').textContent=Hidden.has(game.map)?'✦ 궤도 · ◇ 별빛 관문 · ↻ 성운 · ◆ 수문':game.map==='factory'?'⇄ 순방향·역방향 벨트 · Ⓜ 자석 · ▣ 압착판 · ◀▶ 분류문':game.map==='rapids'?'↔ 급류 · ↻ 소용돌이 · Ⓜ 자석 · ● 바위섬':game.map==='ruins'?'▱ 석벽 · Ⓜ 자석 · ▼ 낙석 · ⌁ 흔들다리 · ◆ 스위치':'⚡ 파워 범퍼 · Ⓜ 자석 · ↔ 바람 · ◆ 수비수';
     $('#raceTitle').textContent = MAPS[raceMap].title+(game.mode==='battle'?' · 능력 배틀':'');
+    $('#raceWinningSummary').textContent = '☕ ' + game.winningLabel + ' 당첨';
     $('#openBattleAbilities').hidden=!game.battle;$('#battleFeed').hidden=!game.battle;
     $('#battleFeed').textContent=game.battle?(game.mode==='battle'?'⚔ 능력 배틀':'★ 황금구슬 능력')+' · 구슬을 눌러 능력 확인':'';
     $('#raceProgress').textContent = `0 / ${n} 도착`;
@@ -579,11 +620,16 @@
     } else if (!game.paused) {
       game.goRemaining = Math.max(0, game.goRemaining - elapsed);
       accumulator += elapsed * raceSpeed;
+      const largeRace = game.balls.length > 100;
+      if (largeRace) accumulator = Math.min(accumulator, FIXED_DT * 40);
+      const physicsStarted = performance.now();
       let iterations = 0;
       while (accumulator >= FIXED_DT && iterations < 40 && !game.paused && stage === 'race') {
         physicsStep(FIXED_DT);
         accumulator -= FIXED_DT;
         iterations++;
+        // Keep controls responsive on slower devices without skipping simulation steps.
+        if (largeRace && performance.now() - physicsStarted >= 12) break;
       }
     }
     if (stage !== 'race') return;
@@ -811,9 +857,9 @@
     game.paused = true;
     $('#raceProgress').textContent = `${game.order.length} / ${game.balls.length} 도착`;
     $('#raceStatus').textContent = '모든 구슬이 결승선을 통과했어요!';
-    const loser = game.order[game.order.length - 1];
-    $('#coffeeWinner').textContent = `#${loser.id} ${loser.label}`;
-    $('#resultSubtitle').textContent = `${new Set(game.balls.map(ball => ball.name)).size}명 · 구슬 ${game.order.length}개 모두 완주한 ${MAPS[game.map].label}${game.mode==='battle'?' 능력 배틀':''} 경기 · ${WORLD.exitGates ? '삼중 차원 출구' : game.keeper.name}의 마지막 통과자예요.`;
+    const winner = game.order[game.winningRank - 1];
+    $('#coffeeWinner').textContent = `#${winner.id} ${winner.label}`;
+    $('#resultSubtitle').textContent = `${new Set(game.balls.map(ball => ball.name)).size}명 · 구슬 ${game.order.length}개 모두 완주한 ${MAPS[game.map].label}${game.mode==='battle'?' 능력 배틀':''} 경기 · ${game.winningLabel} 당첨이에요.`;
     $('#resultMapLabel').textContent = MAPS[game.map].label;
     $('#goldenResult').hidden = !game.reveal;
     if (game.reveal) $('#goldenResult').textContent = (game.comet?'☄ 이번 히든 혜성 · #':'★ 이번 황금구슬 · #') + game.reveal.ball.id + ' ' + (game.reveal.ball.originalLabel||game.reveal.ball.label) + ' · ' + game.reveal.ability.name;
@@ -821,12 +867,12 @@
     list.replaceChildren();
     game.order.forEach((ball, index) => {
       const item = document.createElement('li');
-      if (index === game.order.length - 1) item.classList.add('last-place');
+      if (index === game.winningRank - 1) item.classList.add('winning-place');
       const rank = document.createElement('span'); rank.className = 'rank-badge'; rank.textContent = String(index + 1);
       const bead = document.createElement('i'); bead.className = 'ranking-bead'; Roster.styleBead(bead, ball);
       const name = document.createElement('span'); name.className = 'rank-name'; fillRaceName(name,ball);
       item.append(rank, bead, name);
-      if (index === game.order.length - 1) {
+      if (index === game.winningRank - 1) {
         const note = document.createElement('span'); note.className = 'rank-note'; note.textContent = '☕ 커피 당첨'; item.append(note);
       }
       list.append(item);
@@ -846,11 +892,12 @@
     list.replaceChildren();
     const fragment = document.createDocumentFragment();
     const running = game.balls.filter(ball => !ball.finished).sort((a, b) => b.y - a.y);
-    $('#liveTitle').textContent = game.order.length ? '결승 도착 순서' : '현재 선두 그룹';
-    const displayed = game.order.length ? game.order : running.slice(0, 12);
+    const offset = Math.max(0, game.order.length - 100);
+    $('#liveTitle').textContent = offset ? '최근 결승 도착 순서' : game.order.length ? '결승 도착 순서' : '현재 선두 그룹';
+    const displayed = game.order.length ? game.order.slice(offset) : running.slice(0, 12);
     displayed.forEach((ball, index) => {
       const li = document.createElement('li');
-      const rank = document.createElement('span'); rank.className = 'rank-number'; rank.textContent = String(index + 1);
+      const rank = document.createElement('span'); rank.className = 'rank-number'; rank.textContent = String(index + 1 + (game.order.length ? offset : 0));
       const bead = document.createElement('i'); bead.className = 'mini-bead'; Roster.styleBead(bead, ball);
       const name = document.createElement('span'); name.className = 'order-name'; fillRaceName(name,ball);
       li.append(rank, bead, name); fragment.append(li);

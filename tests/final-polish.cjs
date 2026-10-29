@@ -21,7 +21,7 @@ sandbox.window.handlers.pageshow();
 names.value='민지 * 5, 준호 * 2';setupFrame();
 assert.equal(elements.get('#participantCount').textContent,'2명 · 구슬 7개');
 count.value='8';count.handlers.input();assert.equal(names.value,'민지 * 5, 준호 * 2','manual roster survives quick settings');
-names.value='민지 * 101';setupFrame();assert.equal(confirm.disabled,true);
+names.value='민지 * 1001';setupFrame();assert.equal(confirm.disabled,true);
 names.value='민지 * 2';sandbox.window.handlers.focus();assert.equal(confirm.disabled,false);
 assert.equal(elements.get('#participantCount').textContent,'1명 · 구슬 2개');
 confirm.handlers.click();assert.equal(pendingFrames.size,0,'setup watcher stops when leaving setup');

@@ -155,6 +155,15 @@ button:focus-visible, select:focus-visible { outline: 3px solid #478879; outline
   .quick-entry .button { width: 100%; min-height: 44px; margin: 14px 0 0; padding: 10px 12px; font-size: 12px; }
 }
 .mode-settings { margin-top: 18px; padding: 15px 16px; background: #f5f0ff; border: 1px solid #dfd3ed; border-radius: 12px; }
+.winning-settings { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 20px; padding: 14px; background: #fff8e9; border: 1px solid #f3e8d2; border-radius: 12px; font-size: 12px; }
+.winning-settings > label:first-child { font-weight: 800; }
+.winning-settings select, .winning-settings input { min-height: 44px; padding: 8px 10px; border: 1px solid #e9ddca; border-radius: 9px; background: #fffdf8; color: inherit; font: inherit; }
+.winning-settings input { width: 85px; }
+.winning-settings p { flex-basis: 100%; margin: 0; }
+.winning-summary { color: #a56030; font-size: 13px; margin: -6px 0 18px; }
+.final-ranking li.winning-place { background: #fff5ed; border-radius: 8px; color: #a34d34; }
+#raceWinningSummary { color: #a56030; }
+@media (max-width: 600px) { .winning-settings select, .winning-settings input { font-size: 16px; } body.race-active .track-legend { flex-wrap: wrap; } }
 .mode-settings label { font-size: 12px; font-weight: 800; margin-right: 12px; color: #74528d; }
 .mode-settings select { min-height: 40px; padding: 7px 12px; border: 1px solid #cdb8df; border-radius: 8px; background: #fffdf9; font: inherit; font-size: 13px; color: #69447e; }
 .mode-settings p { margin: 8px 0 0; color: #8b7797; font-size: 11px; line-height: 1.6; }
