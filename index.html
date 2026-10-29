@@ -14,7 +14,7 @@
         <span class="brand-mark brand-coffee" aria-hidden="true">☕</span>
         <span>커피내기 <strong>구슬 경주</strong></span>
       </a>
-      <span class="local-badge"><span aria-hidden="true">☕</span> 점심 한 판, 커피 한 잔</span>
+      <div class="topbar-actions"><span class="local-badge"><span aria-hidden="true">☕</span> 점심 한 판, 커피 한 잔</span><button id="beanWipe" class="bean-wipe" type="button" aria-label="흘린 커피 닦고 일반 구슬로 돌아가기" title="흘린 커피 닦고 일반 구슬로 돌아가기" hidden><svg viewBox="0 0 40 40" aria-hidden="true" focusable="false"><path d="M7 12Q11 8 17 11L29 8L34 29Q30 27 26 31L10 34Q8 28 5 26Z" fill="#d2ece5" stroke="#5d9c92" stroke-width="2" stroke-linejoin="round"/><path d="M10 15L26 12L30 27L12 30ZM14 13Q13 22 17 30M23 12Q21 23 25 29" fill="none" stroke="#84b6ac" stroke-width="1" stroke-dasharray="2 2"/><path d="M25 1L27 7L33 9L27 11L25 17L23 11L17 9L23 7Z" fill="#fff7d1" stroke="#c5a756"/></svg></button></div>
     </header>
 
     <section class="intro" aria-labelledby="page-title">
@@ -23,7 +23,7 @@
         <h1 id="page-title">구슬에게 맡겨봐요<span>!</span></h1>
         <p class="intro-copy">장애물은 진짜로 부딪히고, 결승선을 먼저 통과한 순서대로 순위가 정해져요.</p>
       </div>
-      <div class="coffee-doodle coffee-bean-doodle" aria-hidden="true">
+      <button id="beanTrigger" class="coffee-doodle coffee-bean-doodle" type="button" aria-label="커피콩">
         <svg viewBox="0 0 64 64" focusable="false" aria-hidden="true">
           <defs><linearGradient id="coffeeBeanRoast" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#bd8a5d"/><stop offset=".48" stop-color="#8c5637"/><stop offset="1" stop-color="#523021"/></linearGradient></defs>
           <ellipse cx="32" cy="32" rx="19" ry="27" transform="rotate(32 32 32)" fill="url(#coffeeBeanRoast)"/>
@@ -31,7 +31,7 @@
           <path d="M44 12C24 25 43 38 24 53" fill="none" stroke="#d5a171" stroke-opacity=".55" stroke-width="1.5" stroke-linecap="round"/>
           <path d="M24 14C14 20 10 33 16 43" fill="none" stroke="#efc092" stroke-opacity=".35" stroke-width="2.5" stroke-linecap="round"/>
         </svg>
-      </div>
+      </button>
     </section>
 
     <nav class="steps" aria-label="경주 진행 단계">
@@ -277,6 +277,8 @@
   <script src="maps.js"></script>
   <script src="secret.js"></script>
   <script src="hidden.js"></script>
+  <div id="coffeeDye" class="coffee-dye" aria-hidden="true" hidden></div><div id="beanFx" class="bean-fx" aria-hidden="true" hidden></div>
+  <script src="beans.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

@@ -20,6 +20,7 @@
   const Battle = window.MarbleBattle;
   const Extra = window.ExtraCourses;
   const Hidden = window.HiddenCourses;
+  const Beans = window.CoffeeBeans;
   Object.values(MAPS).forEach(map => { map.height *= Course.verticalScale; map.sections = map.sections.map(([y, name]) => [y * Course.verticalScale, name]); });
   const $ = (selector) => document.querySelector(selector);
   const setupView = $('#setupView');
@@ -137,6 +138,7 @@
     if(next!=='map')hideCometFx();
     if (next !== 'race') clearCameraGesture();
     stage = next;
+    Beans.setStage(next);
     setupView.hidden = next !== 'setup';
     mapView.hidden = next !== 'map';
     raceView.hidden = next !== 'race';
@@ -411,6 +413,7 @@
   }
 
   function setUpRace() {
+    if(Beans.busy)return;
     clearCameraGesture();
     // The drawn map belongs to this race only; random discovery never grants a command unlock.
     const raceMap=randomMapSelected?mapCommand.pick():selectedMap;
@@ -440,7 +443,7 @@
     const balls = Roster.entries(participants).map((entry, index) => {
       const slot = slots[index];
       return {
-        ...entry, r: radius,
+        ...entry, r: radius, bean:Beans.enabled, angle:entry.id*.71,spin:(entry.id%2?1:-1)*.9,
         x: slot.x + (Math.random() - 0.5) * 1.2, y: slot.y + (Math.random() - 0.5) * 1.2,
         vx: (Math.random() - 0.5) * 10, vy: Math.random() * 3,
         finished: false, finishTime: null, maxY: slot.y, stallTime: 0, rescueCount: 0, prevX: slot.x, prevY: slot.y
@@ -603,6 +606,7 @@
     if(game.battle)Battle.tick(game,dt,{pins:dynamicPins,segments:dynamicSegments});
 
     for (const ball of active) {
+      Beans.tick(ball,dt);
       ball.prevX = ball.x;
       ball.prevY = ball.y;
       const fields = game.collisionBuckets.get(Math.floor(ball.y / 160))?.fields ?? [];
@@ -650,12 +654,14 @@
         const fraction = travel > 0 ? Math.max(0, Math.min(1, (WORLD.finishY - ball.prevY) / travel)) : 1;
         const crossingX = ball.prevX + (ball.x - ball.prevX) * fraction;
         const gates=WORLD.exitGates||[{left:WORLD.finishLeft,right:WORLD.finishRight}];
-        const exit=gates.findIndex(g=>crossingX-ball.r>=g.left-.01&&crossingX+ball.r<=g.right+.01);
+        const horizontal=ball.bean?Beans.radius({...ball,angle:ball.prevAngle+(ball.angle-ball.prevAngle)*fraction},1,0):ball.r;
+        const exit=gates.findIndex(g=>crossingX-horizontal>=g.left-.01&&crossingX+horizontal<=g.right+.01);
         if (exit>=0) {
           ball.exitLane=exit;
           crossed.push({ ball, fraction });
           continue;
         }
+        if(ball.bean){ball.y=WORLD.finishY-.001;ball.vy=Math.min(0,ball.vy);}
       }
       if (ball.noProgressTime > 12 && ball.y < WORLD.funnelY) {
         const rescues = ball.rescueCount + 1;
@@ -664,10 +670,13 @@
         ball.noProgressTime = 0;
         if (ball.rescueCount >= 4) game.stuckCount++;
       } else if (ball.stallTime > 7.5) {
-        ball.stallTime = 0;
-        ball.rescueCount++;
-        ball.vy += 70 + Math.random() * 30;
-        ball.vx += (Math.random() - 0.5) * 80;
+        if(ball.bean){const rescues=ball.rescueCount+1;Course.rescue(ball,game.time);ball.rescueCount=rescues;}
+        else {
+          ball.stallTime = 0;
+          ball.rescueCount++;
+          ball.vy += 70 + Math.random() * 30;
+          ball.vx += (Math.random() - 0.5) * 80;
+        }
         if (ball.rescueCount >= 4) game.stuckCount++;
       }
     }
@@ -677,6 +686,7 @@
       crossing.ball.finishTime = game.time - dt + crossing.fraction * dt;
       game.order.push(crossing.ball);
     }
+    if(active.some(ball=>ball.bean))game.stuckCount=active.filter(ball=>!ball.finished&&ball.rescueCount>=4).length;
 
     if (game.order.length === game.balls.length) { finishRace(); return; }
     if (game.stuckCount >= 2 || game.watchdogTime > 360) {
@@ -694,18 +704,19 @@
     const oldX=ball.x;
     Course.contain(ball, WORLD);
     if(game?.battle&&oldX!==ball.x)Battle.wallHit(game,ball,Math.sign(ball.x-oldX));
-    if (ball.y - ball.r < WORLD.top) {
-      ball.y = WORLD.top + ball.r;
+    const vertical=ball.bean?Beans.radius(ball,0,1):ball.r;
+    if (ball.y - vertical < WORLD.top) {
+      ball.y = WORLD.top + vertical;
       if (ball.vy < 0) ball.vy = -ball.vy * 0.48;
     }
-    if (ball.y + ball.r > WORLD.bottom) {
-      ball.y = WORLD.bottom - ball.r;
+    if (ball.y + vertical > WORLD.bottom) {
+      ball.y = WORLD.bottom - vertical;
       if (ball.vy > 0) ball.vy = -ball.vy * 0.48;
     }
   }
   function resolvePin(ball, pin) {
     if(game.battle&&Battle.skipObstacle(ball,pin,game))return;
-    const contact=Course.pinContact(ball,pin);
+    const contact=ball.bean?Beans.pinContact(ball,pin):Course.pinContact(ball,pin);
     if(!contact)return;
     const {nx,ny,depth:overlap}=contact;
     ball.x += nx * overlap;
@@ -713,6 +724,7 @@
     const toward = (ball.vx - (pin.vx || 0)) * nx + (ball.vy - (pin.vy || 0)) * ny;
     const previous=game.battle?{vx:ball.vx,vy:ball.vy}:null;
     if (toward < 0) { ball.vx -= 1.48 * toward * nx; ball.vy -= 1.48 * toward * ny; }
+    if(toward<0)Beans.impact(ball,nx,ny,-1.48*toward,pin.vx||0,pin.vy||0);
     if(!Battle.disabled(game,pin)){Battle.kick(game,ball,pin,nx,ny);Extra.onPinContact(pin,ball,game);}
     if(game.battle)Battle.obstacleHit(game,ball,previous,pin,nx,ny,pin.vx||0,pin.vy||0);
   }
@@ -736,14 +748,17 @@
       const length = Math.sqrt(length2);
       nx = -dy / length; ny = dx / length;
     } else { nx /= distance; ny /= distance; }
-    ball.x += nx * (min - distance);
-    ball.y += ny * (min - distance);
+    let depth=min-distance;
+    if(ball.bean){const beanContact=Beans.segmentContact(ball,segment);if(!beanContact)return;nx=beanContact.nx;ny=beanContact.ny;depth=beanContact.depth;}
+    ball.x += nx * depth;
+    ball.y += ny * depth;
     const surfaceVx = (segment.vx || 0) + (segment.rotating ? -segment.omega * (py - segment.cy) : 0);
     const surfaceVy = (segment.vy || 0) + (segment.rotating ? segment.omega * (px - segment.cx) : 0);
     const toward = (ball.vx - surfaceVx) * nx + (ball.vy - surfaceVy) * ny;
     if(Extra.onContact(segment,ball,game,toward))return;
     const previous=game.battle?{vx:ball.vx,vy:ball.vy}:null;
     if (toward < 0) { ball.vx -= 1.5 * toward * nx; ball.vy -= 1.5 * toward * ny; }
+    if(toward<0)Beans.impact(ball,nx,ny,-1.5*toward,surfaceVx,surfaceVy);
     Extra.belt(segment,ball,game);
     if(game.battle)Battle.obstacleHit(game,ball,previous,segment,nx,ny,surfaceVx,surfaceVy);
   }
@@ -776,9 +791,8 @@
     const d2 = dx * dx + dy * dy;
     if (d2 >= min * min) return;
     const distance = Math.sqrt(d2) || 0.001;
-    const nx = dx / distance;
-    const ny = dy / distance;
-    const overlap = min - distance;
+    let nx = dx / distance,ny = dy / distance,overlap=min-distance;
+    if(a.bean||b.bean){const contact=Beans.pairContact(a,b);if(!contact)return;nx=-contact.nx;ny=-contact.ny;overlap=contact.depth;}
     const inverseA = 1 / (a.mass ?? 1), inverseB = 1 / (b.mass ?? 1), inverseTotal = inverseA + inverseB;
     a.x -= nx * overlap * inverseA / inverseTotal; a.y -= ny * overlap * inverseA / inverseTotal;
     b.x += nx * overlap * inverseB / inverseTotal; b.y += ny * overlap * inverseB / inverseTotal;
@@ -787,6 +801,7 @@
       const impulse = -(1 + 0.38) * relative / inverseTotal;
       a.vx -= impulse * nx * inverseA; a.vy -= impulse * ny * inverseA;
       b.vx += impulse * nx * inverseB; b.vy += impulse * ny * inverseB;
+      Beans.impact(a,-nx,-ny,impulse*inverseA);Beans.impact(b,nx,ny,impulse*inverseB);
     }
     if(game?.battle)Battle.contact(game,a,b,nx,ny);
   }
@@ -1194,6 +1209,7 @@
         ctx.restore();
       }
       if ((ball.boostUntil ?? 0) > game.time) { ctx.save(); ctx.globalAlpha = 0.45; ctx.lineWidth = r; ctx.strokeStyle = ball.color; ctx.beginPath(); ctx.moveTo(ball.x - ball.vx * 0.035, ball.y - ball.vy * 0.035); ctx.lineTo(ball.x, ball.y); ctx.stroke(); ctx.restore(); }
+      if(ball.bean){Beans.draw(ctx,ball,game.selectedBall===ball.id);if(game.battle)Battle.drawBall(ctx,ball,game,camera);continue;}
       ctx.beginPath(); ctx.arc(ball.x + 1.5, ball.y + 2, r + 1, 0, Math.PI * 2); ctx.fillStyle = 'rgba(60,41,25,.19)'; ctx.fill();
       ctx.beginPath(); ctx.arc(ball.x, ball.y, r, 0, Math.PI * 2);
       const grad = ctx.createRadialGradient(ball.x - r * .33, ball.y - r * .38, r * .12, ball.x, ball.y, r * 1.08);
@@ -1236,6 +1252,7 @@
     return match ? `hsl(${match[1]} ${match[2]} ${Math.min(88, Number(match[3]) + amount * 30)}%)` : color;
   }
 
+  Beans.mount({allowed:()=>stage!=='race',names:()=>participants});
   queueSetupSync();
   updateMode();
   selectMap(selectedMap);

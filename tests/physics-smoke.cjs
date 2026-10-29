@@ -32,6 +32,7 @@ vm.runInContext(fs.readFileSync(path.join(root, 'maps.js'), 'utf8'), context);
 vm.runInContext(fs.readFileSync(path.join(root, 'secret.js'), 'utf8'), context);
 vm.runInContext(fs.readFileSync(path.join(root, 'hidden.js'), 'utf8'), context);
 const golden = sandbox.window.GoldenMarble;
+vm.runInContext(fs.readFileSync(path.join(root, 'beans.js'), 'utf8'), context);
 // The baseline matrix deliberately exercises the ordinary race branch.
 golden.choose = () => null;
 const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8').replace(/\}\)\(\);\s*$/, `

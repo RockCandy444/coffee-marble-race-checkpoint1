@@ -58,17 +58,20 @@
   function contain(ball, world) {
     window.HiddenCourses?.containStructure(ball,world);
     const b = window.HiddenCourses?.laneBounds(ball.x,ball.y,world)||bounds(ball.y, world);
-    if (ball.x - ball.r < b.left) {
-      ball.x = b.left + ball.r;
+    const bean=ball.bean&&window.CoffeeBeans,leftLength=Math.hypot(1,b.leftSlope),rightLength=Math.hypot(1,b.rightSlope),leftR=bean?bean.radius(ball,1/leftLength,-b.leftSlope/leftLength)*leftLength:ball.r,rightR=bean?bean.radius(ball,-1/rightLength,b.rightSlope/rightLength)*rightLength:ball.r;
+    if (ball.x - leftR < b.left) {
+      ball.x = b.left + leftR;
       const length = Math.hypot(1, b.leftSlope), nx = 1 / length, ny = -b.leftSlope / length;
       const toward = ball.vx * nx + ball.vy * ny;
       if (toward < 0) { ball.vx -= 1.5 * toward * nx; ball.vy -= 1.5 * toward * ny; }
+      if(bean&&toward<0)bean.impact(ball,nx,ny,-1.5*toward);
     }
-    if (ball.x + ball.r > b.right) {
-      ball.x = b.right - ball.r;
+    if (ball.x + rightR > b.right) {
+      ball.x = b.right - rightR;
       const length = Math.hypot(1, b.rightSlope), nx = -1 / length, ny = b.rightSlope / length;
       const toward = ball.vx * nx + ball.vy * ny;
       if (toward < 0) { ball.vx -= 1.5 * toward * nx; ball.vy -= 1.5 * toward * ny; }
+      if(bean&&toward<0)bean.impact(ball,nx,ny,-1.5*toward);
     }
   }
   function distanceToSegment(x, y, s) {
@@ -221,6 +224,7 @@
     ball.boostUntil = time + 0.4; pin.flashUntil = time + 0.18;
   }
   function rescue(ball, time, random = Math.random) {
+    window.CoffeeBeans?.rescued(ball);
     const direction = random() < 0.5 ? -1 : 1;
     ball.vx = direction * (280 + random() * 80);
     ball.vy = -(320 + random() * 80);

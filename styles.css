@@ -8,6 +8,37 @@
 .brand-mark.brand-coffee { flex:none; width:40px; height:36px; font-size:34px; line-height:1; background:transparent; box-shadow:none; border-radius:0; }
 .coffee-bean-doodle { flex:none; }
 .coffee-bean-doodle svg { display:block; width:1.25em; height:1.25em; }
+.coffee-bean-doodle { padding:0; border:0; background:none; cursor:pointer; touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
+.coffee-bean-doodle:active { transform:rotate(-8deg) scale(.94); }
+.topbar-actions { display:flex; align-items:center; gap:10px; }
+.bean-wipe { display:grid; place-items:center; width:36px; height:36px; padding:3px; border:1px solid #d8b38a66; border-radius:10px; background:#fff5e6; cursor:pointer; touch-action:manipulation; }
+.bean-wipe svg { width:29px; height:29px; }.bean-wipe:hover { box-shadow:0 0 12px #fff2bd66; }.bean-wipe:active { transform:rotate(-8deg); }
+body { transition:background-color 1.5s ease,color .8s ease; }
+.app-shell { position:relative; z-index:1; }
+body.bean-mode { background-color:#4b2a1e; background-image:radial-gradient(ellipse at 88% 10%,#94613c50,transparent 50%); color:#f4dfc4; }
+body.bean-mode .brand { color:#f5dfc2; }body.bean-mode .intro-copy { color:#dfc7ac; }body.bean-mode .eyebrow { color:#e6ad72; }body.bean-mode .page-footer { color:#ceb092; }
+body.bean-mode .card,body.bean-mode .battle-dialog { color:#30271f; }body.bean-mode .race-heading h2 { color:#f5dfc2; }body.bean-mode .steps { color:#c4aa91; }body.bean-mode .step.active { color:#ffcf8a; }
+body.bean-mode .intro>div { min-width:0; }body.bean-mode .race-bottom-actions .text-button { color:#efd0ab; }
+body.bean-mode .camera-toolbar > label,body.bean-mode .camera-zoom output,body.bean-mode .race-speed { color:#efd0ab; }
+body.bean-mode .camera-zoom button,body.bean-mode .race-speed select { color:#60452e; }
+body.bean-mode #cameraStatus { color:#b9dfbc; }
+body.bean-mode .step.done { color:#b9dfbc; }
+body.bean-mode :is(.roster-bead,.mini-bead,.ranking-bead) { position:relative; transform:rotate(-25deg) scaleY(.72); }
+body.bean-mode :is(.roster-bead,.mini-bead,.ranking-bead)::after { content:''; position:absolute; left:43%; top:10%; height:80%; width:15%; border-left:1px solid #4d2b1c; border-radius:50%; transform:rotate(15deg); }
+.coffee-dye { position:fixed; inset:0; z-index:0; pointer-events:none; background:#4b2a1e; }
+.coffee-dye.spreading { clip-path:circle(0 at var(--origin)); animation:coffee-spread 1.5s ease-out forwards; }
+.coffee-dye.wiping { background:#fff8eb; animation:coffee-clean 1.4s ease-in-out forwards; }
+.bean-fx { position:fixed; inset:0; z-index:100; pointer-events:auto; overflow:hidden; }
+.flying-bean { position:absolute; top:0; left:0; width:48px; height:48px; filter:drop-shadow(0 6px 5px #29130855); }.flying-bean svg { width:100%; height:100%; }
+.coffee-drop { position:absolute; width:10px; height:16px; background:#653b25; border-radius:50%; box-shadow:0 1px 2px #2d1b13; animation:coffee-drop .85s ease-out forwards; }
+.flying-cloth { position:absolute; top:0; left:0; width:70px; height:70px; filter:drop-shadow(0 5px 5px #34221855); }.flying-cloth svg { width:100%; height:100%; }
+.wipe-sparkle { position:absolute; color:#fff5ba; text-shadow:0 0 12px #fff; font-size:32px; opacity:0; animation:coffee-sparkle .65s ease-in-out forwards; }
+@keyframes coffee-spread { to {clip-path:circle(160vmax at var(--origin))} }
+@keyframes coffee-clean { from {clip-path:polygon(0 0,0 0,0 100%,0 100%)} to {clip-path:polygon(0 0,110% 0,110% 100%,0 100%)} }
+@keyframes coffee-drop { from{opacity:1;transform:translate(0,0) scale(.5)} to{opacity:0;transform:translate(var(--dx),var(--dy)) rotate(65deg) scale(.7)} }
+@keyframes coffee-sparkle { 0%,100%{opacity:0;transform:scale(.3) rotate(0)} 50%{opacity:1;transform:scale(1) rotate(50deg)} }
+@media(max-width:600px){body.bean-mode .local-badge{display:none}body.bean-mode .intro h1{font-size:26px}.topbar-actions{gap:6px}}
+@media(prefers-reduced-motion:reduce){body{transition:none}.bean-fx,.coffee-dye{animation:none}}
 
 /* A fixed viewing window; the course moves through the camera, not the page. */
 body.race-active { overflow: hidden; }
