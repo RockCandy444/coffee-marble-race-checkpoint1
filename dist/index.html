@@ -11,7 +11,7 @@
   <main class="app-shell">
     <header class="topbar">
       <a class="brand" href="#" aria-label="처음으로">
-        <span class="brand-mark" aria-hidden="true">●</span>
+        <span class="brand-mark brand-coffee" aria-hidden="true">☕</span>
         <span>커피내기 <strong>구슬 경주</strong></span>
       </a>
       <span class="local-badge"><span aria-hidden="true">☕</span> 점심 한 판, 커피 한 잔</span>
@@ -23,7 +23,15 @@
         <h1 id="page-title">구슬에게 맡겨봐요<span>!</span></h1>
         <p class="intro-copy">장애물은 진짜로 부딪히고, 결승선을 먼저 통과한 순서대로 순위가 정해져요.</p>
       </div>
-      <div class="coffee-doodle" aria-hidden="true">☕</div>
+      <div class="coffee-doodle coffee-bean-doodle" aria-hidden="true">
+        <svg viewBox="0 0 64 64" focusable="false" aria-hidden="true">
+          <defs><linearGradient id="coffeeBeanRoast" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#bd8a5d"/><stop offset=".48" stop-color="#8c5637"/><stop offset="1" stop-color="#523021"/></linearGradient></defs>
+          <ellipse cx="32" cy="32" rx="19" ry="27" transform="rotate(32 32 32)" fill="url(#coffeeBeanRoast)"/>
+          <path d="M43 10C22 23 41 37 22 54" fill="none" stroke="#44271e" stroke-width="4.5" stroke-linecap="round"/>
+          <path d="M44 12C24 25 43 38 24 53" fill="none" stroke="#d5a171" stroke-opacity=".55" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M24 14C14 20 10 33 16 43" fill="none" stroke="#efc092" stroke-opacity=".35" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+      </div>
     </section>
 
     <nav class="steps" aria-label="경주 진행 단계">
