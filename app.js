@@ -913,16 +913,19 @@
       const log=game.battle.logs.at(-1);$('#battleFeed').textContent=log&&game.time-log.time<3?log.text:(game.mode==='battle'?'⚔ 능력 배틀':'★ 황금구슬 능력')+' · 내 구슬 능력 버튼으로 확인';
       for(const ball of game.balls) {const label=cameraBallLabel(ball);if(ball.battle.optionText!==label){$('#cameraSelect option[value="ball:'+ball.id+'"]').textContent=label;ball.battle.optionText=label;}}
     }
-    if (game.selectedBall) {
-      const ball = game.balls.find((item) => item.id === game.selectedBall);
-      if (ball) $('#beadInfo').textContent = game.battle?Battle.describe(ball,game.time):`구슬 #${ball.id} · ${ball.label}${ball.finished ? ' — 결승선 통과!' : game.introRemaining > 0 || game.countdownRemaining > 0 ? ' — 출발 준비' : ' — 달리는 중'}`;
+    if (game.selectedBall || camera.mode === 'winning') {
+      const ball = camera.mode === 'winning' ? camera.target : game.balls.find((item) => item.id === game.selectedBall);
+      if (ball) {
+        const description=game.battle?Battle.describe(ball,game.time):`구슬 #${ball.id} · ${ball.label}${ball.finished ? ' — 결승선 통과!' : game.introRemaining > 0 || game.countdownRemaining > 0 ? ' — 출발 준비' : ' — 달리는 중'}`;
+        $('#beadInfo').textContent = camera.mode === 'winning' ? (game.order[game.winningRank-1]?'당첨 확정 · ':'현재 위치 기준 당첨 후보 · ')+description : description;
+      }
     }
   }
 
   const cameraBallLabel=ball=>(ball.battle?.id==='comet'?'✦ ':'')+'#'+ball.id+' '+ballLabel(ball);
   function populateCamera(balls = Roster.entries(participants)) {
     cameraSelect.replaceChildren();
-    for (const [value, label] of [['auto', '자동 중계'], ['leader', '선두 따라가기'], ['pack', '중간 그룹'], ['tail', '후미 따라가기'], ['overview', '전체 코스'], ['manual', '수동 보기']]) {
+    for (const [value, label] of [['auto', '자동 중계'], ['winning', '당첨 등수 따라가기 · '+(game?.winningRank??balls.length)+'등'], ['leader', '선두 따라가기'], ['pack', '중간 그룹'], ['tail', '후미 따라가기'], ['overview', '전체 코스'], ['manual', '수동 보기']]) {
       const option = document.createElement('option'); option.value = value; option.textContent = label; cameraSelect.append(option);
     }
     const group = document.createElement('optgroup'); group.label = '참가자 추적';
@@ -1231,7 +1234,8 @@
     }
     if(game.battle)Battle.drawWorld(ctx,game,camera);
     for (const ball of game.balls) {
-      if (ball.finished) continue;
+      const selected=game.selectedBall===ball.id||camera.mode==='winning'&&camera.target===ball;
+      if (ball.finished && !(camera.mode==='winning'&&camera.target===ball)) continue;
       if (ball.y + ball.r < camera.top || ball.y - ball.r > camera.top + camera.visibleHeight) continue;
       const r = ball.r;
       if (ball.golden) {
@@ -1254,7 +1258,7 @@
         ctx.restore();
       }
       if ((ball.boostUntil ?? 0) > game.time) { ctx.save(); ctx.globalAlpha = 0.45; ctx.lineWidth = r; ctx.strokeStyle = ball.color; ctx.beginPath(); ctx.moveTo(ball.x - ball.vx * 0.035, ball.y - ball.vy * 0.035); ctx.lineTo(ball.x, ball.y); ctx.stroke(); ctx.restore(); }
-      if(ball.bean){Beans.draw(ctx,ball,game.selectedBall===ball.id);if(game.battle)Battle.drawBall(ctx,ball,game,camera);continue;}
+      if(ball.bean){Beans.draw(ctx,ball,selected);if(game.battle)Battle.drawBall(ctx,ball,game,camera);continue;}
       ctx.beginPath(); ctx.arc(ball.x + 1.5, ball.y + 2, r + 1, 0, Math.PI * 2); ctx.fillStyle = 'rgba(60,41,25,.19)'; ctx.fill();
       ctx.beginPath(); ctx.arc(ball.x, ball.y, r, 0, Math.PI * 2);
       const grad = ctx.createRadialGradient(ball.x - r * .33, ball.y - r * .38, r * .12, ball.x, ball.y, r * 1.08);
@@ -1267,8 +1271,8 @@
       else if (ball.pattern === 'dots') for (const [dx,dy] of [[-.5,-.4],[.5,-.4],[0,.6]]) { ctx.beginPath(); ctx.arc(ball.x+dx*r,ball.y+dy*r,r*.19,0,Math.PI*2); ctx.fill(); }
       ctx.restore();
       ctx.beginPath(); ctx.arc(ball.x, ball.y, r, 0, Math.PI * 2);
-      ctx.strokeStyle = game.selectedBall === ball.id ? '#30271f' : 'rgba(255,255,255,.8)';
-      ctx.lineWidth = game.selectedBall === ball.id ? 2 : 1; ctx.stroke();
+      ctx.strokeStyle = selected ? '#30271f' : 'rgba(255,255,255,.8)';
+      ctx.lineWidth = selected ? 2 : 1; ctx.stroke();
       ctx.fillStyle = '#2b2520';
       ctx.font = `800 ${Math.max(5.5, Math.min(9, r * .82))}px sans-serif`;
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -1287,7 +1291,7 @@
     m.clearRect(0, 0, w, h); m.fillStyle = 'rgba(255,253,248,.95)'; m.fillRect(0, 0, w, h);
     MAPS[game.map].sections.forEach(([y], index) => { m.fillStyle = (MAPS[game.map].colors||['#d9eddf', '#f7dfb9', '#dde3f4', '#e6cbe8', '#b9dfdb', '#f6d6c6'])[index]; m.fillRect(6, 8 + y * sy, w - 12, 4); });
     m.fillStyle = '#e77b48'; m.fillRect(6, 8 + WORLD.finishY * sy, w - 12, 2);
-    for (const ball of game.balls) if (!ball.finished) { m.fillStyle = ball.color; m.beginPath(); m.arc(6 + ball.x * sx, 8 + ball.y * sy, ball.golden || ball.id === game.selectedBall ? 3 : 1.8, 0, Math.PI * 2); m.fill(); if (ball.golden) {m.strokeStyle='#956700';m.lineWidth=1;m.stroke();} }
+    for (const ball of game.balls) if (!ball.finished||camera.mode==='winning'&&camera.target===ball) { m.fillStyle = ball.color; m.beginPath(); m.arc(6 + ball.x * sx, 8 + ball.y * sy, ball.golden || ball.id === game.selectedBall || camera.mode==='winning'&&camera.target===ball ? 3 : 1.8, 0, Math.PI * 2); m.fill(); if (ball.golden) {m.strokeStyle='#956700';m.lineWidth=1;m.stroke();} }
     const top = Math.max(0, camera.top), bottom = Math.min(WORLD.height, camera.top + camera.visibleHeight);
     const left = Math.max(0, camera.left), right = Math.min(WORLD.width, camera.left + camera.visibleWidth);
     m.strokeStyle = '#326f69'; m.lineWidth = 1.5; m.strokeRect(6 + left * sx, 8 + top * sy, Math.max(3, (right - left) * sx), Math.max(3, (bottom - top) * sy));

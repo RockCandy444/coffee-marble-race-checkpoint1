@@ -129,6 +129,21 @@
       }))return false;
       return segments.every(s=>distance(x,y,s)>r+s.radius+50)&&pins.every(p=>Math.hypot(p.x-x,p.y-y)>p.r+r+(p.island||p.pillar?45:28));
     };
+    // Reserve a few staggered pins in the reported empty routes before filler placement.
+    const routeSupport=(section,factoryLane=false)=>{
+      const start=sections[section][0],end=sections[section+1][0],span=end-start;
+      const placements=[[.12,-12,11],[.23,10,14],[.32,0,21,true],[.42,-7,12],[.54,14,15],[.66,-10,11],[.76,4,23,true],[.88,7,13]];
+      placements.forEach(([fraction,offset,r,power],index)=>{
+        for(const dy of [0,45,-45,90,-90,135,-135,180,-180]){
+          const y=start+span*fraction+dy;if(y<start+70||y>end-70)continue;
+          const b=Course.bounds(y,world),x=(factoryLane?400:(b.left+b.right)/2)+offset;
+          if(!clear(x,y,r))continue;
+          pins.push({x,y,r,section,routeSupport:true,supportIndex:index,riverRock:map==='rapids',...(power?{kind:'power',kick:190,bumper:true,range:0}:{} )});break;
+        }
+      });
+    };
+    if(map==='factory')routeSupport(0,true);
+    if(map==='rapids'){routeSupport(1);routeSupport(4);}
     sections.forEach(([start],section)=>{
       const end=Math.min(sections[section+1]?.[0]||world.finishY-260,world.finishY-260),span=end-start,layout=layouts[map][section],target=fillerCounts[map][section];
       const magneticEnd=Math.min(end-100,world.funnelY-180);
