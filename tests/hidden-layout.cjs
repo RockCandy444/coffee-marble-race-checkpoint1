@@ -1,7 +1,7 @@
 const fs=require('node:fs'),path=require('node:path');const h=fs.readFileSync(path.join(__dirname,'physics-smoke.cjs'),'utf8').split('// Manual camera movement')[0];
 new Function('require','__dirname',h+`
 const hidden=sandbox.window.HiddenCourses,battle=sandbox.window.MarbleBattle;let cases=0;
-for(const count of [2,100])for(let keeper=0;keeper<4;keeper++)for(let lane=0;lane<3;lane++){
+for(const count of [2,100])for(let keeper=0;keeper<course.keepers.length;keeper++)for(let lane=0;lane<3;lane++){
  seed=3500+cases;elements.get('#raceMode').value='normal';simulation.reset('rift',count,keeper);const {game,world}=simulation.state(),g=world.exitGates[lane],ball=game.balls[0];game.balls=[ball];game.winningRank=1;
  Object.assign(ball,{x:(g.startLeft+g.startRight)/2,y:world.funnelY+5,vx:0,vy:160,maxY:world.funnelY+5});
  for(let i=0;i<120*100&&!game.order.length&&!game.paused;i++){simulation.step(1/120);assert.ok(hidden.inside(ball.x,ball.y,ball.r,world),'physical marble stays in a real exit');}

@@ -96,10 +96,10 @@ for (const n of [2,100]) for (const random of [() => 0.1, () => 0.9]) {
   assert.equal(ball.magnetGrace,0,'magnet grace expires normally');
 }
 console.log('Camera hold/pan/bounds/return, slider clearance and four trapped-marble rescue cases passed');
-const distribution = [0, 0, 0, 0];
+const distribution = Array(course.keepers.length).fill(0);
 for (let i = 0; i < 10000; i++) distribution[course.keepers.indexOf(course.chooseKeeper(() => (i + 0.5) / 10000))]++;
-assert.deepEqual(distribution, [2500, 2500, 2500, 2500]);
-for (const [value, index] of [[0,0], [0.249999,0], [0.25,1], [0.5,2], [0.75,3], [0.999999,3]]) assert.equal(course.chooseKeeper(() => value).id, course.keepers[index].id);
+assert.deepEqual(distribution, [2000, 2000, 2000, 2000, 2000]);
+for (const [value, index] of [[0,0], [0.199999,0], [.2,1], [.4,2], [.6,3], [.8,4], [1,4]]) assert.equal(course.chooseKeeper(() => value).id, course.keepers[index].id);
 const kicked = { vx: 0, vy: 0 };
 course.kick(kicked, { id: 'test', kick: 250 }, 1, 0, 1);
 assert.equal(kicked.vx, 250);
@@ -112,7 +112,7 @@ const blown = { x: 400, y: 400, vx: 0, vy: 0 };
 course.field(blown, { x: 450, y: 400, kind: 'wind', range: 120, strength: 270, direction: -1 }, 0.1);
 assert.ok(blown.vx < 0);
 const outcomes = [];
-for (const map of ['pinball', 'spinner', 'fork'].filter(m => !process.env.MARBLE_TEST_MAP || m === process.env.MARBLE_TEST_MAP)) for (const n of [2, 100].filter(n => !process.env.MARBLE_TEST_COUNT || n === Number(process.env.MARBLE_TEST_COUNT))) for (const keeperIndex of [0, 1, 2, 3]) {
+for (const map of ['pinball', 'spinner', 'fork'].filter(m => !process.env.MARBLE_TEST_MAP || m === process.env.MARBLE_TEST_MAP)) for (const n of [2, 100].filter(n => !process.env.MARBLE_TEST_COUNT || n === Number(process.env.MARBLE_TEST_COUNT))) for (const keeperIndex of course.keepers.keys()) {
   const randomSeed = 11 + keeperIndex * 19;
   seed = randomSeed;
   simulation.reset(map, n, keeperIndex);

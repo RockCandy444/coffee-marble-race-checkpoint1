@@ -21,9 +21,10 @@
     { id: 'slider', name: '슬라이딩 골키퍼' },
     { id: 'rotor', name: '회전 방패' },
     { id: 'doors', name: '쌍문 수문장' },
-    { id: 'pendulum', name: '진자 골키퍼' }
+    { id: 'pendulum', name: '진자 골키퍼' },
+    { id: 'bumper', name: '미니 범퍼 골키퍼' }
   ];
-  const chooseKeeper = (random = Math.random) => keepers[Math.min(3, Math.floor(random() * 4))];
+  const chooseKeeper = (random = Math.random) => keepers[clamp(Math.floor(random() * keepers.length), 0, keepers.length - 1)];
 
   function configure(world, map) {
     world.exitGates=null;
@@ -235,6 +236,11 @@
   function goalkeeper(type, time, diameter, world) {
     const mid = world.width / 2, gap = world.finishRight - world.finishLeft, y = world.finishY - 45;
     const radius = Math.max(2, diameter * 0.16);
+    if (type.id === 'bumper') {
+      const speed = 1.35, amplitude = gap * .82, cx = mid + Math.sin(time * speed) * amplitude;
+      return [{ id: 'keeper-bumper', x1: cx, y1: y, x2: cx, y2: y, radius: diameter * .52,
+        vx: Math.cos(time * speed) * amplitude * speed, vy: 0, circle: true, goalkeeper: true, kind: 'power', kick: 210 }];
+    }
     if (type.id === 'rotor') {
       const angle = time * 1.4, half = diameter * 0.68;
       // The rotating shield also sweeps completely clear of the throat periodically.
@@ -252,9 +258,29 @@
     }
     const amplitude = gap * (type.id === 'pendulum' ? 0.85 : 0.9), speed = type.id === 'pendulum' ? 1.25 : 1.65;
     const cx = mid + Math.sin(time * speed) * amplitude;
-    if (type.id === 'pendulum') return [{ x1: cx, y1: y - 10 + Math.cos(time * speed * 2) * 10, x2: cx, y2: y,
-      radius: diameter * 0.43, vx: Math.cos(time * speed) * amplitude * speed, vy: -20 * speed * Math.sin(time * speed * 2), circle: true, goalkeeper: true }];
+    if (type.id === 'pendulum') {
+      const cy = y - 10 + Math.cos(time * speed * 2) * 10;
+      return [{ x1: cx, y1: cy, x2: cx, y2: cy, anchorX: mid, anchorY: y - 75,
+        radius: diameter * 0.43, vx: Math.cos(time * speed) * amplitude * speed, vy: -20 * speed * Math.sin(time * speed * 2), circle: true, goalkeeper: true }];
+    }
     return [{ x1: cx - diameter * 0.55, y1: y, x2: cx + diameter * 0.55, y2: y, radius, vx: Math.cos(time * speed) * amplitude * speed, goalkeeper: true }];
+  }
+  function drawKeeper(ctx, s, time, world, flashUntil = 0) {
+    if (!s.goalkeeper || !s.circle) return false;
+    ctx.save();
+    const x = s.x1, y = s.y1, r = s.radius, stellar = !!s.stellar;
+    if (s.kind === 'power') {
+      const flash = Math.max(0, Math.min(1, (flashUntil - time) / .18));
+      ctx.beginPath();ctx.arc(x,y,r+2+flash*r*.7,0,Math.PI*2);ctx.strokeStyle=flash?'#ffd16c':'#f1a55f88';ctx.lineWidth=1.5+flash*2;ctx.stroke();
+      const gradient=ctx.createRadialGradient(x-r*.3,y-r*.35,0,x,y,r);
+      gradient.addColorStop(0,flash?'#fff8c5':'#ffe5a4');gradient.addColorStop(1,stellar?'#c77dab':'#ef894e');
+      ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=gradient;ctx.fill();ctx.strokeStyle=stellar?'#f9d8ff':'#c46b43';ctx.lineWidth=1.2;ctx.stroke();
+      ctx.fillStyle='#fff9e9';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='bold '+Math.max(8,r*1.15)+'px sans-serif';ctx.fillText('⚡',x,y+.5);
+    } else {
+      ctx.beginPath();ctx.moveTo(s.anchorX??world.width/2,s.anchorY??world.finishY-120);ctx.lineTo(x,y);ctx.strokeStyle=stellar?'#d8cef2':'#aa6a75';ctx.lineWidth=1.5;ctx.stroke();
+      ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=stellar?'#c18bc9':'#c94f67';ctx.fill();ctx.strokeStyle=stellar?'#f5dcff':'#ffbac8';ctx.lineWidth=2;ctx.stroke();
+    }
+    ctx.restore();return true;
   }
   function defenders(time, world) {
     const result = [];
@@ -282,5 +308,5 @@
       ctx.restore();
     } else if (pin.defender) { ctx.strokeStyle = '#426a91'; ctx.lineWidth = 2.5; ctx.stroke(); }
   }
-  window.MarbleCourse = { wallRadius, verticalScale, waterTuning, vortexAcceleration, wallPath, outline, keepers, chooseKeeper, configure, bounds, contain, starVertices, pinPath, pinContact, enrich, buckets, field, kick, rescue, goalkeeper, defenders, drawField, drawPinSymbol };
+  window.MarbleCourse = { wallRadius, verticalScale, waterTuning, vortexAcceleration, wallPath, outline, keepers, chooseKeeper, configure, bounds, contain, starVertices, pinPath, pinContact, enrich, buckets, field, kick, rescue, goalkeeper, drawKeeper, defenders, drawField, drawPinSymbol };
 })();

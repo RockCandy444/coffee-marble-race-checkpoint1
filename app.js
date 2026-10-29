@@ -772,12 +772,13 @@
     if (toward < 0) { ball.vx -= 1.48 * toward * nx; ball.vy -= 1.48 * toward * ny; }
     if(toward<0)Beans.impact(ball,nx,ny,-1.48*toward,pin.vx||0,pin.vy||0);
     if(!Battle.disabled(game,pin)){Battle.kick(game,ball,pin,nx,ny);Extra.onPinContact(pin,ball,game);}
+    if(pin.goalkeeper&&pin.kick&&pin.flashUntil>game.time){game.keeperFlashes??={};game.keeperFlashes[pin.id]=pin.flashUntil;}
     if(game.battle)Battle.obstacleHit(game,ball,previous,pin,nx,ny,pin.vx||0,pin.vy||0);
   }
   function resolveSegment(ball, segment) {
     if(segment.broken)return;
     if(game.battle&&Battle.skipObstacle(ball,segment,game))return;
-    if (segment.circle) { resolvePin(ball, { x: segment.x1, y: segment.y1, r: segment.radius, vx: segment.vx, vy: segment.vy }); return; }
+    if (segment.circle) { resolvePin(ball, { ...segment, x: segment.x1, y: segment.y1, r: segment.radius }); return; }
     const dx = segment.x2 - segment.x1;
     const dy = segment.y2 - segment.y1;
     const length2 = dx * dx + dy * dy;
@@ -1216,12 +1217,9 @@
     for (const segment of segments) {
       if (segment.sideWall || segment.funnel || segment.temporary) continue;
       if (Math.max(segment.y1, segment.y2) + segment.radius < camera.top || Math.min(segment.y1, segment.y2) - segment.radius > camera.top + camera.visibleHeight) continue;
-      if(Hidden.has(game.map)&&Hidden.drawSegment(ctx,segment,game.time,WORLD))continue;
+      if(Hidden.has(game.map)&&Hidden.drawSegment(ctx,segment,game.time,WORLD,game.keeperFlashes?.[segment.id]||0))continue;
       if(Extra.drawSegment(ctx,segment,game.time,game.map))continue;
-      if (segment.circle) {
-        ctx.strokeStyle = '#aa6a75'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(500, WORLD.finishY - 120); ctx.lineTo(segment.x1, segment.y1); ctx.stroke();
-        ctx.beginPath(); ctx.arc(segment.x1, segment.y1, segment.radius, 0, Math.PI * 2); ctx.fillStyle = '#c94f67'; ctx.fill(); ctx.strokeStyle = '#ffbac8'; ctx.lineWidth = 2; ctx.stroke(); continue;
-      }
+      if (Course.drawKeeper(ctx,segment,game.time,WORLD,game.keeperFlashes?.[segment.id]||0)) continue;
       ctx.lineCap = 'round'; ctx.lineWidth = (segment.radius ?? 4.5) * 2;
       ctx.strokeStyle = segment.goalkeeper ? '#c64e63' : segment.defender ? '#42678f' : segment.sliding ? '#557faf' : segment.diamond ? '#9573a9' : segment.rotating ? '#bf7545' : (segment.funnel ? '#c58b58' : '#ba946c');
       if(Battle.frozen(game,segment.machineKey))ctx.strokeStyle='#68b3d2';

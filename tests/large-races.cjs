@@ -3,7 +3,7 @@ let h=fs.readFileSync(path.join(__dirname,'physics-smoke.cjs'),'utf8').split('//
 if(process.env.LARGE_BEANS==='1')h=h.replace(".replace(/\\}\\)\\(\\);\\s*$/, ", ".replace('bean:Beans.enabled','bean:true').replace(/\\}\\)\\(\\);\\s*$/, ");
 new Function('require','__dirname',h+`
 for(const map of (process.env.LARGE_MAPS||'pinball,spinner,fork,factory,rapids,ruins,observatory,rift').split(',')){
- seed=5101;elements.get('#raceMode').value=process.env.LARGE_MODE||'normal';const start=performance.now();simulation.reset(map,1000,0);const{game:g,world:w}=simulation.state();
+ seed=5101;elements.get('#raceMode').value=process.env.LARGE_MODE||'normal';const start=performance.now();simulation.reset(map,1000,Number(process.env.LARGE_KEEPER||0));const{game:g,world:w}=simulation.state();
  assert.equal(g.balls.length,1000);assert.equal(new Set(g.balls.map(b=>b.id)).size,1000);
  assert.ok(g.balls.every(b=>b.y<350||b.battle?.id==='shortcut'),'ordinary marbles start before obstacles');
  for(const b of g.balls){if(b.battle?.id==='shortcut')continue;const bounds=course.bounds(b.y,w);assert.ok(b.x-b.r>bounds.left&&b.x+b.r<bounds.right,'safe initial walls');}
