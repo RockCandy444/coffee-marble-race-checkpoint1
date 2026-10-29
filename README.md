@@ -2,6 +2,14 @@
 
 브라우저에서 실행하는 정적 웹앱입니다. 로그인, 서버, 데이터베이스 없이 동작합니다.
 
+## 온라인 실행과 업데이트
+
+- 무료 공개 게임: https://rockcandy444.github.io/coffeemarble/
+- 소스 저장소: https://github.com/RockCandy444/coffeemarble
+- GitHub Pages는 공개 저장소의 `main` 브랜치, `/(root)` 폴더를 게시합니다. 루트의 `.nojekyll`은 게임 파일을 그대로 게시하도록 합니다.
+- 게임 코드를 수정한 뒤 `main`에 커밋하고 푸시하면 자동 배포됩니다. 소스와 `dist/` 사본을 함께 갱신합니다. 운영 방법은 GITHUB_PAGES.md를 참고하세요.
+- 기존 `coffee-marble-checkpoint1.ldh4563.chatgpt.site` 배포는 별도로 유지됩니다. GitHub Pages 배포만으로 기존 Sites 배포가 갱신되지는 않습니다.
+
 ## 실행 방법
 
 - `index.html`을 최신 데스크톱/모바일 브라우저에서 엽니다.
