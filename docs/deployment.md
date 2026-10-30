@@ -1,4 +1,4 @@
-# coffeemarble · GitHub Pages 운영
+# GitHub Pages 운영 안내
 
 - 게임 주소: https://rockcandy444.github.io/coffeemarble/
 - 저장소: https://github.com/RockCandy444/coffeemarble
