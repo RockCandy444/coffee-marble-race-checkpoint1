@@ -1,5 +1,6 @@
 (() => {
   'use strict';
+  const tr = (key, values = []) => window.MarbleI18n ? window.MarbleI18n.t(key, values) : key.replace(/\{(\d+)\}/g, (_, i) => String(values[+i] ?? ''));
 
   // Physical course dimensions are independent of the camera viewport.
   const WORLD = {
@@ -10,9 +11,9 @@
   const MAPS = {
     ...window.ExtraCourses.definitions,
     ...window.HiddenCourses.definitions,
-    pinball: { title: '핀볼 코스', label: '핀볼', height: 3600, sections: [[180, '핀 숲'], [800, '범퍼 정원'], [1400, '지그재그 슬라이드'], [2050, '링 범퍼'], [2630, '스윙 브리지'], [3030, '골키퍼 게이트']] },
-    spinner: { title: '회전 장애물 코스', label: '회전 장애물', height: 3900, sections: [[190, '회전 날개'], [850, '엇갈린 회전문'], [1550, '더블 게이트'], [2150, '슬라이딩 블록'], [2800, '삼중 회전문'], [3330, '골키퍼 게이트']] },
-    fork: { title: '갈림길 코스', label: '갈림길', height: 4200, sections: [[190, '첫 번째 갈림길'], [1050, '교차 합류'], [1650, '마지막 선택'], [2350, '다이아몬드 미로'], [3000, '움직이는 징검다리'], [3630, '골키퍼 게이트']] }
+    pinball: { title: tr("핀볼 코스"), label: tr("핀볼"), height: 3600, sections: [[180, tr("핀 숲")], [800, tr("범퍼 정원")], [1400, tr("지그재그 슬라이드")], [2050, tr("링 범퍼")], [2630, tr("스윙 브리지")], [3030, tr("골키퍼 게이트")]] },
+    spinner: { title: tr("회전 장애물 코스"), label: tr("회전 장애물"), height: 3900, sections: [[190, tr("회전 날개")], [850, tr("엇갈린 회전문")], [1550, tr("더블 게이트")], [2150, tr("슬라이딩 블록")], [2800, tr("삼중 회전문")], [3330, tr("골키퍼 게이트")]] },
+    fork: { title: tr("갈림길 코스"), label: tr("갈림길"), height: 4200, sections: [[190, tr("첫 번째 갈림길")], [1050, tr("교차 합류")], [1650, tr("마지막 선택")], [2350, tr("다이아몬드 미로")], [3000, tr("움직이는 징검다리")], [3630, tr("골키퍼 게이트")]] }
   };
   const Course = window.MarbleCourse;
   const Roster = window.MarbleRoster;
@@ -34,7 +35,7 @@
   const ballsPerPersonInput = $('#ballsPerPerson');
   const setupError = $('#setupError');
   const winnerMode = $('#winnerMode'), winnerRank = $('#winnerRank');
-  const defaultNames = '참가자 1 * 5\n참가자 2 * 5\n참가자 3 * 5';
+  const defaultNames = tr("참가자 1 * 5\n참가자 2 * 5\n참가자 3 * 5");
   let participants = Roster.parse(defaultNames).names;
   let selectedMap = 'pinball';
   let randomMapSelected = false;
@@ -51,14 +52,14 @@
   const camera = new window.RaceCamera();
   let canvasDpr = 1;
   const cameraSelect = $('#cameraSelect');
-  const cameraHint = '두 손가락·휠로 확대·축소 · 드래그로 이동 · 미니맵 클릭·드래그로 구간 선택';
+  const cameraHint = tr("두 손가락·휠로 확대·축소 · 드래그로 이동 · 미니맵 클릭·드래그로 구간 선택");
   let normalGoldenEnabled = $('#goldenEnabled').checked;
   let modeWasBattle = false;
   let cometPending = false;
   let cometCard = null, cometFxTimer = null;
   let mapFxTimer=null;
   function hideMapFx(){clearTimeout(mapFxTimer);mapFxTimer=null;$('#mapUnlockFx').hidden=true;$('#mapUnlockFx').classList.remove('is-playing');}
-  function showMapFx(id){hideMapFx();const fx=$('#mapUnlockFx');fx.dataset.route=id;$('#mapUnlockFxTitle').textContent=id==='rift'?'차원의 틈이 열렸어요':'혜성 천문대를 발견했어요';fx.hidden=false;void fx.offsetWidth;fx.classList.add('is-playing');mapFxTimer=setTimeout(hideMapFx,2200);}
+  function showMapFx(id){hideMapFx();const fx=$('#mapUnlockFx');fx.dataset.route=id;$('#mapUnlockFxTitle').textContent=id==='rift'?tr("차원의 틈이 열렸어요"):tr("혜성 천문대를 발견했어요");fx.hidden=false;void fx.offsetWidth;fx.classList.add('is-playing');mapFxTimer=setTimeout(hideMapFx,2200);}
   function hideCometFx(){clearTimeout(cometFxTimer);cometFxTimer=null;$('#cometUnlockFx').hidden=true;$('#cometUnlockFx').classList.remove('is-playing');}
   function clearCometDiscovery(){hideCometFx();if(cometCard){cometCard.remove();cometCard=null;}}
   function showCometDiscovery(){
@@ -71,7 +72,7 @@
   document.addEventListener('keydown',event=>{const ability=secretCommand.key(event),map=mapCommand.key(event);if(ability||map||(secretCommand.keys.length||mapCommand.inputs.length)&&event.code?.startsWith('Arrow'))event.preventDefault();});
   const mapCommand=new window.HiddenMapCommand({allowed:()=>stage==='map'&&!$('#battleGuide').open&&!document.hidden,randomSelected:()=>randomMapSelected,unlock:id=>{
     $('#hiddenMapPanel').hidden=false;$('#chooseObservatory').hidden=!mapCommand.observatory;$('#chooseRift').hidden=!mapCommand.rift;
-    $('#hiddenMapMessage').textContent=id==='rift'?'차원의 틈이 열렸어요. 두 숨겨진 코스를 선택할 수 있어요.':'혜성 천문대를 발견했어요. 숨겨진 항로를 선택해 보세요.';
+    $('#hiddenMapMessage').textContent=id==='rift'?tr("차원의 틈이 열렸어요. 두 숨겨진 코스를 선택할 수 있어요."):tr("혜성 천문대를 발견했어요. 숨겨진 항로를 선택해 보세요.");
     $('#hiddenMapPanel').classList.remove('just-unlocked');void $('#hiddenMapPanel').offsetWidth;$('#hiddenMapPanel').classList.add('just-unlocked');
     $('#hiddenMapPanel').scrollIntoView?.({block:'nearest',behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches?'auto':'smooth'});
     showMapFx(id);
@@ -89,14 +90,14 @@
     }
     modeWasBattle = battle; $('#goldenEnabled').disabled = battle;
     $('#goldenOption').hidden = battle; $('#battleGuide').hidden = false;secretCommand.reset();
-    $('#modeHelp').textContent = battle ? '모든 구슬에 능력 하나씩 · 자동 발동 · 황금구슬 중첩 없음' : '기존 규칙으로 달리고, 황금구슬 이벤트를 선택할 수 있어요.';
+    $('#modeHelp').textContent = battle ? tr("모든 구슬에 능력 하나씩 · 자동 발동 · 황금구슬 중첩 없음") : tr("기존 규칙으로 달리고, 황금구슬 이벤트를 선택할 수 있어요.");
   }
   $('#raceMode').addEventListener('change', updateMode);
   function makeAbilityCard(a){
     const card = document.createElement('button');card.className='ability-card';card.dataset.ability=a.id;card.type='button';
     const title=document.createElement('strong');title.textContent=a.icon+' '+a.name;
     const text=document.createElement('p');text.textContent=a.description;
-    const meta=document.createElement('small');meta.textContent=a.group+' · '+(a.id==='comet'?a.duration+'초 발동 · '+a.cooldown+'초 쿨타임':a.id==='shortcut'?'출발할 때 한 번':a.cooldown?a.cooldown+'초 간격':'조건에 따라 자동 적용');
+    const meta=document.createElement('small');meta.textContent=a.group+' · '+(a.id==='comet'?tr("{0}초 발동 · {1}초 쿨타임",[a.duration,a.cooldown]):a.id==='shortcut'?tr("출발할 때 한 번"):a.cooldown?tr("{0}초 간격",[a.cooldown]):tr("조건에 따라 자동 적용"));
     card.append(title,text,meta);card.addEventListener('click',event=>secretCommand.tap(a.id,event));return card;
   }
   for (const a of Battle.abilities) {
@@ -106,15 +107,15 @@
   $('#openBattleAbilities').addEventListener('click', () => {
     if (!game?.battle) return;
     abilityDialogGame=game;abilityDialogPaused=game.paused;game.paused=true;
-    $('#pauseRace').textContent='계속하기';
+    $('#pauseRace').textContent=tr("계속하기");
     $('#battleRoster').replaceChildren();
-    for(const ball of game.balls) {const item=document.createElement('li');item.textContent=Battle.describe(ball,game.time)+(ball.finished?' · 완주':'');$('#battleRoster').append(item);}
+    for(const ball of game.balls) {const item=document.createElement('li');item.textContent=Battle.describe(ball,game.time)+(ball.finished?tr(" · 완주"):'');$('#battleRoster').append(item);}
     $('#battleDialogBody').scrollTop=0;
     $('#battleDialog').showModal();
   });
   $('#closeBattleAbilities').addEventListener('click', () => $('#battleDialog').close());
   $('#battleDialog').addEventListener('close', () => {
-    if(stage==='race'&&game===abilityDialogGame&&!game.autoPaused) {game.paused=abilityDialogPaused;$('#pauseRace').textContent=game.paused?'계속하기':'일시 정지';previousFrame=0;}
+    if(stage==='race'&&game===abilityDialogGame&&!game.autoPaused) {game.paused=abilityDialogPaused;$('#pauseRace').textContent=game.paused?tr("계속하기"):tr("일시 정지");previousFrame=0;}
     abilityDialogGame=null;
   });
   const ballLabel = ball => ball.battle ? Battle.label(ball) : ball.label;
@@ -135,16 +136,16 @@
 
   function winningRule(total) {
     const rank = winnerMode.value === 'first' ? 1 : winnerMode.value === 'custom' ? Number(winnerRank.value) : total;
-    const error = !Number.isInteger(rank) || rank < 1 || rank > total ? `당첨 등수는 1~${total}등 사이의 정수로 입력해 주세요.` : '';
-    const label = winnerMode.value === 'last' ? `꼴찌 (${total}등)` : `${rank}등`;
+    const error = !Number.isInteger(rank) || rank < 1 || rank > total ? tr("당첨 등수는 1~{0}등 사이의 정수로 입력해 주세요.",[total]) : '';
+    const label = winnerMode.value === 'last' ? tr("꼴찌 ({0}등)",[total]) : tr("{0}등",[rank]);
     return { rank, label, error };
   }
   function updateWinningRule(total) {
     winnerRank.max = String(Math.max(1, total));
     $('#winnerRankLabel').hidden = winnerMode.value !== 'custom';
     const rule = winningRule(total);
-    $('#winningRankHelp').textContent = total < 2 ? '참가 구슬을 2개 이상 입력해 주세요.' : rule.error || `${rule.label}으로 도착한 구슬의 주인이 당첨돼요.`;
-    $('#mapWinningSummary').textContent = '☕ 당첨 등수 · ' + rule.label;
+    $('#winningRankHelp').textContent = total < 2 ? tr("참가 구슬을 2개 이상 입력해 주세요.") : rule.error || tr("{0}으로 도착한 구슬의 주인이 당첨돼요.",[rule.label]);
+    $('#mapWinningSummary').textContent = tr("☕ 당첨 등수 · ") + rule.label;
     return rule;
   }
 
@@ -176,11 +177,11 @@
   function updateCountBadge(names) {
     const entries = Roster.entries(names);
     const groups = entries.filter(ball => ball.copy === 1);
-    const summary = `${groups.length}명 · 구슬 ${names.length}개`;
+    const summary = tr("{0}명 · 구슬 {1}개",[groups.length,names.length]);
     $('#participantCount').textContent = summary;
     $('#mapParticipantSummary').textContent = summary;
     updateWinningRule(names.length);
-    $('#rosterSummary').textContent = names.length ? `${summary} 준비됐어요` : '명단을 입력하면 이름별 구슬 수를 확인할 수 있어요.';
+    $('#rosterSummary').textContent = names.length ? tr("{0} 준비됐어요",[summary]) : tr("명단을 입력하면 이름별 구슬 수를 확인할 수 있어요.");
     $('#rosterPreview').replaceChildren();
     groups.forEach(ball => {
       const item = document.createElement('li');
@@ -200,9 +201,9 @@
     customNamesEdited = namesInput.value !== lastGeneratedNames;
     const parsed = parsedNames();
     updateCountBadge(parsed.names);
-    setupError.textContent = parsed.error || (parsed.names.length < 2 ? '전체 구슬이 2개 이상이 되도록 입력해 주세요.' : winningRule(parsed.names.length).error);
+    setupError.textContent = parsed.error || (parsed.names.length < 2 ? tr("전체 구슬이 2개 이상이 되도록 입력해 주세요.") : winningRule(parsed.names.length).error);
     $('#confirmParticipants').disabled = !!setupError.textContent;
-    if (parsed.error) $('#rosterSummary').textContent = '입력한 이름과 구슬 수를 확인해 주세요.';
+    if (parsed.error) $('#rosterSummary').textContent = tr("입력한 이름과 구슬 수를 확인해 주세요.");
   }
   function watchSetupRoster() {
     setupFrameId = 0;
@@ -225,17 +226,17 @@
   function generateNames() {
     const count = Number(countInput.value), copies = Number(ballsPerPersonInput.value);
     if (![count, copies].every(n => Number.isInteger(n) && n >= 1 && n <= Roster.MAX)) {
-      setupError.textContent = '참가 인원과 1인당 구슬 수는 1~1,000의 정수로 입력해 주세요.';
+      setupError.textContent = tr("참가 인원과 1인당 구슬 수는 1~1,000의 정수로 입력해 주세요.");
       $('#confirmParticipants').disabled = true;
       return;
     }
     const total = count * copies;
     if (total < 2 || total > Roster.MAX) {
-      setupError.textContent = `${count}명 × ${copies}개는 구슬 ${total}개예요. 전체 구슬이 2~1,000개가 되도록 조절해 주세요.`;
+      setupError.textContent = tr("{0}명 × {1}개는 구슬 {2}개예요. 전체 구슬이 2~1,000개가 되도록 조절해 주세요.",[count,copies,total]);
       $('#confirmParticipants').disabled = true;
       return;
     }
-    namesInput.value = Array.from({ length: count }, (_, i) => `참가자 ${i + 1} * ${copies}`).join('\n');
+    namesInput.value = Array.from({ length: count }, (_, i) => tr("참가자 {0} * {1}",[i + 1,copies])).join('\n');
     lastGeneratedNames = namesInput.value;
     displayedRosterValue = null;
     syncSetupRoster();
@@ -278,7 +279,7 @@
     const {names, error} = parsedNames();
     if (error) { setupError.textContent = error; return; }
     if (names.length < 2 || names.length > Roster.MAX) {
-      setupError.textContent = '전체 구슬이 2개 이상 1,000개 이하가 되도록 입력해 주세요.';
+      setupError.textContent = tr("전체 구슬이 2개 이상 1,000개 이하가 되도록 입력해 주세요.");
       return;
     }
     if (winningRule(names.length).error) { setupError.textContent = winningRule(names.length).error; return; }
@@ -294,19 +295,19 @@
   $('#randomMap').addEventListener('click',event=>{randomMapSelected=true;mapCommand.tap('random',event);updateMapChoice();});
   function updateMapChoice(){
     $('#randomMap').setAttribute('aria-pressed',String(randomMapSelected));
-    $('#startRace').textContent=randomMapSelected?'랜덤 맵으로 경주 시작':'경주 시작하기';
+    $('#startRace').textContent=randomMapSelected?tr("랜덤 맵으로 경주 시작"):tr("경주 시작하기");
     document.querySelectorAll('.map-card').forEach(card=>{const selected=!randomMapSelected&&card.dataset.map===selectedMap;card.classList.toggle('selected',selected);card.setAttribute('aria-checked',String(selected));});
     for(const [id,map]of [['chooseObservatory','observatory'],['chooseRift','rift']])$('#'+id).setAttribute('aria-pressed',String(!randomMapSelected&&selectedMap===map));
-    if(randomMapSelected){$('#mapMechanicHelp').hidden=false;$('#mapMechanicHelp').textContent='경주 시작 때 코스를 한 번 추첨해요.';$('#sectionGuide').hidden=true;}
+    if(randomMapSelected){$('#mapMechanicHelp').hidden=false;$('#mapMechanicHelp').textContent=tr("경주 시작 때 코스를 한 번 추첨해요.");$('#sectionGuide').hidden=true;}
   }
   function selectMap(map) {
     if (!MAPS[map]||Hidden.has(map)&&!mapCommand[map]) return;
     randomMapSelected=false;
     selectedMap = map;
-    const descriptions={factory:'입고·압착·역주행·분류·교차·최종 검수, 구간마다 다른 설비를 통과해요.',rapids:'완만한 상류에서 분기·소용돌이·바위섬·합류를 거쳐 마지막 협곡으로 내려가요.',ruins:'석주 정원에서 붕괴 회랑·흔들다리·스위치 석문·낙석 신전을 지나 봉인 출구로 향해요.'};
-    const help=Hidden.has(map)?map==='rift'?'협곡·넓은 방·갈림길·샛길을 지나 난도가 다른 세 출구로 향하는 25,000m 코스예요.':'공전 위성·별빛 관문·혜성 잔해와 성운이 이어지는 숨겨진 천문대예요.':descriptions[map];
+    const descriptions={factory:tr("입고·압착·역주행·분류·교차·최종 검수, 구간마다 다른 설비를 통과해요."),rapids:tr("완만한 상류에서 분기·소용돌이·바위섬·합류를 거쳐 마지막 협곡으로 내려가요."),ruins:tr("석주 정원에서 붕괴 회랑·흔들다리·스위치 석문·낙석 신전을 지나 봉인 출구로 향해요.")};
+    const help=Hidden.has(map)?map==='rift'?tr("협곡·넓은 방·갈림길·샛길을 지나 난도가 다른 세 출구로 향하는 25,000m 코스예요."):tr("공전 위성·별빛 관문·혜성 잔해와 성운이 이어지는 숨겨진 천문대예요."):descriptions[map];
     $('#mapMechanicHelp').textContent=help||'';$('#mapMechanicHelp').hidden=!help;
-    $('#sectionGuide').hidden=!Extra.has(map)&&!Hidden.has(map);$('#sectionPlanList').replaceChildren();$('#sectionGuideTitle').textContent=MAPS[map].sections.length+'구간 구성 보기';
+    $('#sectionGuide').hidden=!Extra.has(map)&&!Hidden.has(map);$('#sectionPlanList').replaceChildren();$('#sectionGuideTitle').textContent=tr("{0}구간 구성 보기",[MAPS[map].sections.length]);
     for(const [name,primary,secondary] of (Hidden.plans[map]||Extra.sectionPlans[map]||[])){const item=document.createElement('li'),title=document.createElement('strong'),text=document.createElement('span');title.textContent=name;text.textContent=primary+' · '+secondary;item.append(title,text);$('#sectionPlanList').append(item);}
     document.querySelectorAll('.map-card').forEach((card) => {
       const selected = card.dataset.map === map;
@@ -513,7 +514,7 @@
     const golden = game.reveal;
     $('#goldenBadge').hidden = !golden; $('#goldenReveal').hidden = !golden;
     $('#goldenReveal').classList.toggle('is-comet',!!game.comet);
-    $('#revealTitle').textContent=game.comet?'히든 혜성 등장!':'황금구슬 등장!';
+    $('#revealTitle').textContent=game.comet?tr("히든 혜성 등장!"):tr("황금구슬 등장!");
     $('#goldenBadge').classList.toggle('comet-badge',!!game.comet);
     if (golden) {
       const owner = '#' + golden.ball.id + ' ' + (golden.ball.originalLabel||golden.ball.label);
@@ -526,19 +527,19 @@
       camera.mode = 'ball:' + golden.ball.id; cameraSelect.value = camera.mode;
       game.selectedBall = golden.ball.id;
     }
-    $('#keeperLabel').textContent = WORLD.exitGates?'3갈래 출구 · 삼중 / 무수문 / 이중':'이번 골키퍼 · '+game.keeper.name;
-    $('#hazardKey').textContent=Hidden.has(game.map)?'✦ 궤도 · ◇ 별빛 관문 · ↻ 성운 · ◆ 수문':game.map==='factory'?'⇄ 순방향·역방향 벨트 · Ⓜ 자석 · ▣ 압착판 · ◀▶ 분류문':game.map==='rapids'?'↔ 급류 · ↻ 소용돌이 · Ⓜ 자석 · ● 바위섬':game.map==='ruins'?'▱ 석벽 · Ⓜ 자석 · ▼ 낙석 · ⌁ 흔들다리 · ◆ 스위치':'⚡ 파워 범퍼 · Ⓜ 자석 · ↔ 바람 · ◆ 수비수';
-    $('#raceTitle').textContent = MAPS[raceMap].title+(game.mode==='battle'?' · 능력 배틀':'');
-    $('#raceWinningSummary').textContent = '☕ ' + game.winningLabel + ' 당첨';
+    $('#keeperLabel').textContent = WORLD.exitGates?tr("3갈래 출구 · 삼중 / 무수문 / 이중"):tr("이번 골키퍼 · ")+game.keeper.name;
+    $('#hazardKey').textContent=Hidden.has(game.map)?tr("✦ 궤도 · ◇ 별빛 관문 · ↻ 성운 · ◆ 수문"):game.map==='factory'?tr("⇄ 순방향·역방향 벨트 · Ⓜ 자석 · ▣ 압착판 · ◀▶ 분류문"):game.map==='rapids'?tr("↔ 급류 · ↻ 소용돌이 · Ⓜ 자석 · ● 바위섬"):game.map==='ruins'?tr("▱ 석벽 · Ⓜ 자석 · ▼ 낙석 · ⌁ 흔들다리 · ◆ 스위치"):tr("⚡ 파워 범퍼 · Ⓜ 자석 · ↔ 바람 · ◆ 수비수");
+    $('#raceTitle').textContent = MAPS[raceMap].title+(game.mode==='battle'?tr(" · 능력 배틀"):'');
+    $('#raceWinningSummary').textContent = tr("☕ {0} 당첨",[game.winningLabel]);
     $('#openBattleAbilities').hidden=!game.battle;$('#battleFeed').hidden=!game.battle;
-    $('#battleFeed').textContent=game.battle?(game.mode==='battle'?'⚔ 능력 배틀':'★ 황금구슬 능력')+' · 구슬을 눌러 능력 확인':'';
-    $('#raceProgress').textContent = `0 / ${n} 도착`;
-    $('#raceStatus').textContent = '구슬이 출발을 기다리고 있어요.';
+    $('#battleFeed').textContent=game.battle?(game.mode==='battle'?tr("⚔ 능력 배틀"):tr("★ 황금구슬 능력"))+tr(" · 구슬을 눌러 능력 확인"):'';
+    $('#raceProgress').textContent = tr("0 / {0} 도착",[n]);
+    $('#raceStatus').textContent = tr("구슬이 출발을 기다리고 있어요.");
     $('#beadInfo').textContent = cameraHint;
     $('#liveOrder').replaceChildren();
-    $('#liveFooter').textContent = '아직 결승선을 통과한 구슬이 없어요.';
+    $('#liveFooter').textContent = tr("아직 결승선을 통과한 구슬이 없어요.");
     $('#recoveryControls').hidden = true;
-    $('#pauseRace').textContent = '일시 정지';
+    $('#pauseRace').textContent = tr("일시 정지");
     raceSpeed = 1; $('#raceSpeed').value = '1';
     setStage('race');
     resizeCanvas();
@@ -561,8 +562,8 @@
   $('#pauseRace').addEventListener('click', () => {
     if (!game || game.autoPaused) return;
     game.paused = !game.paused;
-    $('#pauseRace').textContent = game.paused ? '계속하기' : '일시 정지';
-    $('#raceStatus').textContent = game.paused ? '경주를 잠시 멈췄어요.' : '경주가 다시 시작됐어요!';
+    $('#pauseRace').textContent = game.paused ? tr("계속하기") : tr("일시 정지");
+    $('#raceStatus').textContent = game.paused ? tr("경주를 잠시 멈췄어요.") : tr("경주가 다시 시작됐어요!");
   });
   $('#resumeRace').addEventListener('click', () => {
     if (!game) return;
@@ -571,9 +572,9 @@
     game.stuckCount = 0;
     game.watchdogTime = 0;
     game.balls.forEach((ball) => { if (!ball.finished) ball.rescueCount = 0; });
-    $('#pauseRace').textContent = '일시 정지';
+    $('#pauseRace').textContent = tr("일시 정지");
     $('#recoveryControls').hidden = true;
-    $('#raceStatus').textContent = '경주를 계속합니다.';
+    $('#raceStatus').textContent = tr("경주를 계속합니다.");
     previousFrame = 0;
   });
   $('#nudgeBalls').addEventListener('click', () => {
@@ -586,8 +587,8 @@
     game.autoPaused = false;
     game.paused = false;
     $('#recoveryControls').hidden = true;
-    $('#pauseRace').textContent = '일시 정지';
-    $('#raceStatus').textContent = '구슬을 강하게 튀겼어요. 계속 달립니다!';
+    $('#pauseRace').textContent = tr("일시 정지");
+    $('#raceStatus').textContent = tr("구슬을 강하게 튀겼어요. 계속 달립니다!");
     previousFrame = 0;
   });
 
@@ -595,9 +596,9 @@
   function updateStartCountdown() {
     const overlay = $('#startCountdown');
     overlay.hidden = game.introRemaining > 0 || (game.countdownRemaining === 0 && game.goRemaining === 0);
-    const label = game.countdownRemaining > 0 ? String(Math.ceil(game.countdownRemaining)) : '출발!';
+    const label = game.countdownRemaining > 0 ? String(Math.ceil(game.countdownRemaining)) : tr("출발!");
     if ($('#countdownNumber').textContent !== label) $('#countdownNumber').textContent = label;
-    const help = game.paused ? '잠시 멈췄어요' : game.countdownRemaining > 0 ? '준비하세요' : '레이스 시작';
+    const help = game.paused ? tr("잠시 멈췄어요") : game.countdownRemaining > 0 ? tr("준비하세요") : tr("레이스 시작");
     if ($('#countdownHelp').textContent !== help) $('#countdownHelp').textContent = help;
   }
   function animationFrame(timestamp) {
@@ -738,11 +739,11 @@
     if (game.stuckCount >= 2 || game.watchdogTime > 360) {
       game.paused = true;
       game.autoPaused = true;
-      $('#pauseRace').textContent = '경주 멈춤';
+      $('#pauseRace').textContent = tr("경주 멈춤");
       $('#recoveryControls').hidden = false;
       const remaining = game.balls.length - game.order.length;
-      $('#recoveryMessage').textContent = `${remaining}개의 구슬이 아직 결승선을 통과하지 못했어요. 미완주 구슬을 임의로 꼴찌 처리하지 않았습니다. 힘을 보태 계속하거나 경주를 새로 시작해 주세요.`;
-      $('#raceStatus').textContent = '미완주 구슬이 있어 경주를 잠시 멈췄어요.';
+      $('#recoveryMessage').textContent = tr("{0}개의 구슬이 아직 결승선을 통과하지 못했어요. 미완주 구슬을 임의로 꼴찌 처리하지 않았습니다. 힘을 보태 계속하거나 경주를 새로 시작해 주세요.",[remaining]);
+      $('#raceStatus').textContent = tr("미완주 구슬이 있어 경주를 잠시 멈췄어요.");
     }
   }
 
@@ -856,14 +857,14 @@
   function finishRace() {
     if (!game || stage !== 'race') return;
     game.paused = true;
-    $('#raceProgress').textContent = `${game.order.length} / ${game.balls.length} 도착`;
-    $('#raceStatus').textContent = '모든 구슬이 결승선을 통과했어요!';
+    $('#raceProgress').textContent = tr("{0} / {1} 도착",[game.order.length,game.balls.length]);
+    $('#raceStatus').textContent = tr("모든 구슬이 결승선을 통과했어요!");
     const winner = game.order[game.winningRank - 1];
     $('#coffeeWinner').textContent = `#${winner.id} ${winner.label}`;
-    $('#resultSubtitle').textContent = `${new Set(game.balls.map(ball => ball.name)).size}명 · 구슬 ${game.order.length}개 모두 완주한 ${MAPS[game.map].label}${game.mode==='battle'?' 능력 배틀':''} 경기 · ${game.winningLabel} 당첨이에요.`;
+    $('#resultSubtitle').textContent = tr("{0}명 · 구슬 {1}개 모두 완주한 {2}{3} 경기 · {4} 당첨이에요.",[new Set(game.balls.map(ball => ball.name)).size,game.order.length,MAPS[game.map].label,game.mode==='battle'?tr(" 능력 배틀"):'',game.winningLabel]);
     $('#resultMapLabel').textContent = MAPS[game.map].label;
     $('#goldenResult').hidden = !game.reveal;
-    if (game.reveal) $('#goldenResult').textContent = (game.comet?'☄ 이번 히든 혜성 · #':'★ 이번 황금구슬 · #') + game.reveal.ball.id + ' ' + (game.reveal.ball.originalLabel||game.reveal.ball.label) + ' · ' + game.reveal.ability.name;
+    if (game.reveal) $('#goldenResult').textContent = (game.comet?tr("☄ 이번 히든 혜성 · #"):tr("★ 이번 황금구슬 · #")) + game.reveal.ball.id + ' ' + (game.reveal.ball.originalLabel||game.reveal.ball.label) + ' · ' + game.reveal.ability.name;
     const list = $('#finalRanking');
     list.replaceChildren();
     game.order.forEach((ball, index) => {
@@ -874,7 +875,7 @@
       const name = document.createElement('span'); name.className = 'rank-name'; fillRaceName(name,ball);
       item.append(rank, bead, name);
       if (index === game.winningRank - 1) {
-        const note = document.createElement('span'); note.className = 'rank-note'; note.textContent = '☕ 커피 당첨'; item.append(note);
+        const note = document.createElement('span'); note.className = 'rank-note'; note.textContent = tr("☕ 커피 당첨"); item.append(note);
       }
       list.append(item);
     });
@@ -884,17 +885,17 @@
   function updateLiveUI() {
     if (!game) return;
     const remaining = game.balls.length - game.order.length;
-    $('#raceProgress').textContent = `${game.order.length} / ${game.balls.length} 도착`;
-    if (game.introRemaining > 0) $('#raceStatus').textContent = game.paused ? '특별한 구슬 공개를 잠시 멈췄어요.' : (game.comet?'히든 혜성이 선택됐어요.':'황금구슬이 선택됐어요.')+' 잠시 후 출발합니다!';
-    else if (game.countdownRemaining > 0) $('#raceStatus').textContent = game.paused ? '출발 준비를 잠시 멈췄어요.' : `${Math.ceil(game.countdownRemaining)}초 후 출발해요!`;
-    else if (!game.paused && game.order.length === 0) $('#raceStatus').textContent = '구슬들이 장애물 사이를 달리는 중이에요!';
-    else if (!game.paused && remaining > 0) $('#raceStatus').textContent = `${remaining}개의 구슬이 아직 달리는 중이에요.`;
+    $('#raceProgress').textContent = tr("{0} / {1} 도착",[game.order.length,game.balls.length]);
+    if (game.introRemaining > 0) $('#raceStatus').textContent = game.paused ? tr("특별한 구슬 공개를 잠시 멈췄어요.") : (game.comet?tr("히든 혜성이 선택됐어요."):tr("황금구슬이 선택됐어요."))+tr(" 잠시 후 출발합니다!");
+    else if (game.countdownRemaining > 0) $('#raceStatus').textContent = game.paused ? tr("출발 준비를 잠시 멈췄어요.") : tr("{0}초 후 출발해요!",[Math.ceil(game.countdownRemaining)]);
+    else if (!game.paused && game.order.length === 0) $('#raceStatus').textContent = tr("구슬들이 장애물 사이를 달리는 중이에요!");
+    else if (!game.paused && remaining > 0) $('#raceStatus').textContent = tr("{0}개의 구슬이 아직 달리는 중이에요.",[remaining]);
     const list = $('#liveOrder');
     list.replaceChildren();
     const fragment = document.createDocumentFragment();
     const running = game.balls.filter(ball => !ball.finished).sort((a, b) => b.y - a.y);
     const offset = Math.max(0, game.order.length - 100);
-    $('#liveTitle').textContent = offset ? '최근 결승 도착 순서' : game.order.length ? '결승 도착 순서' : '현재 선두 그룹';
+    $('#liveTitle').textContent = offset ? tr("최근 결승 도착 순서") : game.order.length ? tr("결승 도착 순서") : tr("현재 선두 그룹");
     const displayed = game.order.length ? game.order.slice(offset) : running.slice(0, 12);
     displayed.forEach((ball, index) => {
       const li = document.createElement('li');
@@ -904,20 +905,20 @@
       li.append(rank, bead, name); fragment.append(li);
     });
     list.append(fragment);
-    $('#liveFooter').textContent = game.order.length === 0 ? '현재 위치 기준 · 결승 통과 시 순위 확정' : `구슬 ${game.order.length}개 완주 · ${remaining}개 경주 중`;
+    $('#liveFooter').textContent = game.order.length === 0 ? tr("현재 위치 기준 · 결승 통과 시 순위 확정") : tr("구슬 {0}개 완주 · {1}개 경주 중",[game.order.length,remaining]);
     const section = MAPS[game.map].sections.filter(([y]) => y <= camera.y).at(-1);
-    $('#cameraStatus').textContent = camera.label + (section ? ' · ' + section[1] : ' · 출발 구간');
+    $('#cameraStatus').textContent = camera.label + (section ? ' · ' + section[1] : tr(" · 출발 구간"));
     $('#cameraBadge').textContent = camera.label;
-    $('#cameraZoomLabel').textContent = camera.mode === 'overview' ? '전체' : camera.zoom.toFixed(1) + '×';
+    $('#cameraZoomLabel').textContent = camera.mode === 'overview' ? tr("전체") : camera.zoom.toFixed(1) + '×';
     if(game.battle) {
-      const log=game.battle.logs.at(-1);$('#battleFeed').textContent=log&&game.time-log.time<3?log.text:(game.mode==='battle'?'⚔ 능력 배틀':'★ 황금구슬 능력')+' · 내 구슬 능력 버튼으로 확인';
+      const log=game.battle.logs.at(-1);$('#battleFeed').textContent=log&&game.time-log.time<3?log.text:(game.mode==='battle'?tr("⚔ 능력 배틀"):tr("★ 황금구슬 능력"))+tr(" · 내 구슬 능력 버튼으로 확인");
       for(const ball of game.balls) {const label=cameraBallLabel(ball);if(ball.battle.optionText!==label){$('#cameraSelect option[value="ball:'+ball.id+'"]').textContent=label;ball.battle.optionText=label;}}
     }
     if (game.selectedBall || camera.mode === 'winning') {
       const ball = camera.mode === 'winning' ? camera.target : game.balls.find((item) => item.id === game.selectedBall);
       if (ball) {
-        const description=game.battle?Battle.describe(ball,game.time):`구슬 #${ball.id} · ${ball.label}${ball.finished ? ' — 결승선 통과!' : game.introRemaining > 0 || game.countdownRemaining > 0 ? ' — 출발 준비' : ' — 달리는 중'}`;
-        $('#beadInfo').textContent = camera.mode === 'winning' ? (game.order[game.winningRank-1]?'당첨 확정 · ':'현재 위치 기준 당첨 후보 · ')+description : description;
+        const description=game.battle?Battle.describe(ball,game.time):tr("구슬 #{0} · {1}{2}",[ball.id,ball.label,ball.finished ? tr(" — 결승선 통과!") : game.introRemaining > 0 || game.countdownRemaining > 0 ? tr(" — 출발 준비") : tr(" — 달리는 중")]);
+        $('#beadInfo').textContent = camera.mode === 'winning' ? (game.order[game.winningRank-1]?tr("당첨 확정 · "):tr("현재 위치 기준 당첨 후보 · "))+description : description;
       }
     }
   }
@@ -925,13 +926,13 @@
   const cameraBallLabel=ball=>(ball.battle?.id==='comet'?'✦ ':'')+'#'+ball.id+' '+ballLabel(ball);
   function populateCamera(balls = Roster.entries(participants)) {
     cameraSelect.replaceChildren();
-    for (const [value, label] of [['auto', '자동 중계'], ['winning', '당첨 등수 따라가기 · '+(game?.winningRank??balls.length)+'등'], ['leader', '선두 따라가기'], ['pack', '중간 그룹'], ['tail', '후미 따라가기'], ['overview', '전체 코스'], ['manual', '수동 보기']]) {
+    for (const [value, label] of [['auto', tr("자동 중계")], ['winning', tr("당첨 등수 따라가기 · {0}등",[game?.winningRank??balls.length])], ['leader', tr("선두 따라가기")], ['pack', tr("중간 그룹")], ['tail', tr("후미 따라가기")], ['overview', tr("전체 코스")], ['manual', tr("수동 보기")]]) {
       const option = document.createElement('option'); option.value = value; option.textContent = label; cameraSelect.append(option);
     }
-    const group = document.createElement('optgroup'); group.label = '참가자 추적';
+    const group = document.createElement('optgroup'); group.label = tr("참가자 추적");
     const comet=balls.find(ball=>ball.battle?.id==='comet'),ordered=comet?[comet,...balls.filter(ball=>ball!==comet)]:balls;
     $('#trackComet').hidden=!comet;$('#trackComet').dataset.ballId=comet?String(comet.id):'';
-    if(comet){$('#trackCometLabel').textContent='혜성 추적 · #'+comet.id;$('#trackCometShort').textContent='#'+comet.id;$('#trackComet').setAttribute('aria-label','혜성 추적 · #'+comet.id);$('#trackComet').title=cameraBallLabel(comet);}
+    if(comet){$('#trackCometLabel').textContent=tr("혜성 추적 · #")+comet.id;$('#trackCometShort').textContent='#'+comet.id;$('#trackComet').setAttribute('aria-label',tr("혜성 추적 · #")+comet.id);$('#trackComet').title=cameraBallLabel(comet);}
     ordered.forEach(ball => {
       const option = document.createElement('option'); option.value = 'ball:' + ball.id; option.textContent = cameraBallLabel(ball);if(ball===comet)option.className='comet-option';group.append(option);
     });
@@ -992,7 +993,7 @@
       game.selectedBall = closest.id;
       camera.mode = 'ball:' + closest.id;
       cameraSelect.value = camera.mode;
-      $('#beadInfo').textContent = `구슬 #${closest.id} · ${closest.label} — 달리는 중`;
+      $('#beadInfo').textContent = tr("구슬 #{0} · {1} — 달리는 중",[closest.id,closest.label]);
     }
   }
   let cameraDrag = null;
@@ -1020,7 +1021,7 @@
   }
   function manualView() {
     cameraSelect.value = 'manual'; game.selectedBall = null;
-    $('#beadInfo').textContent = '수동 보기 · 드래그로 이동 · 두 손가락 확대·축소 · 미니맵 이동 · 자동 버튼으로 복귀';
+    $('#beadInfo').textContent = tr("수동 보기 · 드래그로 이동 · 두 손가락 확대·축소 · 미니맵 이동 · 자동 버튼으로 복귀");
   }
   canvas.addEventListener('pointerdown', event => {
     if (stage !== 'race' || !game || event.button !== 0 || cameraPointers.size >= 2) return;
@@ -1302,7 +1303,46 @@
   }
 
   Beans.mount({allowed:()=>stage!=='race',names:()=>participants});
+  // Transfer this tab's choices across language URLs without translating user input.
+  window.MarbleI18n?.bindSettings(() => ({
+    names:namesInput.value, count:countInput.value, copies:ballsPerPersonInput.value,
+    generated:!customNamesEdited, winnerMode:winnerMode.value, winnerRank:winnerRank.value,
+    raceMode:$('#raceMode').value, golden:$('#raceMode').value==='battle'?normalGoldenEnabled:$('#goldenEnabled').checked, map:selectedMap, random:randomMapSelected,
+    stage, beans:Beans.enabled,
+    routes:{observatory:mapCommand.observatory,rift:mapCommand.rift},cometPending,
+    result:stage==='results'?{
+      map:game.map, mode:game.mode, time:game.time, winningRank:game.winningRank, comet:!!game.comet,
+      balls:game.balls.map(b=>({id:b.id,name:b.name,color:b.color,pattern:b.pattern,copy:b.copy,total:b.total,battle:b.battle,finished:true})),
+      order:game.order.map(b=>b.id),reveal:game.reveal?{id:game.reveal.ball.id,abilityId:game.reveal.ability.id}:null
+    }:null
+  }));
+  const languageSettings=window.MarbleI18n?.takeSettings();
+  if(languageSettings&&typeof languageSettings.names==='string'){
+    const s=languageSettings;
+    namesInput.value=s.names;countInput.value=String(s.count);ballsPerPersonInput.value=String(s.copies);
+    lastGeneratedNames=s.generated?s.names:defaultNames;customNamesEdited=!s.generated;
+    winnerMode.value=['last','first','custom'].includes(s.winnerMode)?s.winnerMode:'last';winnerRank.value=String(s.winnerRank);
+    $('#raceMode').value=s.raceMode==='battle'?'battle':'normal';normalGoldenEnabled=!!s.golden;$('#goldenEnabled').checked=normalGoldenEnabled;
+    mapCommand.observatory=!!s.routes?.observatory;mapCommand.rift=mapCommand.observatory&&!!s.routes?.rift;
+    $('#hiddenMapPanel').hidden=!mapCommand.observatory;$('#chooseObservatory').hidden=!mapCommand.observatory;$('#chooseRift').hidden=!mapCommand.rift;
+    selectedMap=Object.hasOwn(MAPS,s.map)&&(!Hidden.has(s.map)||mapCommand[s.map])?s.map:'pinball';randomMapSelected=!!s.random;
+    cometPending=!!s.cometPending;$('#cometReservation').hidden=!cometPending;
+    if(cometPending){cometCard=makeAbilityCard(Battle.hiddenAbility);cometCard.id='cometAbilityCard';cometCard.classList.add('comet-ability-card');$('#abilityCatalog').append(cometCard);}
+    const parsed=parsedNames();if(!parsed.error)participants=parsed.names;
+    Beans.restoreMode(s.beans);
+    if(s.stage==='map'&&participants.length>=2&&!winningRule(participants.length).error){updateCountBadge(participants);setStage('map');}
+    if(s.stage==='results'&&s.result&&Array.isArray(s.result.balls)&&s.result.balls.length===participants.length&&s.result.balls.length<=Roster.MAX&&Object.hasOwn(MAPS,s.result.map)){
+      const result=s.result,entries=Roster.entries(participants);
+      const balls=entries.map((entry,i)=>({...entry,...result.balls[i],label:entry.label})),byId=new Map(balls.map(b=>[b.id,b]));
+      const order=Array.isArray(result.order)?result.order.map(id=>byId.get(id)):[];
+      if(order.length===balls.length&&order.every(Boolean)&&new Set(order).size===balls.length&&Number.isInteger(result.winningRank)&&result.winningRank>=1&&result.winningRank<=balls.length){
+        game={...result,balls,order,paused:true,winningLabel:winningRule(balls.length).label,reveal:null};
+        if(result.reveal&&byId.has(result.reveal.id)&&Battle.byId.has(result.reveal.abilityId))game.reveal={ball:byId.get(result.reveal.id),ability:Battle.byId.get(result.reveal.abilityId)};
+        stage='race';finishRace();
+      }
+    }
+  }
   queueSetupSync();
   updateMode();
-  selectMap(selectedMap);
+  const restoreRandom=randomMapSelected;selectMap(selectedMap);if(restoreRandom){randomMapSelected=true;updateMapChoice();}
 })();

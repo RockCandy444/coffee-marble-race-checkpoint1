@@ -5,6 +5,8 @@
 - [게임 실행](https://rockcandy444.github.io/coffeemarble/)
 - [소스 저장소](https://github.com/RockCandy444/coffeemarble)
 
+푸터에서 한국어·English·日本語를 선택할 수 있습니다. 같은 탭에서 언어를 바꾸어도 입력한 이름과 설정은 유지됩니다. [English](https://rockcandy444.github.io/coffeemarble/en/) · [日本語](https://rockcandy444.github.io/coffeemarble/ja/)
+
 ## 사용 방법
 
 1. 참가자 이름을 줄바꿈·쉼표·탭으로 구분해 붙여넣습니다. 엑셀 이름 열도 사용할 수 있습니다.
@@ -28,7 +30,7 @@
 
 ## 로컬 실행
 
-`index.html`을 최신 브라우저로 열거나 프로젝트 폴더를 정적 HTTP 서버로 제공하면 됩니다. 빌드나 패키지 설치는 필요하지 않습니다. Google Fonts를 불러올 수 없는 환경에서는 대체 글꼴을 사용합니다.
+프로젝트 폴더를 정적 HTTP 서버로 제공하면 언어별 주소를 포함해 실행할 수 있습니다. 이미 생성된 HTML을 제공하므로 패키지 설치나 서버 측 처리는 필요하지 않습니다. Google Fonts를 불러올 수 없는 환경에서는 대체 글꼴을 사용합니다.
 
 ## 문서
 

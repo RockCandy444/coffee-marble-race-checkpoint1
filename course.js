@@ -1,5 +1,6 @@
 (() => {
   'use strict';
+  const tr = (key, values = []) => window.MarbleI18n ? window.MarbleI18n.t(key, values) : key.replace(/\{(\d+)\}/g, (_, i) => String(values[+i] ?? ''));
   const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
   const wallRadius = 4.5;
   const verticalScale = 3;
@@ -18,11 +19,11 @@
   }
   function outline(world) { return [...wallPath(world, 'left', 0), ...wallPath(world, 'right', 0).reverse()]; }
   const keepers = [
-    { id: 'slider', name: '슬라이딩 골키퍼' },
-    { id: 'rotor', name: '회전 방패' },
-    { id: 'doors', name: '쌍문 수문장' },
-    { id: 'pendulum', name: '진자 골키퍼' },
-    { id: 'bumper', name: '미니 범퍼 골키퍼' }
+    { id: 'slider', name: tr("슬라이딩 골키퍼") },
+    { id: 'rotor', name: tr("회전 방패") },
+    { id: 'doors', name: tr("쌍문 수문장") },
+    { id: 'pendulum', name: tr("진자 골키퍼") },
+    { id: 'bumper', name: tr("미니 범퍼 골키퍼") }
   ];
   const chooseKeeper = (random = Math.random) => keepers[clamp(Math.floor(random() * keepers.length), 0, keepers.length - 1)];
 

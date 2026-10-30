@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <base href="../">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#fff8eb">
+  <title>Coffee Marble コーヒーマーブル</title>
+  <meta name="description" content="Coffee Marbleはコーヒーをおごる人を決める無料ビー玉レース。名前の一括入力、最大1,000個のビー玉、当選順位の指定、能力バトルに対応。PC・スマホでログイン不要です。">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta name="google-site-verification" content="vOq4Gp9Xw1tFIRvdxE0gJ1HDRLVQOeA2pLY8xMCYmRY">
+  <link rel="canonical" href="https://rockcandy444.github.io/coffeemarble/ja/">
+  <link rel="sitemap" type="application/xml" href="sitemap.xml">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="ja_JP">
+  <meta property="og:site_name" content="Coffee Marble コーヒーマーブル">
+  <meta property="og:title" content="Coffee Marble コーヒーマーブル">
+  <meta property="og:description" content="コーヒーをおごる人を決める無料ビー玉レース。名前の一括入力・当選順位指定・能力バトルをPCやスマホで楽しめます。">
+  <meta property="og:url" content="https://rockcandy444.github.io/coffeemarble/ja/">
+  <meta property="og:image" content="https://rockcandy444.github.io/coffeemarble/social-preview.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Coffee Marble コーヒー豆のロゴ">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Coffee Marble コーヒーマーブル">
+  <meta name="twitter:description" content="ログイン不要の無料ビー玉レース。PCでもスマホでも楽しめます。">
+  <meta name="twitter:image" content="https://rockcandy444.github.io/coffeemarble/social-preview.png">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "@id": "https://rockcandy444.github.io/coffeemarble/ja/#game",
+  "name": "Coffee Marble コーヒーマーブル",
+  "alternateName": [
+    "Coffee Marble",
+    "コーヒーマーブル"
+  ],
+  "url": "https://rockcandy444.github.io/coffeemarble/ja/",
+  "description": "Coffee Marbleはコーヒーをおごる人を決める無料ビー玉レース。名前の一括入力、最大1,000個のビー玉、当選順位の指定、能力バトルに対応。PC・スマホでログイン不要です。",
+  "applicationCategory": "GameApplication",
+  "operatingSystem": "Web browser",
+  "browserRequirements": "JavaScript and HTML5 Canvas support",
+  "inLanguage": "ja",
+  "isAccessibleForFree": true,
+  "image": "https://rockcandy444.github.io/coffeemarble/social-preview.png",
+  "author": {
+    "@type": "Person",
+    "name": "RockCandy"
+  },
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "KRW"
+  }
+}
+  </script>
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=48">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="favicon.svg?v=48">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=48">
+  <link rel="alternate" hreflang="ko" href="https://rockcandy444.github.io/coffeemarble/">
+  <link rel="alternate" hreflang="en" href="https://rockcandy444.github.io/coffeemarble/en/">
+  <link rel="alternate" hreflang="ja" href="https://rockcandy444.github.io/coffeemarble/ja/">
+  <link rel="alternate" hreflang="x-default" href="https://rockcandy444.github.io/coffeemarble/">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&amp;display=swap">
+  <link rel="stylesheet" href="styles.css?v=53">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="ja/" aria-label="ホーム">
+        <span class="brand-mark brand-coffee" aria-hidden="true">☕</span>
+        <span>Coffee <strong>Marble</strong></span>
+      </a>
+      <div class="topbar-actions"><span class="local-badge"><span aria-hidden="true">☕</span> ひと勝負、コーヒー1杯</span><button id="beanWipe" class="bean-wipe" type="button" aria-label="コーヒーを拭いて通常のビー玉に戻す" title="コーヒーを拭いて通常のビー玉に戻す" hidden><svg viewBox="0 0 40 40" aria-hidden="true" focusable="false"><path d="M7 12Q11 8 17 11L29 8L34 29Q30 27 26 31L10 34Q8 28 5 26Z" fill="#d2ece5" stroke="#5d9c92" stroke-width="2" stroke-linejoin="round"/><path d="M10 15L26 12L30 27L12 30ZM14 13Q13 22 17 30M23 12Q21 23 25 29" fill="none" stroke="#84b6ac" stroke-width="1" stroke-dasharray="2 2"/><path d="M25 1L27 7L33 9L27 11L25 17L23 11L17 9L23 7Z" fill="#fff7d1" stroke="#c5a756"/></svg></button></div>
+    </header>
+
+    <section class="intro" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow">今日のコーヒーは誰のおごり？</p>
+        <h1 id="page-title">ビー玉におまかせ<span>!</span></h1>
+        <p class="intro-copy">ゴールした順番で順位が決まります。</p>
+      </div>
+      <button id="beanTrigger" class="coffee-doodle coffee-bean-doodle" type="button" aria-label="コーヒー豆">
+        <svg viewBox="0 0 64 64" focusable="false" aria-hidden="true">
+          <defs><linearGradient id="coffeeBeanRoast" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#bd8a5d"/><stop offset=".48" stop-color="#8c5637"/><stop offset="1" stop-color="#523021"/></linearGradient></defs>
+          <ellipse cx="32" cy="32" rx="19" ry="27" transform="rotate(32 32 32)" fill="url(#coffeeBeanRoast)"/>
+          <path d="M43 10C22 23 41 37 22 54" fill="none" stroke="#44271e" stroke-width="4.5" stroke-linecap="round"/>
+          <path d="M44 12C24 25 43 38 24 53" fill="none" stroke="#d5a171" stroke-opacity=".55" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M24 14C14 20 10 33 16 43" fill="none" stroke="#efc092" stroke-opacity=".35" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </section>
+
+    <nav class="steps" aria-label="レースの手順">
+      <div class="step active" data-step="setup"><span>1</span> 参加者設定</div>
+      <i aria-hidden="true"></i>
+      <div class="step" data-step="map"><span>2</span> マップ選択</div>
+      <i aria-hidden="true"></i>
+      <div class="step" data-step="race"><span>3</span> レース</div>
+      <i aria-hidden="true"></i>
+      <div class="step" data-step="results"><span>4</span> 結果</div>
+    </nav>
+
+    <section id="setupView" class="view card setup-view">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">STEP 1 · 参加者設定</p>
+          <h2>今日は誰と走る？</h2>
+        </div>
+        <span class="count-pill" id="participantCount">3人 · ビー玉15個</span>
+      </div>
+      <div class="setup-grid">
+        <div class="name-entry">
+          <label for="namesInput">名簿をまとめて貼り付け</label>
+          <textarea id="namesInput" rows="6" spellcheck="false" aria-describedby="nameHelp" placeholder="太郎 * 5, 花子, 次郎 * 2"></textarea>
+          <div id="nameHelp" class="field-note">改行・カンマ・タブで区切ります。Excelの名前の列もそのまま貼り付けられます。<br><strong>太郎 * 5</strong> → 同じ色・模様のビー玉5個。合計2〜1,000個で遊べます！</div>
+          <div class="roster-preview" aria-label="入力名簿のプレビュー">
+            <div id="rosterSummary" class="roster-summary" aria-live="polite"></div>
+            <ul id="rosterPreview" class="roster-list"></ul>
+          </div>
+          <p class="field-note handicap-note">同じ名前は同じ人としてまとめます。指定した順位でゴールしたビー玉の持ち主がコーヒー担当です。</p>
+        </div>
+        <aside class="quick-entry">
+          <div class="quick-icon" aria-hidden="true">✦</div>
+          <h3>名前なしですぐ始める</h3>
+          <p>「参加者 1、参加者 2…」という名前で作ります。<br>初期設定は3人、1人につきビー玉5個です。</p>
+          <label for="countInput">参加人数</label>
+          <div class="count-control">
+            <button id="countDown" class="stepper" type="button" aria-label="参加者を1人減らす">−</button>
+            <input id="countInput" type="number" min="1" max="1000" value="3" inputmode="numeric">
+            <button id="countUp" class="stepper" type="button" aria-label="参加者を1人増やす">＋</button>
+          </div>
+          <label for="ballsPerPerson">1人あたりのビー玉数</label>
+          <div class="count-control">
+            <button id="copiesDown" class="stepper" type="button" aria-label="1人あたりのビー玉を1個減らす">−</button>
+            <input id="ballsPerPerson" type="number" min="1" max="1000" value="5" inputmode="numeric" aria-describedby="defaultNamesHelp">
+            <button id="copiesUp" class="stepper" type="button" aria-label="1人あたりのビー玉を1個増やす">＋</button>
+          </div>
+          <p id="defaultNamesHelp" class="field-note">手入力した名前にも同じ個数を適用します。個別に変える場合は名簿の * の個数を編集してください。合計2〜1,000個まで。</p>
+          <button id="generateNames" class="button button-soft" type="button">初期名で入力</button>
+        </aside>
+      </div>
+      <div class="winning-settings">
+        <label for="winnerMode">コーヒーの当選順位</label>
+        <select id="winnerMode"><option value="last">最下位</option><option value="first">1位</option><option value="custom">順位を指定</option></select>
+        <label id="winnerRankLabel" for="winnerRank" hidden>当選順位 <input id="winnerRank" type="number" min="1" max="15" value="1" inputmode="numeric"> 位</label>
+        <p id="winningRankHelp" class="field-note" aria-live="polite"></p>
+      </div>
+      <div class="form-footer">
+        <p id="setupError" class="error-message" role="alert" aria-live="polite"></p>
+        <button id="confirmParticipants" class="button button-primary" type="button">参加者を確認してマップへ <span aria-hidden="true">→</span></button>
+      </div>
+    </section>
+
+    <section id="mapView" class="view card map-view" hidden>
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">STEP 2 · マップ選択</p>
+          <h2>今日のレースコース</h2>
+        </div>
+        <button id="editParticipants" class="text-button" type="button">← 参加者を編集</button>
+      </div>
+      <p class="subheading"><strong id="mapParticipantSummary">3人 · ビー玉15個</strong>でレース。同じ名前は同じ色・模様に。スタートの配置は毎回シャッフル！</p>
+      <p id="mapWinningSummary" class="winning-summary"></p>
+      <div class="map-options" role="radiogroup" aria-label="レースマップ">
+        <button class="map-card selected" data-map="pinball" role="radio" aria-checked="true" type="button">
+          <span class="map-visual pinball-visual" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><b>●</b></span>
+          <span class="map-card-copy"><strong>ピンボール</strong><small>パワーバンパーとピンの森 · 6区間 · 10,800m</small></span>
+          <span class="map-check" aria-hidden="true">✓</span>
+        </button>
+        <button class="map-card" data-map="spinner" role="radio" aria-checked="false" type="button">
+          <span class="map-visual spinner-visual" aria-hidden="true"><i></i><i></i><i></i><b>●</b></span>
+          <span class="map-card-copy"><strong>回転障害物</strong><small>曲がる壁・回転ゲート・動くブロック · 6区間 · 11,700m</small></span>
+          <span class="map-check" aria-hidden="true">✓</span>
+        </button>
+        <button class="map-card" data-map="fork" role="radio" aria-checked="false" type="button">
+          <span class="map-visual fork-visual" aria-hidden="true"><i></i><i></i><b>●</b></span>
+          <span class="map-card-copy"><strong>分かれ道</strong><small>広狭の分岐とダイヤの障害物 · 6区間 · 12,600m</small></span>
+          <span class="map-check" aria-hidden="true">✓</span>
+        </button>
+        <button class="map-card" data-map="factory" role="radio" aria-checked="false" type="button">
+          <span class="map-visual factory-visual" aria-hidden="true">🏭</span>
+          <span class="map-card-copy"><strong>コンベア工場</strong><small>運搬・プレス・仕分け設備 · 6区間 · 11,400m</small></span><span class="map-check" aria-hidden="true">✓</span>
+        </button>
+        <button class="map-card" data-map="rapids" role="radio" aria-checked="false" type="button">
+          <span class="map-visual rapids-visual" aria-hidden="true">🌊</span>
+          <span class="map-card-copy"><strong>急流の谷</strong><small>分流・交差する急流・岩の島 · 6区間 · 12,300m</small></span><span class="map-check" aria-hidden="true">✓</span>
+        </button>
+        <button class="map-card" data-map="ruins" role="radio" aria-checked="false" type="button">
+          <span class="map-visual ruins-visual" aria-hidden="true">🏛️</span>
+          <span class="map-card-copy"><strong>崩れゆく遺跡</strong><small>石柱・崩落回廊・落石 · 6区間 · 12,900m</small></span><span class="map-check" aria-hidden="true">✓</span>
+        </button>
+      </div>
+      <button id="randomMap" class="random-map" type="button" aria-pressed="false">🎲 ランダムマップ <span>レース開始時にコースを抽選</span></button>
+      <section id="hiddenMapPanel" class="hidden-map-panel" aria-label="隠された航路" hidden>
+        <div><span aria-hidden="true">✦</span><h3>隠された航路</h3><p id="hiddenMapMessage" role="status" aria-live="polite"></p></div>
+        <div class="hidden-map-options"><button id="chooseObservatory" data-hidden-map="observatory" type="button" aria-pressed="false" hidden><strong>🌠 彗星天文台</strong><span>公転・星明かりの門・彗星の残骸 · 6区間 · 13,500m</span></button><button id="chooseRift" data-hidden-map="rift" type="button" aria-pressed="false" hidden><strong>🌌 次元の裂け目</strong><span>7つの世界と異なる3つの出口 · 8区間 · 25,000m</span></button></div>
+      </section>
+      <div class="mode-settings">
+        <label for="raceMode">プレイモード</label>
+        <select id="raceMode"><option value="normal">通常レース</option><option value="battle">能力バトル · 50種</option></select>
+        <p id="modeHelp">通常ルールで走ります。黄金のビー玉イベントも選べます。</p>
+      </div>
+      <p id="mapMechanicHelp" class="field-note" hidden></p>
+      <details id="sectionGuide" class="section-guide" hidden><summary id="sectionGuideTitle">全6区間を見る</summary><ol id="sectionPlanList"></ol></details>
+      <details id="battleGuide" class="battle-guide" hidden>
+        <summary>バトルルールと全50種の能力</summary>
+        <p>バトルでは各ビー玉に能力が1つ付き、自動で発動します。通常レースでは選ばれた黄金のビー玉が能力を獲得。妨害の後は短時間保護されます。ゴール直前の安全区間では、妨害・位置移動・サイズ変更・障害物のすり抜けが制限されます。</p>
+        <div id="abilityCatalog" class="ability-catalog"></div>
+      </details>
+      <div id="cometReservation" class="comet-reservation" role="status" aria-live="polite" hidden><span>☄ 隠しコマンド成功！次のレースでランダムなビー玉1個が彗星ダッシュを獲得します。</span><button id="cancelComet" type="button">予約を取り消す</button></div>
+      <div class="event-option" id="goldenOption">
+        <label class="event-toggle" for="goldenEnabled">
+          <input id="goldenEnabled" type="checkbox" checked aria-describedby="goldenOptionHelp">
+          <span><strong>黄金のビー玉イベント</strong><small id="goldenOptionHelp">オンにすると、ときどきビー玉1個が特別な能力を獲得。オフなら全員通常のビー玉で出発します。</small></span>
+        </label>
+      </div>
+      <div class="form-footer map-footer">
+        <span class="field-note">ゴールキーパーはレースごとにランダムで変わります。</span>
+        <button id="startRace" class="button button-primary" type="button">レース開始 <span aria-hidden="true">→</span></button>
+      </div>
+    </section>
+
+    <section id="raceView" class="view race-view" hidden>
+      <div class="race-heading">
+        <div>
+          <p class="eyebrow">STEP 3 · レース中</p>
+          <h2 id="raceTitle">ピンボールコース</h2>
+        </div>
+      </div>
+      <div class="race-controls">
+        <div class="race-tools">
+          <span id="raceProgress" class="progress-pill">0 / 2 ゴール</span>
+          <label class="race-speed" for="raceSpeed"><span class="control-full">速度</span>
+            <select id="raceSpeed" aria-label="レース速度"><option value="0.25">0.25倍</option><option value="0.5">0.5倍</option><option value="1" selected>1倍</option><option value="2">2倍</option><option value="4">4倍</option></select>
+          </label>
+          <button id="pauseRace" class="button button-small button-soft" type="button">一時停止</button>
+          <button id="trackComet" class="comet-track" type="button" hidden><span class="comet-track-spark" aria-hidden="true">✦</span><span id="trackCometLabel" class="control-full">彗星を追跡</span><span id="trackCometShort" class="control-short" aria-hidden="true">彗星</span></button>
+          <button id="openBattleAbilities" class="battle-open" type="button" aria-label="自分の能力" hidden><span class="control-full">自分の能力</span><span class="control-short" aria-hidden="true">能力</span></button>
+        </div>
+      <div class="camera-toolbar" aria-label="レースカメラの設定">
+        <label for="cameraSelect">カメラ</label>
+        <select id="cameraSelect" aria-label="カメラ視点"></select>
+        <div class="camera-zoom">
+          <button id="cameraZoomOut" type="button" aria-label="縮小">−</button>
+          <output id="cameraZoomLabel">1.0×</output>
+          <button id="cameraZoomIn" type="button" aria-label="拡大">＋</button>
+          <button id="cameraReset" type="button">自動</button>
+        </div>
+        <span id="cameraStatus">自動 · スタート準備</span>
+      </div>
+      </div>
+      <div class="race-layout card">
+        <div class="track-column">
+          <div class="canvas-wrap">
+            <canvas id="raceCanvas" width="1000" height="600" aria-label="ビー玉レース画面。ビー玉を押して追跡、指1本で移動、2本で拡大・縮小できます。" role="img"></canvas>
+            <canvas id="miniMap" width="70" height="210" aria-label="ミニマップ：クリック・ドラッグでカメラを移動。矢印キーでも調整可能" role="button" tabindex="0"></canvas>
+            <div id="cameraBadge" class="camera-badge">AUTO · 自動カメラ</div>
+            <div id="keeperLabel" class="keeper-label"></div>
+            <div class="hazard-key" id="hazardKey"><span>⚡ パワーバンパー</span><span>Ⓜ 磁石</span><span>↔ 風</span><span>◆ ディフェンダー</span></div>
+            <div id="startCountdown" class="start-countdown" role="status" aria-live="polite" aria-atomic="true" hidden>
+              <small id="countdownHelp">準備してください</small>
+              <strong id="countdownNumber">3</strong>
+            </div>
+            <div id="goldenReveal" class="golden-reveal" role="status" aria-live="polite" hidden>
+              <div class="golden-orb" id="goldenOrb" aria-hidden="true"></div>
+              <strong id="revealTitle">黄金のビー玉が登場！</strong>
+              <span id="goldenOwner"></span>
+              <b id="goldenAbility"></b>
+              <p id="goldenDescription"></p>
+              <small>まもなくレース開始</small>
+            </div>
+          </div>
+          <div class="track-legend">
+            <span><i class="legend-start"></i> スタート</span>
+            <span><i class="legend-finish"></i> ゴール</span>
+            <span id="raceWinningSummary"></span>
+            <span id="raceStatus" aria-live="polite">ビー玉がスタートを待っています。</span>
+          </div>
+          <div class="race-information" role="region" aria-label="レース情報 · 左右にスワイプして表示" tabindex="0">
+            <span class="race-information-label" aria-hidden="true">情報 ↔</span>
+            <div id="goldenBadge" class="golden-badge" hidden></div>
+            <div id="beadInfo" class="bead-info" aria-live="polite">ピンチ・ホイールで拡大縮小 · ドラッグで移動 · ミニマップで区間を選択</div>
+            <div id="battleFeed" class="battle-feed" aria-live="off" hidden></div>
+          </div>
+          <div id="recoveryControls" class="recovery-controls" hidden>
+            <p id="recoveryMessage">一部のビー玉が長く止まっているため、一時停止しました。未完走のビー玉を勝手に最下位にはしません。</p>
+            <button id="nudgeBalls" class="button button-soft" type="button">止まったビー玉を弾いて続ける</button>
+            <button id="resumeRace" class="button button-primary button-small" type="button">レースを続ける</button>
+          </div>
+        </div>
+        <aside class="live-sidebar">
+          <div class="live-title"><span class="live-dot"></span> <span id="liveTitle">ライブレース</span></div>
+          <p class="live-help">走行中のビー玉とゴール順を確認できます。</p>
+          <ol id="liveOrder" class="live-order"></ol>
+          <div class="live-footer" id="liveFooter">まだゴールしたビー玉はありません。</div>
+        </aside>
+      </div>
+      <div class="race-bottom-actions">
+        <button id="changeRaceSetup" class="text-button" type="button">参加者・マップを変更</button>
+        <button id="restartDuringRace" class="text-button" type="button">このレースをやり直す</button>
+      </div>
+    </section>
+
+    <section id="resultsView" class="view results-view" hidden>
+      <div class="result-hero card">
+        <div class="confetti-mark" aria-hidden="true">✦</div>
+        <p class="eyebrow">STEP 4 · 最終結果</p>
+        <h2>今日のコーヒー担当は…</h2>
+        <div class="coffee-winner" id="coffeeWinner"></div>
+        <p class="result-subtitle" id="resultSubtitle"></p>
+        <p class="golden-result" id="goldenResult" hidden></p>
+      </div>
+      <div class="card ranking-card">
+        <div class="section-heading ranking-heading">
+          <div><p class="eyebrow">FINISH ORDER</p><h2>全体順位</h2></div>
+          <span id="resultMapLabel" class="count-pill"></span>
+        </div>
+        <ol id="finalRanking" class="final-ranking"></ol>
+      </div>
+      <div class="result-actions">
+        <button id="rematch" class="button button-primary" type="button">同じ設定でもう一度 <span aria-hidden="true">↻</span></button>
+        <button id="newSetup" class="button button-soft" type="button">参加者・マップを変更</button>
+      </div>
+    </section>
+
+    <section id="game-about" class="game-about" aria-labelledby="game-about-title">
+      <h2 id="game-about-title">Coffee Marble：みんなで楽しむビー玉レース</h2>
+      <p>Coffee Marbleは、ランチや集まりでコーヒーをおごる人を決める無料ビー玉レースです。参加者とマップを決めたら、ビー玉が障害物を抜けてゴールへ。ログインやインストール不要で、PC・スマホのブラウザからすぐに遊べます。</p>
+      <details>
+        <summary>参加者の名前とビー玉数の決め方は？</summary>
+        <p>名前を改行・カンマ・タブで区切って貼り付けます。Excelの名簿も使えます。「太郎 * 5」のように書くと同じ人のビー玉を複数作れます。合計2〜1,000個でレースできます。</p>
+      </details>
+      <details>
+        <summary>最下位以外の順位も当選にできますか？</summary>
+        <p>参加者設定で「最下位・1位・順位を指定」から選べます。実際にゴールした順番で順位が決まり、指定順位のビー玉の持ち主がコーヒー担当です。能力バトルでは各ビー玉に自動発動の能力が付きます。</p>
+      </details>
+      <details>
+        <summary>スマホでもカメラを動かせますか？</summary>
+        <p>指1本のドラッグで移動、2本のピンチで拡大・縮小できます。PCではマウスのドラッグとホイールに対応。ミニマップを押す・ドラッグして区間を選び、速度変更や一時停止でゆっくり観戦できます。</p>
+      </details>
+    </section>
+
+    <footer class="page-footer" aria-label="制作者・お問い合わせ">
+      <div class="footer-meta">
+        <span class="footer-creator">© 2026 <strong>RockCandy</strong>. All rights reserved.</span>
+        <a class="footer-contact" href="mailto:ldh4563@gmail.com">お問い合わせ・不具合報告 · ldh4563@gmail.com</a>
+        <a class="footer-support" href="https://open.kakao.com/o/s9U69KUi" target="_blank" rel="noopener noreferrer" aria-label="制作者にもコーヒーを · Kakaoオープンチャット（新しいタブ）" title="Kakaoオープンチャットを開く（新しいタブ）"><span aria-hidden="true">☕</span> 制作者にもコーヒーを</a>
+      </div>
+      <p class="footer-note">順位は、ビー玉が実際にゴールした順番で決まります。 <span>ゲームはこの端末で実行されます。</span></p>
+      <nav class="footer-languages" aria-label="言語">
+        <span aria-hidden="true">🌐</span>
+        <a href="./" lang="ko" hreflang="ko" data-locale-link="ko">한국어</a>
+        <a href="en/" lang="en" hreflang="en" data-locale-link="en">English</a>
+        <a href="ja/" lang="ja" hreflang="ja" data-locale-link="ja" aria-current="page">日本語</a>
+      </nav>
+      <p id="languageStatus" class="field-note" role="status" aria-live="polite"></p>
+    </footer>
+  </main>
+  <dialog id="battleDialog" class="battle-dialog" aria-labelledby="battleDialogTitle">
+    <div class="battle-dialog-heading"><h2 id="battleDialogTitle">自分の能力</h2></div>
+    <div id="battleDialogBody" class="battle-dialog-body">
+      <p>能力を見ている間はレースが一時停止します。ビー玉を押して追跡すると発動状態も確認できます。</p>
+      <ul id="battleRoster" class="battle-roster"></ul>
+    </div>
+    <div class="battle-dialog-actions"><button id="closeBattleAbilities" type="button">閉じて戻る</button></div>
+  </dialog>
+  <div id="mapUnlockFx" class="map-unlock-fx" aria-hidden="true" hidden><div class="map-unlock-space"><i></i><i></i><i></i><b></b></div><span id="mapUnlockFxTitle"></span></div>
+  <div id="cometUnlockFx" class="comet-unlock-fx" aria-hidden="true" hidden><i class="comet-unlock-meteor"></i><i class="comet-unlock-burst"></i><span>☄ 彗星ダッシュを発見しました</span></div>
+  <script src="locales/ja.js?v=53"></script>
+  <script src="i18n.js?v=53"></script>
+  <script src="course.js?v=53"></script>
+  <script src="camera.js?v=53"></script>
+  <script src="roster.js?v=53"></script>
+  <script src="golden.js"></script>
+  <script src="battle.js?v=53"></script>
+  <script src="maps.js?v=53"></script>
+  <script src="secret.js"></script>
+  <script src="hidden.js?v=53"></script>
+  <div id="coffeeDye" class="coffee-dye" aria-hidden="true" hidden></div><div id="beanFx" class="bean-fx" aria-hidden="true" hidden></div>
+  <script src="beans.js?v=53"></script>
+  <script src="app.js?v=53"></script>
+</body>
+</html>

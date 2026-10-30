@@ -1,16 +1,17 @@
 (() => {
   'use strict';
+  const tr = (key, values = []) => window.MarbleI18n ? window.MarbleI18n.t(key, values) : key.replace(/\{(\d+)\}/g, (_, i) => String(values[+i] ?? ''));
   const definitions={
-    factory:{title:'컨베이어 공장 코스',label:'컨베이어 공장',height:3800,sections:[[180],[820],[1460],[2100],[2740],[3250]],colors:['#dfe7ed','#d1dde6','#e8e0ca','#d6e3e5','#cedce3','#e3ddd0'],theme:{backdrop:'#293b49',bank:'#435a69',wall:'#526c80',wallLight:'#b5c9d5',ink:'#3b5363',base:'#e1e9ee',end:'#cddae2',finish:'#c9a44a26'}},
-    rapids:{title:'급류 계곡 코스',label:'급류 계곡',height:4100,sections:[[180],[880],[1580],[2280],[2980],[3550]],colors:['#c5e9f0','#b4dfeb','#c0d9ed','#bce4db','#addce7','#cce5e3'],theme:{backdrop:'#34595d',bank:'#547a6b',wall:'#4b7475',wallLight:'#b1cec0',ink:'#305c68',base:'#ceeef0',end:'#a9d8df',finish:'#b7dcd426'}},
-    ruins:{title:'붕괴하는 유적 코스',label:'붕괴하는 유적',height:4300,sections:[[180],[920],[1660],[2400],[3140],[3750]],colors:['#ddd9ca','#d3cabc','#dce0ce','#c9ccbc','#cfd6bf','#e0d7c4'],theme:{backdrop:'#565e50',bank:'#737665',wall:'#727d6a',wallLight:'#c6c7ac',ink:'#535e48',base:'#e2dfd0',end:'#c6ceba',finish:'#a7af7d26'}}
+    factory:{title:tr("컨베이어 공장 코스"),label:tr("컨베이어 공장"),height:3800,sections:[[180],[820],[1460],[2100],[2740],[3250]],colors:['#dfe7ed','#d1dde6','#e8e0ca','#d6e3e5','#cedce3','#e3ddd0'],theme:{backdrop:'#293b49',bank:'#435a69',wall:'#526c80',wallLight:'#b5c9d5',ink:'#3b5363',base:'#e1e9ee',end:'#cddae2',finish:'#c9a44a26'}},
+    rapids:{title:tr("급류 계곡 코스"),label:tr("급류 계곡"),height:4100,sections:[[180],[880],[1580],[2280],[2980],[3550]],colors:['#c5e9f0','#b4dfeb','#c0d9ed','#bce4db','#addce7','#cce5e3'],theme:{backdrop:'#34595d',bank:'#547a6b',wall:'#4b7475',wallLight:'#b1cec0',ink:'#305c68',base:'#ceeef0',end:'#a9d8df',finish:'#b7dcd426'}},
+    ruins:{title:tr("붕괴하는 유적 코스"),label:tr("붕괴하는 유적"),height:4300,sections:[[180],[920],[1660],[2400],[3140],[3750]],colors:['#ddd9ca','#d3cabc','#dce0ce','#c9ccbc','#cfd6bf','#e0d7c4'],theme:{backdrop:'#565e50',bank:'#737665',wall:'#727d6a',wallLight:'#c6c7ac',ink:'#535e48',base:'#e2dfd0',end:'#c6ceba',finish:'#a7af7d26'}}
   };
   const has=map=>Object.hasOwn(definitions,map);
   const unit=seed=>{const n=Math.sin(seed*127.1+311.7)*43758.5453;return n-Math.floor(n);};
   const sectionPlans={
-    factory:[['입고 레인','운반 벨트','세 갈래 레인'],['압축 작업장','왕복 압착판','반발 핀'],['역주행 라인','역방향 벨트','측면 배출구'],['분류 게이트','좌우 분류문','자석'],['출하 교차로','엇갈린 운반 벨트','반발 핀'],['최종 검수','검수 게이트','골키퍼']],
-    rapids:[['상류 물길','완만한 중앙 물살','강변 바위'],['갈라지는 여울','갈래 물길','분기 바위섬'],['소용돌이 분지','연속 소용돌이','반발 바위'],['바위섬 수로','지그재그 바위섬','잔잔한 물길'],['합류 급류','간헐적 합류 물살','자석'],['마지막 협곡','좁은 바위 통로','골키퍼']],
-    ruins:[['석주 정원','큰 돌기둥','자석'],['붕괴 회랑','부서지는 석벽','반발 핀'],['흔들다리','왕복 회전 다리','징검 돌'],['스위치 석문','접촉 스위치와 석문','자석'],['낙석 신전','교차 낙석','잔해 바위'],['봉인 출구','봉인 석벽','골키퍼']]
+    factory:[[tr("입고 레인"),tr("운반 벨트"),tr("세 갈래 레인")],[tr("압축 작업장"),tr("왕복 압착판"),tr("반발 핀")],[tr("역주행 라인"),tr("역방향 벨트"),tr("측면 배출구")],[tr("분류 게이트"),tr("좌우 분류문"),tr("자석")],[tr("출하 교차로"),tr("엇갈린 운반 벨트"),tr("반발 핀")],[tr("최종 검수"),tr("검수 게이트"),tr("골키퍼")]],
+    rapids:[[tr("상류 물길"),tr("완만한 중앙 물살"),tr("강변 바위")],[tr("갈라지는 여울"),tr("갈래 물길"),tr("분기 바위섬")],[tr("소용돌이 분지"),tr("연속 소용돌이"),tr("반발 바위")],[tr("바위섬 수로"),tr("지그재그 바위섬"),tr("잔잔한 물길")],[tr("합류 급류"),tr("간헐적 합류 물살"),tr("자석")],[tr("마지막 협곡"),tr("좁은 바위 통로"),tr("골키퍼")]],
+    ruins:[[tr("석주 정원"),tr("큰 돌기둥"),tr("자석")],[tr("붕괴 회랑"),tr("부서지는 석벽"),tr("반발 핀")],[tr("흔들다리"),tr("왕복 회전 다리"),tr("징검 돌")],[tr("스위치 석문"),tr("접촉 스위치와 석문"),tr("자석")],[tr("낙석 신전"),tr("교차 낙석"),tr("잔해 바위")],[tr("봉인 출구"),tr("봉인 석벽"),tr("골키퍼")]]
   };
   for(const [map,plans] of Object.entries(sectionPlans))definitions[map].sections=definitions[map].sections.map(([y],i)=>[y,plans[i][0]]);
   const layouts={factory:['lanes','cluster','diagonal','split','slalom','guard'],rapids:['banks','split','rings','islands','split','guard'],ruins:['arches','diagonal','islands','split','cluster','guard']};

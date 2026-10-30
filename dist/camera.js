@@ -1,12 +1,13 @@
 (() => {
   'use strict';
+  const tr = (key, values = []) => window.MarbleI18n ? window.MarbleI18n.t(key, values) : key.replace(/\{(\d+)\}/g, (_, i) => String(values[+i] ?? ''));
   // Camera transforms never change simulation positions or results.
   const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
   window.RaceCamera = class RaceCamera {
     constructor() { this.reset(); }
     reset() {
       this.mode = 'auto'; this.zoom = 1; this.x = 500; this.y = 150;
-      this.initialized = false; this.label = '자동 중계';
+      this.initialized = false; this.label = tr("자동 중계");
     }
     moveTo(x, y) {
       this.mode = 'manual'; this.x = x; this.y = y;
@@ -42,10 +43,10 @@
       this.initialized = true;
       this.left = this.x - this.visibleWidth / 2;
       this.top = this.y - this.visibleHeight / 2;
-      const names = { leader: '선두', pack: '중간 그룹', tail: '후미', overview: '전체 코스', manual: '수동 보기' };
-      this.label = names[mode] || (target ? '#' + target.id + ' ' + (target.label ?? target.name) + (target.finished ? ' · 완주' : '') : '결승선');
-      if(mode==='winning')this.label='당첨 '+winningRank+'등 '+(game.order[winningRank-1]?'확정':'후보')+(target?' · #'+target.id:'');
-      if (this.mode === 'auto') this.label = '자동 중계 · ' + this.label;
+      const names = { leader: tr("선두"), pack: tr("중간 그룹"), tail: tr("후미"), overview: tr("전체 코스"), manual: tr("수동 보기") };
+      this.label = names[mode] || (target ? '#' + target.id + ' ' + (target.label ?? target.name) + (target.finished ? tr(" · 완주") : '') : tr("결승선"));
+      if(mode==='winning')this.label=tr("당첨 {0}등 {1}",[winningRank,game.order[winningRank-1]?tr("확정"):tr("후보")])+(target?' · #'+target.id:'');
+      if (this.mode === 'auto') this.label = tr("자동 중계 · ") + this.label;
       this.target = target;
     }
     apply(ctx, dpr) {

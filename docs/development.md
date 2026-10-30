@@ -4,6 +4,8 @@
 
 HTML, CSS와 브라우저 JavaScript로 실행하는 정적 웹앱입니다. 화면과 입력 처리는 `app.js`, 코스와 충돌 계산은 `course.js`, 카메라 좌표는 `camera.js`, 참가자 명단은 `roster.js`, 능력은 `battle.js`에서 주로 관리합니다.
 
+번역은 `locales/en.js`와 `locales/ja.js`에서 관리합니다. 한국어 원문을 키로 사용하며, 동적 문구의 `{0}`, `{1}` 등은 순서에 맞춰 보존합니다. 사용자 입력 이름과 내부 ID는 번역하지 않습니다. 문구를 수정한 뒤 `node scripts/build-locales.cjs`를 실행하면 영어·일본어 정적 페이지, 사이트맵과 `dist/`를 갱신합니다. 외부 라이브러리는 필요하지 않습니다.
+
 ## 수정 절차
 
 1. 관련 코드와 현재 동작을 확인하고 필요한 범위만 수정합니다.
@@ -21,6 +23,7 @@ Node.js가 있는 환경에서는 저장소 루트에서 필요한 검사를 선
 node tests/roster.cjs
 node tests/winning-settings.cjs
 node tests/winning-camera.cjs
+node tests/localization.cjs
 ```
 
 일반 경주의 실제 결승 통과·순위·정체 복구, 참가자 수량·당첨 등수, 카메라·배속·모바일 입력은 변경된 기능에 맞춰 점검합니다. 시뮬레이션 완주 시간은 실제 기기의 프레임 성능이나 휴대폰 실기기 검증과 구분합니다.

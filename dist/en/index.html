@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <base href="../">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#fff8eb">
+  <title>Coffee Marble</title>
+  <meta name="description" content="Coffee Marble is a free marble racing game to decide who buys coffee. Paste names, race up to 1,000 marbles, choose the winning place and try ability battles on desktop or mobile. No sign-up.">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta name="google-site-verification" content="vOq4Gp9Xw1tFIRvdxE0gJ1HDRLVQOeA2pLY8xMCYmRY">
+  <link rel="canonical" href="https://rockcandy444.github.io/coffeemarble/en/">
+  <link rel="sitemap" type="application/xml" href="sitemap.xml">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:site_name" content="Coffee Marble">
+  <meta property="og:title" content="Coffee Marble">
+  <meta property="og:description" content="A free marble race to decide who buys coffee. Paste names, pick a winning place and try ability battles on desktop or mobile.">
+  <meta property="og:url" content="https://rockcandy444.github.io/coffeemarble/en/">
+  <meta property="og:image" content="https://rockcandy444.github.io/coffeemarble/social-preview.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Coffee Marble coffee bean logo">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Coffee Marble">
+  <meta name="twitter:description" content="Free marble racing to decide who buys coffee. Play on desktop or mobile without signing up.">
+  <meta name="twitter:image" content="https://rockcandy444.github.io/coffeemarble/social-preview.png">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "@id": "https://rockcandy444.github.io/coffeemarble/en/#game",
+  "name": "Coffee Marble",
+  "alternateName": [
+    "Coffee Marble"
+  ],
+  "url": "https://rockcandy444.github.io/coffeemarble/en/",
+  "description": "Coffee Marble is a free marble racing game to decide who buys coffee. Paste names, race up to 1,000 marbles, choose the winning place and try ability battles on desktop or mobile. No sign-up.",
+  "applicationCategory": "GameApplication",
+  "operatingSystem": "Web browser",
+  "browserRequirements": "JavaScript and HTML5 Canvas support",
+  "inLanguage": "en",
+  "isAccessibleForFree": true,
+  "image": "https://rockcandy444.github.io/coffeemarble/social-preview.png",
+  "author": {
+    "@type": "Person",
+    "name": "RockCandy"
+  },
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "KRW"
+  }
+}
+  </script>
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=48">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="favicon.svg?v=48">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=48">
+  <link rel="alternate" hreflang="ko" href="https://rockcandy444.github.io/coffeemarble/">
+  <link rel="alternate" hreflang="en" href="https://rockcandy444.github.io/coffeemarble/en/">
+  <link rel="alternate" hreflang="ja" href="https://rockcandy444.github.io/coffeemarble/ja/">
+  <link rel="alternate" hreflang="x-default" href="https://rockcandy444.github.io/coffeemarble/">
+  <link rel="stylesheet" href="styles.css?v=53">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="en/" aria-label="Home">
+        <span class="brand-mark brand-coffee" aria-hidden="true">☕</span>
+        <span>Coffee <strong>Marble</strong></span>
+      </a>
+      <div class="topbar-actions"><span class="local-badge"><span aria-hidden="true">☕</span> One race. One coffee.</span><button id="beanWipe" class="bean-wipe" type="button" aria-label="Wipe up the coffee and return to normal marbles" title="Wipe up the coffee and return to normal marbles" hidden><svg viewBox="0 0 40 40" aria-hidden="true" focusable="false"><path d="M7 12Q11 8 17 11L29 8L34 29Q30 27 26 31L10 34Q8 28 5 26Z" fill="#d2ece5" stroke="#5d9c92" stroke-width="2" stroke-linejoin="round"/><path d="M10 15L26 12L30 27L12 30ZM14 13Q13 22 17 30M23 12Q21 23 25 29" fill="none" stroke="#84b6ac" stroke-width="1" stroke-dasharray="2 2"/><path d="M25 1L27 7L33 9L27 11L25 17L23 11L17 9L23 7Z" fill="#fff7d1" stroke="#c5a756"/></svg></button></div>
+    </header>
+
+    <section class="intro" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow">Who's buying coffee today?</p>
+        <h1 id="page-title">Let the marbles decide<span>!</span></h1>
+        <p class="intro-copy">Places are decided by the order marbles cross the finish line.</p>
+      </div>
+      <button id="beanTrigger" class="coffee-doodle coffee-bean-doodle" type="button" aria-label="Coffee bean">
+        <svg viewBox="0 0 64 64" focusable="false" aria-hidden="true">
+          <defs><linearGradient id="coffeeBeanRoast" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#bd8a5d"/><stop offset=".48" stop-color="#8c5637"/><stop offset="1" stop-color="#523021"/></linearGradient></defs>
+          <ellipse cx="32" cy="32" rx="19" ry="27" transform="rotate(32 32 32)" fill="url(#coffeeBeanRoast)"/>
+          <path d="M43 10C22 23 41 37 22 54" fill="none" stroke="#44271e" stroke-width="4.5" stroke-linecap="round"/>
+          <path d="M44 12C24 25 43 38 24 53" fill="none" stroke="#d5a171" stroke-opacity=".55" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M24 14C14 20 10 33 16 43" fill="none" stroke="#efc092" stroke-opacity=".35" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </section>
+
+    <nav class="steps" aria-label="Race steps">
+      <div class="step active" data-step="setup"><span>1</span> Players</div>
+      <i aria-hidden="true"></i>
+      <div class="step" data-step="map"><span>2</span> Map</div>
+      <i aria-hidden="true"></i>
+      <div class="step" data-step="race"><span>3</span> Race</div>
+      <i aria-hidden="true"></i>
+      <div class="step" data-step="results"><span>4</span> Results</div>
+    </nav>
+
+    <section id="setupView" class="view card setup-view">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">STEP 1 · PLAYERS</p>
+          <h2>Who's racing today?</h2>
+        </div>
+        <span class="count-pill" id="participantCount">3 players · 15 marbles</span>
+      </div>
+      <div class="setup-grid">
+        <div class="name-entry">
+          <label for="namesInput">Paste your player list</label>
+          <textarea id="namesInput" rows="6" spellcheck="false" aria-describedby="nameHelp" placeholder="Alex * 5, Sam, Jordan * 2"></textarea>
+          <div id="nameHelp" class="field-note">Separate names with line breaks, commas or tabs. You can paste a name column from a spreadsheet.<br><strong>Alex * 5</strong> → 5 marbles with the same color and pattern. Use 2–1,000 marbles in total!</div>
+          <div class="roster-preview" aria-label="Player list preview">
+            <div id="rosterSummary" class="roster-summary" aria-live="polite"></div>
+            <ul id="rosterPreview" class="roster-list"></ul>
+          </div>
+          <p class="field-note handicap-note">Matching names belong to the same player. The owner finishing in your chosen place buys the coffee.</p>
+        </div>
+        <aside class="quick-entry">
+          <div class="quick-icon" aria-hidden="true">✦</div>
+          <h3>Quick start without names</h3>
+          <p>Use Player 1, Player 2… as names.<br>Default: 3 players, 5 marbles each.</p>
+          <label for="countInput">Players</label>
+          <div class="count-control">
+            <button id="countDown" class="stepper" type="button" aria-label="Remove one player">−</button>
+            <input id="countInput" type="number" min="1" max="1000" value="3" inputmode="numeric">
+            <button id="countUp" class="stepper" type="button" aria-label="Add one player">＋</button>
+          </div>
+          <label for="ballsPerPerson">Marbles per player</label>
+          <div class="count-control">
+            <button id="copiesDown" class="stepper" type="button" aria-label="One fewer marble per player">−</button>
+            <input id="ballsPerPerson" type="number" min="1" max="1000" value="5" inputmode="numeric" aria-describedby="defaultNamesHelp">
+            <button id="copiesUp" class="stepper" type="button" aria-label="One more marble per player">＋</button>
+          </div>
+          <p id="defaultNamesHelp" class="field-note">Also applies to names you enter yourself. Edit the * count in the list for individual amounts. Total: 2–1,000 marbles.</p>
+          <button id="generateNames" class="button button-soft" type="button">Fill with default names</button>
+        </aside>
+      </div>
+      <div class="winning-settings">
+        <label for="winnerMode">Coffee-winning place</label>
+        <select id="winnerMode"><option value="last">Last place</option><option value="first">First place</option><option value="custom">Choose a place</option></select>
+        <label id="winnerRankLabel" for="winnerRank" hidden>Winning place <input id="winnerRank" type="number" min="1" max="15" value="1" inputmode="numeric"> </label>
+        <p id="winningRankHelp" class="field-note" aria-live="polite"></p>
+      </div>
+      <div class="form-footer">
+        <p id="setupError" class="error-message" role="alert" aria-live="polite"></p>
+        <button id="confirmParticipants" class="button button-primary" type="button">Confirm players &amp; choose map <span aria-hidden="true">→</span></button>
+      </div>
+    </section>
+
+    <section id="mapView" class="view card map-view" hidden>
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">STEP 2 · CHOOSE A MAP</p>
+          <h2>Today's race course</h2>
+        </div>
+        <button id="editParticipants" class="text-button" type="button">← Edit players</button>
+      </div>
+      <p class="subheading"><strong id="mapParticipantSummary">3 players · 15 marbles</strong> are ready to race. Each player keeps their color and pattern. Starting positions shuffle every race!</p>
+      <p id="mapWinningSummary" class="winning-summary"></p>
+      <div class="map-options" role="radiogroup" aria-label="Race map">
+        <button class="map-card selected" data-map="pinball" role="radio" aria-checked="true" type="button">
+          <span class="map-visual pinball-visual" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><b>●</b></span>
+          <span class="map-card-copy"><strong>Pinball</strong><small>Power bumpers and dense pins · 6 sections · 10,800m</small></span>
+          <span class="map-check" aria-hidden="true">✓</span>
+        </button>
+        <button class="map-card" data-map="spinner" role="radio" aria-checked="false" type="button">
+          <span class="map-visual spinner-visual" aria-hidden="true"><i></i><i></i><i></i><b>●</b></span>
+          <span class="map-card-copy"><strong>Spinning Obstacles</strong><small>Curved walls, turnstiles and moving blocks · 6 sections · 11,700m</small></span>
+          <span class="map-check" aria-hidden="true">✓</span>
+        </button>
+        <button class="map-card" data-map="fork" role="radio" aria-checked="false" type="button">
+          <span class="map-visual fork-visual" aria-hidden="true"><i></i><i></i><b>●</b></span>
+          <span class="map-card-copy"><strong>Crossroads</strong><small>Wide and narrow forks, diamond obstacles · 6 sections · 12,600m</small></span>
+          <span class="map-check" aria-hidden="true">✓</span>
+        </button>
+        <button class="map-card" data-map="factory" role="radio" aria-checked="false" type="button">
+          <span class="map-visual factory-visual" aria-hidden="true">🏭</span>
+          <span class="map-card-copy"><strong>Conveyor Factory</strong><small>Conveyors, presses and sorters · 6 sections · 11,400m</small></span><span class="map-check" aria-hidden="true">✓</span>
+        </button>
+        <button class="map-card" data-map="rapids" role="radio" aria-checked="false" type="button">
+          <span class="map-visual rapids-visual" aria-hidden="true">🌊</span>
+          <span class="map-card-copy"><strong>Rapids Valley</strong><small>Split streams, crossing rapids and rocky islands · 6 sections · 12,300m</small></span><span class="map-check" aria-hidden="true">✓</span>
+        </button>
+        <button class="map-card" data-map="ruins" role="radio" aria-checked="false" type="button">
+          <span class="map-visual ruins-visual" aria-hidden="true">🏛️</span>
+          <span class="map-card-copy"><strong>Crumbling Ruins</strong><small>Pillars, collapsing corridors and rockfalls · 6 sections · 12,900m</small></span><span class="map-check" aria-hidden="true">✓</span>
+        </button>
+      </div>
+      <button id="randomMap" class="random-map" type="button" aria-pressed="false">🎲 Random map <span>Draw a course at the start</span></button>
+      <section id="hiddenMapPanel" class="hidden-map-panel" aria-label="Secret routes" hidden>
+        <div><span aria-hidden="true">✦</span><h3>Secret routes</h3><p id="hiddenMapMessage" role="status" aria-live="polite"></p></div>
+        <div class="hidden-map-options"><button id="chooseObservatory" data-hidden-map="observatory" type="button" aria-pressed="false" hidden><strong>🌠 Comet Observatory</strong><span>Orbits, starlight gates and comet debris · 6 sections · 13,500m</span></button><button id="chooseRift" data-hidden-map="rift" type="button" aria-pressed="false" hidden><strong>🌌 Dimensional Rift</strong><span>Seven worlds and three distinct exits · 8 sections · 25,000m</span></button></div>
+      </section>
+      <div class="mode-settings">
+        <label for="raceMode">Play mode</label>
+        <select id="raceMode"><option value="normal">Normal race</option><option value="battle">Ability Battle · 50 abilities</option></select>
+        <p id="modeHelp">Race with the standard rules and an optional golden marble event.</p>
+      </div>
+      <p id="mapMechanicHelp" class="field-note" hidden></p>
+      <details id="sectionGuide" class="section-guide" hidden><summary id="sectionGuideTitle">Explore 6 sections</summary><ol id="sectionPlanList"></ol></details>
+      <details id="battleGuide" class="battle-guide" hidden>
+        <summary>Battle rules &amp; all 50 abilities</summary>
+        <p>In battle, each marble gets one automatic ability. In normal races, only a selected golden marble gets an ability. Brief protection follows disruption. Near the finish, a safe zone limits disruption, teleporting, resizing and obstacle phasing.</p>
+        <div id="abilityCatalog" class="ability-catalog"></div>
+      </details>
+      <div id="cometReservation" class="comet-reservation" role="status" aria-live="polite" hidden><span>☄ Secret command accepted! One random marble gets Comet Rush in the next race.</span><button id="cancelComet" type="button">Cancel reservation</button></div>
+      <div class="event-option" id="goldenOption">
+        <label class="event-toggle" for="goldenEnabled">
+          <input id="goldenEnabled" type="checkbox" checked aria-describedby="goldenOptionHelp">
+          <span><strong>Golden marble event</strong><small id="goldenOptionHelp">When enabled, one marble occasionally gets a special ability. Turn it off for an ordinary race.</small></span>
+        </label>
+      </div>
+      <div class="form-footer map-footer">
+        <span class="field-note">A random goalkeeper is chosen for each race.</span>
+        <button id="startRace" class="button button-primary" type="button">Start race <span aria-hidden="true">→</span></button>
+      </div>
+    </section>
+
+    <section id="raceView" class="view race-view" hidden>
+      <div class="race-heading">
+        <div>
+          <p class="eyebrow">STEP 3 · RACE IN PROGRESS</p>
+          <h2 id="raceTitle">Pinball Course</h2>
+        </div>
+      </div>
+      <div class="race-controls">
+        <div class="race-tools">
+          <span id="raceProgress" class="progress-pill">0 / 2 finished</span>
+          <label class="race-speed" for="raceSpeed"><span class="control-full">Speed</span>
+            <select id="raceSpeed" aria-label="Race speed"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select>
+          </label>
+          <button id="pauseRace" class="button button-small button-soft" type="button">Pause</button>
+          <button id="trackComet" class="comet-track" type="button" hidden><span class="comet-track-spark" aria-hidden="true">✦</span><span id="trackCometLabel" class="control-full">Track comet</span><span id="trackCometShort" class="control-short" aria-hidden="true">Comet</span></button>
+          <button id="openBattleAbilities" class="battle-open" type="button" aria-label="My abilities" hidden><span class="control-full">My abilities</span><span class="control-short" aria-hidden="true">Abilities</span></button>
+        </div>
+      <div class="camera-toolbar" aria-label="Race camera settings">
+        <label for="cameraSelect">Camera</label>
+        <select id="cameraSelect" aria-label="Camera view"></select>
+        <div class="camera-zoom">
+          <button id="cameraZoomOut" type="button" aria-label="Zoom out">−</button>
+          <output id="cameraZoomLabel">1.0×</output>
+          <button id="cameraZoomIn" type="button" aria-label="Zoom in">＋</button>
+          <button id="cameraReset" type="button">Auto</button>
+        </div>
+        <span id="cameraStatus">Auto · Ready to start</span>
+      </div>
+      </div>
+      <div class="race-layout card">
+        <div class="track-column">
+          <div class="canvas-wrap">
+            <canvas id="raceCanvas" width="1000" height="600" aria-label="Marble race view. Tap a marble to follow, drag with one finger to pan, and pinch with two fingers to zoom." role="img"></canvas>
+            <canvas id="miniMap" width="70" height="210" aria-label="Minimap: click or drag to move the camera, or use arrow keys" role="button" tabindex="0"></canvas>
+            <div id="cameraBadge" class="camera-badge">AUTO · Auto camera</div>
+            <div id="keeperLabel" class="keeper-label"></div>
+            <div class="hazard-key" id="hazardKey"><span>⚡ Power bumper</span><span>Ⓜ Magnet</span><span>↔ Wind</span><span>◆ Defender</span></div>
+            <div id="startCountdown" class="start-countdown" role="status" aria-live="polite" aria-atomic="true" hidden>
+              <small id="countdownHelp">Get ready</small>
+              <strong id="countdownNumber">3</strong>
+            </div>
+            <div id="goldenReveal" class="golden-reveal" role="status" aria-live="polite" hidden>
+              <div class="golden-orb" id="goldenOrb" aria-hidden="true"></div>
+              <strong id="revealTitle">A golden marble appears!</strong>
+              <span id="goldenOwner"></span>
+              <b id="goldenAbility"></b>
+              <p id="goldenDescription"></p>
+              <small>The race starts shortly</small>
+            </div>
+          </div>
+          <div class="track-legend">
+            <span><i class="legend-start"></i> Start</span>
+            <span><i class="legend-finish"></i> Finish</span>
+            <span id="raceWinningSummary"></span>
+            <span id="raceStatus" aria-live="polite">The marbles are waiting to start.</span>
+          </div>
+          <div class="race-information" role="region" aria-label="Race info · Swipe sideways for more" tabindex="0">
+            <span class="race-information-label" aria-hidden="true">Info ↔</span>
+            <div id="goldenBadge" class="golden-badge" hidden></div>
+            <div id="beadInfo" class="bead-info" aria-live="polite">Pinch or scroll to zoom · Drag to pan · Use the minimap to navigate</div>
+            <div id="battleFeed" class="battle-feed" aria-live="off" hidden></div>
+          </div>
+          <div id="recoveryControls" class="recovery-controls" hidden>
+            <p id="recoveryMessage">Some marbles have been stuck, so the race is paused. Unfinished marbles are not automatically assigned last place.</p>
+            <button id="nudgeBalls" class="button button-soft" type="button">Nudge stuck marbles &amp; continue</button>
+            <button id="resumeRace" class="button button-primary button-small" type="button">Keep racing</button>
+          </div>
+        </div>
+        <aside class="live-sidebar">
+          <div class="live-title"><span class="live-dot"></span> <span id="liveTitle">Live race</span></div>
+          <p class="live-help">Follow the race and the finish order.</p>
+          <ol id="liveOrder" class="live-order"></ol>
+          <div class="live-footer" id="liveFooter">No marbles have crossed the finish line yet.</div>
+        </aside>
+      </div>
+      <div class="race-bottom-actions">
+        <button id="changeRaceSetup" class="text-button" type="button">Change players / map</button>
+        <button id="restartDuringRace" class="text-button" type="button">Restart this race</button>
+      </div>
+    </section>
+
+    <section id="resultsView" class="view results-view" hidden>
+      <div class="result-hero card">
+        <div class="confetti-mark" aria-hidden="true">✦</div>
+        <p class="eyebrow">STEP 4 · FINAL RESULTS</p>
+        <h2>Today's coffee is on…</h2>
+        <div class="coffee-winner" id="coffeeWinner"></div>
+        <p class="result-subtitle" id="resultSubtitle"></p>
+        <p class="golden-result" id="goldenResult" hidden></p>
+      </div>
+      <div class="card ranking-card">
+        <div class="section-heading ranking-heading">
+          <div><p class="eyebrow">FINISH ORDER</p><h2>Full standings</h2></div>
+          <span id="resultMapLabel" class="count-pill"></span>
+        </div>
+        <ol id="finalRanking" class="final-ranking"></ol>
+      </div>
+      <div class="result-actions">
+        <button id="rematch" class="button button-primary" type="button">Race again with these settings <span aria-hidden="true">↻</span></button>
+        <button id="newSetup" class="button button-soft" type="button">Change players / map</button>
+      </div>
+    </section>
+
+    <section id="game-about" class="game-about" aria-labelledby="game-about-title">
+      <h2 id="game-about-title">Coffee Marble: race to decide who buys coffee</h2>
+      <p>Coffee Marble is a free marble racing game for deciding who buys coffee at lunch or a get-together. Choose player names and a map, then watch the marbles race through obstacles to the finish. Play right in your desktop or mobile browser, with no sign-up or installation.</p>
+      <details>
+        <summary>How do I set names and marble counts?</summary>
+        <p>Paste names separated by line breaks, commas or tabs, including lists from spreadsheets. Write 'Alex * 5' to give one player multiple marbles. Race with 2–1,000 marbles in total.</p>
+      </details>
+      <details>
+        <summary>Can I choose a winning place other than last?</summary>
+        <p>Choose last place, first place or a custom place in player settings. Places follow the actual finish order, and the owner in your chosen place buys the coffee. In Ability Battle, every marble gets an automatic ability.</p>
+      </details>
+      <details>
+        <summary>Can I move the camera on mobile?</summary>
+        <p>Drag with one finger to pan and pinch with two fingers to zoom. On desktop, use mouse dragging and the scroll wheel. Tap or drag the minimap to view a section, and use speed controls or pause to watch at your own pace.</p>
+      </details>
+    </section>
+
+    <footer class="page-footer" aria-label="Creator and contact">
+      <div class="footer-meta">
+        <span class="footer-creator">© 2026 <strong>RockCandy</strong>. All rights reserved.</span>
+        <a class="footer-contact" href="mailto:ldh4563@gmail.com">Contact / Report a bug · ldh4563@gmail.com</a>
+        <a class="footer-support" href="https://open.kakao.com/o/s9U69KUi" target="_blank" rel="noopener noreferrer" aria-label="Buy the creator a coffee · Kakao Open Chat (new tab)" title="Open Kakao Open Chat (new tab)"><span aria-hidden="true">☕</span> Buy the creator a coffee</a>
+      </div>
+      <p class="footer-note">All places are based on the order marbles actually cross the finish line. <span>The game runs on this device.</span></p>
+      <nav class="footer-languages" aria-label="Language">
+        <span aria-hidden="true">🌐</span>
+        <a href="./" lang="ko" hreflang="ko" data-locale-link="ko">한국어</a>
+        <a href="en/" lang="en" hreflang="en" data-locale-link="en" aria-current="page">English</a>
+        <a href="ja/" lang="ja" hreflang="ja" data-locale-link="ja">日本語</a>
+      </nav>
+      <p id="languageStatus" class="field-note" role="status" aria-live="polite"></p>
+    </footer>
+  </main>
+  <dialog id="battleDialog" class="battle-dialog" aria-labelledby="battleDialogTitle">
+    <div class="battle-dialog-heading"><h2 id="battleDialogTitle">My abilities</h2></div>
+    <div id="battleDialogBody" class="battle-dialog-body">
+      <p>The race pauses while you view abilities. Tap a marble to follow it and check its activation status.</p>
+      <ul id="battleRoster" class="battle-roster"></ul>
+    </div>
+    <div class="battle-dialog-actions"><button id="closeBattleAbilities" type="button">Close &amp; return</button></div>
+  </dialog>
+  <div id="mapUnlockFx" class="map-unlock-fx" aria-hidden="true" hidden><div class="map-unlock-space"><i></i><i></i><i></i><b></b></div><span id="mapUnlockFxTitle"></span></div>
+  <div id="cometUnlockFx" class="comet-unlock-fx" aria-hidden="true" hidden><i class="comet-unlock-meteor"></i><i class="comet-unlock-burst"></i><span>☄ You discovered Comet Rush</span></div>
+  <script src="locales/en.js?v=53"></script>
+  <script src="i18n.js?v=53"></script>
+  <script src="course.js?v=53"></script>
+  <script src="camera.js?v=53"></script>
+  <script src="roster.js?v=53"></script>
+  <script src="golden.js"></script>
+  <script src="battle.js?v=53"></script>
+  <script src="maps.js?v=53"></script>
+  <script src="secret.js"></script>
+  <script src="hidden.js?v=53"></script>
+  <div id="coffeeDye" class="coffee-dye" aria-hidden="true" hidden></div><div id="beanFx" class="bean-fx" aria-hidden="true" hidden></div>
+  <script src="beans.js?v=53"></script>
+  <script src="app.js?v=53"></script>
+</body>
+</html>

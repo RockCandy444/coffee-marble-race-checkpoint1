@@ -1,14 +1,15 @@
 (() => {
   'use strict';
+  const tr = (key, values = []) => window.MarbleI18n ? window.MarbleI18n.t(key, values) : key.replace(/\{(\d+)\}/g, (_, i) => String(values[+i] ?? ''));
   const Course=window.MarbleCourse,Extra=window.ExtraCourses;
   const baseMaps=['pinball','spinner','fork','factory','rapids','ruins'];
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   const theme={backdrop:'#11142b',bank:'#1c2042',wall:'#6d70b4',wallLight:'#c7c8ff',ink:'#626b9b',base:'#252946',end:'#363052',finish:'#aaa7ff30'};
-  const names={observatory:['관측 정원','별빛 관문','혜성 잔해대','공전 회랑','성운 항로','천문대 수문장'],rift:['별의 탄생','궤도 관문','평행우주 분기','역행 항로','은하 소용돌이','붕괴하는 성역','천문대의 잔향','삼중 차원 출구']};
+  const names={observatory:[tr("관측 정원"),tr("별빛 관문"),tr("혜성 잔해대"),tr("공전 회랑"),tr("성운 항로"),tr("천문대 수문장")],rift:[tr("별의 탄생"),tr("궤도 관문"),tr("평행우주 분기"),tr("역행 항로"),tr("은하 소용돌이"),tr("붕괴하는 성역"),tr("천문대의 잔향"),tr("삼중 차원 출구")]};
   const starts={observatory:[180,2250,4450,6650,8850,11100],rift:[180,3400,6620,9840,13060,16280,19500,22720]};
-  const definitions=Object.fromEntries(Object.keys(names).map(id=>[id,{title:id==='rift'?'차원의 틈':'혜성 천문대',label:id==='rift'?'차원의 틈':'혜성 천문대',height:(id==='rift'?25000:13500)/3,sections:starts[id].map((y,i)=>[y/3,names[id][i]]),theme:{...theme},colors:['#252e4c','#302e50','#292f50','#34304f','#273d50','#38334e','#2e354f','#3c3152']}]));
+  const definitions=Object.fromEntries(Object.keys(names).map(id=>[id,{title:id==='rift'?tr("차원의 틈"):tr("혜성 천문대"),label:id==='rift'?tr("차원의 틈"):tr("혜성 천문대"),height:(id==='rift'?25000:13500)/3,sections:starts[id].map((y,i)=>[y/3,names[id][i]]),theme:{...theme},colors:['#252e4c','#302e50','#292f50','#34304f','#273d50','#38334e','#2e354f','#3c3152']}]));
   const has=id=>Object.hasOwn(definitions,id);
-  const plans={observatory:[['관측 정원','공전 위성','별 무리 범퍼'],['별빛 관문','개폐 관문','자석 성운'],['혜성 잔해대','교차하는 혜성 잔해','운석 발판'],['공전 회랑','공전 날개','궤도 위성'],['성운 항로','방향이 보이는 성운 물살','작은 블랙홀'],['천문대 수문장','별빛 검문소','골키퍼']],rift:names.rift.map((name,i)=>[name,['굽은 핀볼 협곡','넓은 공전 방과 두 갈래','세 갈래 평행 항로','좁은 역행 협곡','물살과 왼쪽 샛길','모래시계 붕괴 회랑','세 갈래 공전 합류','삼중 수문·무수문 협곡·이중 수문'][i],i===7?'폭과 굴곡이 다른 세 출구':'기존 대표 기믹과 새로운 지형'])};
+  const plans={observatory:[[tr("관측 정원"),tr("공전 위성"),tr("별 무리 범퍼")],[tr("별빛 관문"),tr("개폐 관문"),tr("자석 성운")],[tr("혜성 잔해대"),tr("교차하는 혜성 잔해"),tr("운석 발판")],[tr("공전 회랑"),tr("공전 날개"),tr("궤도 위성")],[tr("성운 항로"),tr("방향이 보이는 성운 물살"),tr("작은 블랙홀")],[tr("천문대 수문장"),tr("별빛 검문소"),tr("골키퍼")]],rift:names.rift.map((name,i)=>[name,[tr("굽은 핀볼 협곡"),tr("넓은 공전 방과 두 갈래"),tr("세 갈래 평행 항로"),tr("좁은 역행 협곡"),tr("물살과 왼쪽 샛길"),tr("모래시계 붕괴 회랑"),tr("세 갈래 공전 합류"),tr("삼중 수문·무수문 협곡·이중 수문")][i],i===7?tr("폭과 굴곡이 다른 세 출구"):tr("기존 대표 기믹과 새로운 지형")])};
   function configure(world,map){
     if(map==='rift')world.funnelY=world.height-1600;
     world.sideProfile=Array.from({length:49},(_,i)=>{

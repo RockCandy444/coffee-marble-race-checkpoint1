@@ -53,12 +53,26 @@
   }
   let switcher=new BeanSwitch(),stage='setup',config={},observer=null,pending=false;
   const textCache=new WeakMap(),attrCache=new WeakMap();
-  function words(text){if(!switcher.enabled)return text;let result=text;const held=[];for(const name of new Set(config.names?.()||[])){if(!name.includes('구슬'))continue;const escaped=name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');result=result.replace(new RegExp('(#\\d+\\s+)'+escaped,'g'),(_,prefix)=>{const token='\uE000'+held.length+'\uE001';held.push(name);return prefix+token;});}result=result.replace(/구슬로/g,'커피콩으로').replace(/구슬/g,'커피콩');return result.replace(/\uE000(\d+)\uE001/g,(_,i)=>held[+i]);}
+  function words(text){
+    if(!switcher.enabled)return text;
+    let result=text;const held=[];
+    const hold=value=>{const token='\uE000'+held.length+'\uE001';held.push(value);return token;};
+    for(const name of [...new Set(config.names?.()||[])].sort((a,b)=>b.length-a.length)){
+      if(!/구슬|marble|ビー玉/i.test(name))continue;
+      const escaped=name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+      result=result.replace(new RegExp('(#\\d+\\s+)'+escaped,'g'),(_,prefix)=>prefix+hold(name));
+    }
+    result=result.replace(/Coffee Marble/g,hold);
+    if(window.MarbleI18n?.locale==='en')result=result.replace(/\bmarbles?\b/gi,word=>(word[0]==='M'?'Coffee bean':'coffee bean')+(/s$/i.test(word)?'s':''));
+    else if(window.MarbleI18n?.locale==='ja')result=result.replace(/ビー玉/g,'コーヒー豆');
+    else result=result.replace(/구슬로/g,'커피콩으로').replace(/구슬/g,'커피콩');
+    return result.replace(/\uE000(\d+)\uE001/g,(_,i)=>held[+i]);
+  }
   function refresh(){
     pending=false;if(!document.createTreeWalker)return;const walker=document.createTreeWalker(document.body,4);let node;
-    while(node=walker.nextNode()){if(node.parentElement?.closest('script,style,textarea,input,.roster-list'))continue;const old=textCache.get(node),original=old&&node.data===old.shown?old.original:node.data,shown=words(original);textCache.set(node,{original,shown});if(node.data!==shown)node.data=shown;}
+    while(node=walker.nextNode()){if(node.parentElement?.closest('script,style,textarea,input,.roster-list,.brand'))continue;const old=textCache.get(node),original=old&&node.data===old.shown?old.original:node.data,shown=words(original);textCache.set(node,{original,shown});if(node.data!==shown)node.data=shown;}
     for(const el of document.querySelectorAll('[aria-label],[title],[placeholder]'))for(const attr of ['aria-label','title','placeholder']){if(el.id==='beanWipe'||!el.hasAttribute(attr))continue;const values=attrCache.get(el)||{},old=values[attr],current=el.getAttribute(attr),original=old&&current===old.shown?old.original:current,shown=words(original);values[attr]={original,shown};attrCache.set(el,values);if(current!==shown)el.setAttribute(attr,shown);}
-    document.title='Coffee Marble 커피마블';
+    document.title=window.MarbleI18n?.t('Coffee Marble 커피마블')||'Coffee Marble 커피마블';
   }
   function queueWords(){if(pending)return;pending=true;queueMicrotask(refresh);}
   function update(){document.body.classList.toggle('bean-mode',switcher.enabled);const wipe=document.querySelector('#beanWipe');if(wipe)wipe.hidden=!switcher.enabled||stage==='race';refresh();}
@@ -83,5 +97,5 @@
     }
   }
   function mount(options){config=options;switcher=new BeanSwitch({allowed:()=>config.allowed?.()!==false,change:animateMode});document.querySelector('#beanTrigger')?.addEventListener('click',()=>switcher.tap());document.querySelector('#beanWipe')?.addEventListener('click',()=>switcher.wipe());if(typeof MutationObserver!=='undefined'){observer=new MutationObserver(queueWords);observer.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['aria-label','title','placeholder']});}update();}
-  window.CoffeeBeans={BeanSwitch,ellipseSupport,radius,pinContact,segmentContact,pairContact,impact,tick,rescued,draw,words,mount,refresh,setStage(next){stage=next;update();},get enabled(){return switcher.enabled;},get busy(){return switcher.busy;}};
+  window.CoffeeBeans={BeanSwitch,ellipseSupport,radius,pinContact,segmentContact,pairContact,impact,tick,rescued,draw,words,mount,refresh,restoreMode(enabled){switcher.commit(!!enabled);update();},setStage(next){stage=next;update();},get enabled(){return switcher.enabled;},get busy(){return switcher.busy;}};
 })();

@@ -1,63 +1,64 @@
 (() => {
   'use strict';
+  const tr = (key, values = []) => window.MarbleI18n ? window.MarbleI18n.t(key, values) : key.replace(/\{(\d+)\}/g, (_, i) => String(values[+i] ?? ''));
   const abilities = [
-    ['ghost','유령 통과','👻','이동',8,1.5,'잠깐 벽을 제외한 장애물을 통과해요.'],
-    ['bumper','범퍼 변신','💥','방해',8,1.8,'몸에 닿는 다른 구슬을 튕겨내요.'],
-    ['heavy','헤비볼','⚓','방어',0,0,'조금 더 빠르게 내려가고 덜 밀려요.'],
-    ['immune','자석·바람 면역','🧲','방어',0,0,'자석과 바람의 힘을 받지 않아요.'],
-    ['warp','순간 도약','✨','이동',11,0,'아래쪽의 안전한 빈자리로 짧게 이동해요.'],
-    ['rocket','로켓 부스터','🚀','이동',7,.9,'짧고 강하게 아래로 가속해요.'],
-    ['wallkick','벽차기','↘','이동',3,0,'벽에 닿으면 중앙 아래쪽으로 튀어나와요.'],
-    ['path','빈틈 탐색','🧭','이동',7,1.4,'가까운 빈 통로 쪽으로 방향을 바꿔요.'],
-    ['shrink','압축 구슬','🔹','이동',9,1.8,'잠깐 작아져 좁은 틈을 빠져나가요.'],
-    ['frog','개구리 점프','🐸','이동',6,0,'앞이 막힐 때 빈 방향으로 옆·아래 도약해요. 하강 속도는 유지해요.'],
-    ['shield','충격 보호막','🛡','방어',7,0,'다른 구슬의 방해를 한 번 막아요.'],
-    ['absorb','충격 흡수','🧽','방어',7,2,'잠깐 장애물에 크게 튕겨 올라가지 않아요.'],
-    ['reflect','반사 갑옷','🔁','방어',8,2,'받은 공격을 막고 공격자에게 충격을 돌려줘요.'],
-    ['orbphase','구슬 통과','🫧','방어',8,1.6,'잠깐 다른 구슬과 겹쳐 지나가요.'],
-    ['cleanse','상태 정화','💚','방어',6,2,'방해를 풀고 잠깐 다시 걸리지 않아요.'],
-    ['windride','바람 타기','🪁','이동',0,0,'바람의 일부를 아래쪽 추진력으로 바꿔요.'],
-    ['reverse','자력 반전','🧲','방어',8,2,'잠깐 자석에 끌리는 대신 밀려나요.'],
-    ['shock','충격파','💫','방해',9,0,'가까운 구슬들을 바깥쪽으로 밀어내요.'],
-    ['vacuum','진공 흡입','🌀','방해',9,1.2,'주변 구슬을 잠깐 자기 쪽으로 끌어당겨요.'],
-    ['lightning','번개 추격','⚡','방해',8,0,'가까운 앞쪽 구슬 하나를 잠깐 감속시켜요.'],
-    ['ice','냉기 오라','❄','방해',9,1.5,'주변에 들어온 구슬을 짧게 감속시켜요.'],
-    ['goo','끈끈이 자국','🟢','방해',8,0,'0.25초 간격으로 끈끈이 3개를 남겨요. 각각 3.5초 동안 상대를 감속시켜요.'],
-    ['vortex','소용돌이','🌪','방해',10,0,'3.5초 동안 작은 소용돌이를 설치해요. 들어온 상대를 끌어당기며 휘돌게 해요.'],
-    ['freeze','기계 정지','⏸','방해',10,0,'주변의 움직이는 장애물·특수 핀 작동을 잠깐 멈춰요.'],
-    ['mine','반발 지뢰','💣','방해',9,0,'접촉하거나 10초가 지나면 폭발하는 지뢰를 설치해요. 주변 상대를 강하게 튕겨요.'],
-    ['mimic','모방 구슬','🎭','변수',12,2.2,'가까운 상대 능력을 잠깐 빌려요. 일반 모드에서는 무작위 능력을 빌려요.'],
-    ['reroll','변덕쟁이','🎲','변수',0,0,'다음 구간에 들어가면 다른 능력으로 바뀌어요.'],
-    ['swap','자리 교환','🔀','변수',13,0,'가까운 앞쪽 구슬과 안전할 때 자리를 바꿔요.'],
-    ['catchup','역전 본능','🔥','변수',0,0,'후미에 있을 때 하강력이 조금 강해져요.'],
-    ['charge','충전 구슬','🔋','변수',4,0,'충돌 에너지를 모아 부스터로 방출해요.'],
-    ['shortcut','지름길','⏩','이동',0,0,'첫 구간을 건너뛰고 2구간 시작부의 좌우 무작위 위치에서 출발해요. 이후에는 추가 효과가 없어요.'],
-    ['wallride','벽타기','🧗','이동',8,1.8,'잠깐 벽에 붙으면 튕기지 않고 벽을 따라 빠르게 내려가요.'],
-    ['swing','고무줄 스윙','🪢','이동',8,1.5,'가까운 핀에 줄을 걸고 주위를 돌아 빠져나와요.'],
-    ['springball','스프링볼','🏀','이동',8,1.6,'잠깐 탄성이 높아져 크게 튕겨요. 방향에 따라 손해도 봐요.'],
-    ['crossjump','횡단 도약','↔','이동',10,0,'현재 높이를 유지하며 반대편의 안전한 빈자리로 이동해요.'],
-    ['seeker','추적 탄환','🔸','방해',10,0,'앞선 구슬을 향해 짧게 날아가는 탄환으로 밀어내요.'],
-    ['slingshot','슬링샷','🎯','이동',6,0,'움직이는 장애물과 부딪히면 그 이동 방향으로 날아가요.'],
-    ['giant','거대화','🐘','방어',10,1.8,'잠깐 커져 다른 구슬을 밀기 쉬워져요. 좁은 틈에서는 불리해요.'],
-    ['sweeper','지뢰 청소부','🧹','방어',7,0,'주변의 지뢰와 끈끈이를 지워 모두가 지나갈 길을 만들어요.'],
-    ['revenge','보복 표식','🏷','방어',0,0,'공격을 받은 뒤 공격자에게 표식을 남겨 짧은 감속을 돌려줘요.'],
-    ['decoy','미끼 분신','👥','방어',9,2,'순위에 없는 분신이 번개나 추적 탄환을 한 번 대신 받아요.'],
-    ['confuse','혼란파','🔄','방해',9,0,'주변 구슬의 좌우 속도를 뒤집어요. 아래로 떨어지는 속도는 유지해요.'],
-    ['checkpoint','구간 가속','🏁','변수',0,0,'새 구간을 처음 통과할 때마다 짧게 가속해요.'],
-    ['tow','견인줄','🔗','변수',10,1.4,'가까운 구슬과 잠깐 연결돼 서로 당겨요. 상대 위치에 따라 손해도 봐요.'],
-    ['ring','가속 링','⭕','변수',9,0,'4초 동안 통과하면 가속되는 링을 만들어요. 다른 구슬도 이용할 수 있어요.'],
-    ['ramp','임시 경사판','📐','변수',10,0,'뒤쪽에 4초 동안 경사판을 만들어 뒤따르는 구슬의 경로를 바꿔요.'],
-    ['machinefast','기계 가속','⚙','변수',10,0,'주변 기계의 움직임과 특수 핀의 힘을 잠깐 빠르고 강하게 바꿔요.'],
-    ['convert','범퍼 변환','✨','변수',9,0,'가까운 일반 핀 하나를 잠깐 강한 범퍼로 바꿔요. 누구나 영향을 받아요.'],
-    ['machinereverse','흐름 역전','⏮','변수',11,0,'주변 기계·자석·바람의 방향과 급류·소용돌이 흐름을 잠깐 뒤집어요. 모두에게 적용돼요.'],
-    ['portal','공용 포털','🌀','변수',12,0,'3.5초 동안 짧은 거리를 잇는 포털을 만들어요. 다른 구슬도 이용해요.']
+    ['ghost',tr("유령 통과"),'👻',tr("이동"),8,1.5,tr("잠깐 벽을 제외한 장애물을 통과해요.")],
+    ['bumper',tr("범퍼 변신"),'💥',tr("방해"),8,1.8,tr("몸에 닿는 다른 구슬을 튕겨내요.")],
+    ['heavy',tr("헤비볼"),'⚓',tr("방어"),0,0,tr("조금 더 빠르게 내려가고 덜 밀려요.")],
+    ['immune',tr("자석·바람 면역"),'🧲',tr("방어"),0,0,tr("자석과 바람의 힘을 받지 않아요.")],
+    ['warp',tr("순간 도약"),'✨',tr("이동"),11,0,tr("아래쪽의 안전한 빈자리로 짧게 이동해요.")],
+    ['rocket',tr("로켓 부스터"),'🚀',tr("이동"),7,.9,tr("짧고 강하게 아래로 가속해요.")],
+    ['wallkick',tr("벽차기"),'↘',tr("이동"),3,0,tr("벽에 닿으면 중앙 아래쪽으로 튀어나와요.")],
+    ['path',tr("빈틈 탐색"),'🧭',tr("이동"),7,1.4,tr("가까운 빈 통로 쪽으로 방향을 바꿔요.")],
+    ['shrink',tr("압축 구슬"),'🔹',tr("이동"),9,1.8,tr("잠깐 작아져 좁은 틈을 빠져나가요.")],
+    ['frog',tr("개구리 점프"),'🐸',tr("이동"),6,0,tr("앞이 막힐 때 빈 방향으로 옆·아래 도약해요. 하강 속도는 유지해요.")],
+    ['shield',tr("충격 보호막"),'🛡',tr("방어"),7,0,tr("다른 구슬의 방해를 한 번 막아요.")],
+    ['absorb',tr("충격 흡수"),'🧽',tr("방어"),7,2,tr("잠깐 장애물에 크게 튕겨 올라가지 않아요.")],
+    ['reflect',tr("반사 갑옷"),'🔁',tr("방어"),8,2,tr("받은 공격을 막고 공격자에게 충격을 돌려줘요.")],
+    ['orbphase',tr("구슬 통과"),'🫧',tr("방어"),8,1.6,tr("잠깐 다른 구슬과 겹쳐 지나가요.")],
+    ['cleanse',tr("상태 정화"),'💚',tr("방어"),6,2,tr("방해를 풀고 잠깐 다시 걸리지 않아요.")],
+    ['windride',tr("바람 타기"),'🪁',tr("이동"),0,0,tr("바람의 일부를 아래쪽 추진력으로 바꿔요.")],
+    ['reverse',tr("자력 반전"),'🧲',tr("방어"),8,2,tr("잠깐 자석에 끌리는 대신 밀려나요.")],
+    ['shock',tr("충격파"),'💫',tr("방해"),9,0,tr("가까운 구슬들을 바깥쪽으로 밀어내요.")],
+    ['vacuum',tr("진공 흡입"),'🌀',tr("방해"),9,1.2,tr("주변 구슬을 잠깐 자기 쪽으로 끌어당겨요.")],
+    ['lightning',tr("번개 추격"),'⚡',tr("방해"),8,0,tr("가까운 앞쪽 구슬 하나를 잠깐 감속시켜요.")],
+    ['ice',tr("냉기 오라"),'❄',tr("방해"),9,1.5,tr("주변에 들어온 구슬을 짧게 감속시켜요.")],
+    ['goo',tr("끈끈이 자국"),'🟢',tr("방해"),8,0,tr("0.25초 간격으로 끈끈이 3개를 남겨요. 각각 3.5초 동안 상대를 감속시켜요.")],
+    ['vortex',tr("소용돌이"),'🌪',tr("방해"),10,0,tr("3.5초 동안 작은 소용돌이를 설치해요. 들어온 상대를 끌어당기며 휘돌게 해요.")],
+    ['freeze',tr("기계 정지"),'⏸',tr("방해"),10,0,tr("주변의 움직이는 장애물·특수 핀 작동을 잠깐 멈춰요.")],
+    ['mine',tr("반발 지뢰"),'💣',tr("방해"),9,0,tr("접촉하거나 10초가 지나면 폭발하는 지뢰를 설치해요. 주변 상대를 강하게 튕겨요.")],
+    ['mimic',tr("모방 구슬"),'🎭',tr("변수"),12,2.2,tr("가까운 상대 능력을 잠깐 빌려요. 일반 모드에서는 무작위 능력을 빌려요.")],
+    ['reroll',tr("변덕쟁이"),'🎲',tr("변수"),0,0,tr("다음 구간에 들어가면 다른 능력으로 바뀌어요.")],
+    ['swap',tr("자리 교환"),'🔀',tr("변수"),13,0,tr("가까운 앞쪽 구슬과 안전할 때 자리를 바꿔요.")],
+    ['catchup',tr("역전 본능"),'🔥',tr("변수"),0,0,tr("후미에 있을 때 하강력이 조금 강해져요.")],
+    ['charge',tr("충전 구슬"),'🔋',tr("변수"),4,0,tr("충돌 에너지를 모아 부스터로 방출해요.")],
+    ['shortcut',tr("지름길"),'⏩',tr("이동"),0,0,tr("첫 구간을 건너뛰고 2구간 시작부의 좌우 무작위 위치에서 출발해요. 이후에는 추가 효과가 없어요.")],
+    ['wallride',tr("벽타기"),'🧗',tr("이동"),8,1.8,tr("잠깐 벽에 붙으면 튕기지 않고 벽을 따라 빠르게 내려가요.")],
+    ['swing',tr("고무줄 스윙"),'🪢',tr("이동"),8,1.5,tr("가까운 핀에 줄을 걸고 주위를 돌아 빠져나와요.")],
+    ['springball',tr("스프링볼"),'🏀',tr("이동"),8,1.6,tr("잠깐 탄성이 높아져 크게 튕겨요. 방향에 따라 손해도 봐요.")],
+    ['crossjump',tr("횡단 도약"),'↔',tr("이동"),10,0,tr("현재 높이를 유지하며 반대편의 안전한 빈자리로 이동해요.")],
+    ['seeker',tr("추적 탄환"),'🔸',tr("방해"),10,0,tr("앞선 구슬을 향해 짧게 날아가는 탄환으로 밀어내요.")],
+    ['slingshot',tr("슬링샷"),'🎯',tr("이동"),6,0,tr("움직이는 장애물과 부딪히면 그 이동 방향으로 날아가요.")],
+    ['giant',tr("거대화"),'🐘',tr("방어"),10,1.8,tr("잠깐 커져 다른 구슬을 밀기 쉬워져요. 좁은 틈에서는 불리해요.")],
+    ['sweeper',tr("지뢰 청소부"),'🧹',tr("방어"),7,0,tr("주변의 지뢰와 끈끈이를 지워 모두가 지나갈 길을 만들어요.")],
+    ['revenge',tr("보복 표식"),'🏷',tr("방어"),0,0,tr("공격을 받은 뒤 공격자에게 표식을 남겨 짧은 감속을 돌려줘요.")],
+    ['decoy',tr("미끼 분신"),'👥',tr("방어"),9,2,tr("순위에 없는 분신이 번개나 추적 탄환을 한 번 대신 받아요.")],
+    ['confuse',tr("혼란파"),'🔄',tr("방해"),9,0,tr("주변 구슬의 좌우 속도를 뒤집어요. 아래로 떨어지는 속도는 유지해요.")],
+    ['checkpoint',tr("구간 가속"),'🏁',tr("변수"),0,0,tr("새 구간을 처음 통과할 때마다 짧게 가속해요.")],
+    ['tow',tr("견인줄"),'🔗',tr("변수"),10,1.4,tr("가까운 구슬과 잠깐 연결돼 서로 당겨요. 상대 위치에 따라 손해도 봐요.")],
+    ['ring',tr("가속 링"),'⭕',tr("변수"),9,0,tr("4초 동안 통과하면 가속되는 링을 만들어요. 다른 구슬도 이용할 수 있어요.")],
+    ['ramp',tr("임시 경사판"),'📐',tr("변수"),10,0,tr("뒤쪽에 4초 동안 경사판을 만들어 뒤따르는 구슬의 경로를 바꿔요.")],
+    ['machinefast',tr("기계 가속"),'⚙',tr("변수"),10,0,tr("주변 기계의 움직임과 특수 핀의 힘을 잠깐 빠르고 강하게 바꿔요.")],
+    ['convert',tr("범퍼 변환"),'✨',tr("변수"),9,0,tr("가까운 일반 핀 하나를 잠깐 강한 범퍼로 바꿔요. 누구나 영향을 받아요.")],
+    ['machinereverse',tr("흐름 역전"),'⏮',tr("변수"),11,0,tr("주변 기계·자석·바람의 방향과 급류·소용돌이 흐름을 잠깐 뒤집어요. 모두에게 적용돼요.")],
+    ['portal',tr("공용 포털"),'🌀',tr("변수"),12,0,tr("3.5초 동안 짧은 거리를 잇는 포털을 만들어요. 다른 구슬도 이용해요.")]
   ].map(([id,name,icon,group,cooldown,duration,description]) => ({id,name,icon,group,cooldown,duration,description}));
   const byId = new Map(abilities.map(a => [a.id,a]));
-  const hiddenAbility={id:'comet',name:'혜성 질주',icon:'☄',group:'히든',cooldown:15,duration:3,description:'3초간 벽을 제외한 장애물을 통과하며 가속해요. 혜성 꼬리에 닿은 다른 구슬을 짧게 감속시켜요. 15초마다 발동해요.'};
+  const hiddenAbility={id:'comet',name:tr("혜성 질주"),icon:'☄',group:tr("히든"),cooldown:15,duration:3,description:tr("3초간 벽을 제외한 장애물을 통과하며 가속해요. 혜성 꼬리에 닿은 다른 구슬을 짧게 감속시켜요. 15초마다 발동해요.")};
   byId.set('comet',hiddenAbility);
   // Ordinary marbles can receive a golden marble's attacks without gaining a power.
-  byId.set(null,{id:null,name:'일반 구슬',cooldown:0,duration:0,description:'특별한 능력 없이 달려요.'});
-  const colors = {이동:'#dc9a29',방어:'#2b9d9b',방해:'#aa66ca',변수:'#e56e68',히든:'#58a8cf'};
+  byId.set(null,{id:null,name:tr("일반 구슬"),cooldown:0,duration:0,description:tr("특별한 능력 없이 달려요.")});
+  const colors = {[tr('이동')]:'#dc9a29',[tr('방어')]:'#2b9d9b',[tr('방해')]:'#aa66ca',[tr('변수')]:'#e56e68',[tr('히든')]:'#58a8cf'};
   const clamp = (v,a,b) => Math.max(a,Math.min(b,v));
   const effective = ball => ball.battle?.borrowId || ball.battle?.id;
   const ability = ball => byId.get(effective(ball));
@@ -165,15 +166,15 @@
   function hit(game,source,target,vx=0,vy=0,slow=0,reflected=false,status=null) {
     const now=game.time,s=target.battle;
     if(!s||target.finished||safeZone(status?.origin||source,game.battle.world)||safeZone(target,game.battle.world)||s.guardUntil>now||s.controlGrace>now)return false;
-    if(s.shield>0){s.shield--;s.controlGrace=now+1;emit(game,target,'shield','방어');return false;}
-    if(active(target,'reflect',now)&&!reflected){s.controlGrace=now+1;emit(game,target,'reflect','반사');hit(game,target,source,-vx*.65,Math.abs(vy)*.3,0,true,status?{...status,origin:undefined}:null);return false;}
-    if(status?.targeted&&active(target,'decoy',now)&&s.decoyCharges){s.decoyCharges=0;emit(game,target,'decoy','분신 소멸');return false;}
+    if(s.shield>0){s.shield--;s.controlGrace=now+1;emit(game,target,'shield',tr("방어"));return false;}
+    if(active(target,'reflect',now)&&!reflected){s.controlGrace=now+1;emit(game,target,'reflect',tr("반사"));hit(game,target,source,-vx*.65,Math.abs(vy)*.3,0,true,status?{...status,origin:undefined}:null);return false;}
+    if(status?.targeted&&active(target,'decoy',now)&&s.decoyCharges){s.decoyCharges=0;emit(game,target,'decoy',tr("분신 소멸"));return false;}
     const force=Math.hypot(vx,vy),scale=force>240?240/force:1;
     target.vx+=vx*scale;target.vy+=vy*scale;
     s.slowUntil=now+Math.min(1.1,slow);s.controlGrace=now+Math.max(1.5,slow+1.2);
     if(status?.confuse){target.vx=-target.vx;s.confusedUntil=now+1;}
     if(effective(target)==='revenge'&&!reflected&&now>=s.revengeReadyAt){
-      s.revengeReadyAt=now+7;game.battle.marks.push({owner:target.id,target:source.id,at:now+.7,until:now+1.5});emit(game,target,'revenge','표식');
+      s.revengeReadyAt=now+7;game.battle.marks.push({owner:target.id,target:source.id,at:now+.7,until:now+1.5});emit(game,target,'revenge',tr("표식"));
     }
     s.lastAttacker=source.id;return true;
   }
@@ -422,7 +423,7 @@
       for(const target of nearby(owner,game,430))for(let i=1;i<trail.length;i++){
         const p=trail[i-1],q=trail[i];
         if(segmentDistance(target.x,target.y,{x1:p.x,y1:p.y,x2:q.x,y2:q.y})<target.r+owner.r+6){
-          if(hit(game,owner,target,0,0,.55))emit(game,owner,'comet','꼬리 감속');break;
+          if(hit(game,owner,target,0,0,.55))emit(game,owner,'comet',tr("꼬리 감속"));break;
         }
       }
     }
@@ -455,9 +456,9 @@
     battle.marks=battle.marks.filter(m=>m.until>now).slice(-80);
     for(const object of battle.structures)for(const ball of ranked){
       if(safeZone(ball,world)||object.used.has(ball.id)||Math.hypot(ball.x-object.x,ball.y-object.y)>ball.r+(object.kind==='ring'?30:23))continue;
-      if(object.kind==='ring'){object.used.add(ball.id);boost(ball,now,100);emit(game,ball,'ring','공용 링');}
+      if(object.kind==='ring'){object.used.add(ball.id);boost(ball,now,100);emit(game,ball,'ring',tr("공용 링"));}
       else if(object.kind==='portal'&&ball.battle.portalGrace<=now&&clearAt(ball,object.exitX,object.exitY,game,env)){
-        object.used.add(ball.id);move(ball,{x:object.exitX,y:object.exitY});ball.vy=Math.max(60,ball.vy);ball.battle.portalGrace=now+1.5;emit(game,ball,'portal','공용 포털');
+        object.used.add(ball.id);move(ball,{x:object.exitX,y:object.exitY});ball.vy=Math.max(60,ball.vy);ball.battle.portalGrace=now+1.5;emit(game,ball,'portal',tr("공용 포털"));
       }
     }
   }
@@ -469,8 +470,8 @@
     if(!game?.battle)return;
     if(active(a,'bumper',game.time))hit(game,a,b,nx*180,ny*120);
     if(active(b,'bumper',game.time))hit(game,b,a,-nx*180,-ny*120);
-    if(active(a,'reflect',game.time)&&!active(b,'reflect',game.time)&&a.battle.controlGrace<=game.time&&hit(game,a,b,nx*105,ny*65)){a.battle.controlGrace=game.time+1.5;emit(game,a,'reflect','접촉 반사');}
-    if(active(b,'reflect',game.time)&&!active(a,'reflect',game.time)&&b.battle.controlGrace<=game.time&&hit(game,b,a,-nx*105,-ny*65)){b.battle.controlGrace=game.time+1.5;emit(game,b,'reflect','접촉 반사');}
+    if(active(a,'reflect',game.time)&&!active(b,'reflect',game.time)&&a.battle.controlGrace<=game.time&&hit(game,a,b,nx*105,ny*65)){a.battle.controlGrace=game.time+1.5;emit(game,a,'reflect',tr("접촉 반사"));}
+    if(active(b,'reflect',game.time)&&!active(a,'reflect',game.time)&&b.battle.controlGrace<=game.time&&hit(game,b,a,-nx*105,-ny*65)){b.battle.controlGrace=game.time+1.5;emit(game,b,'reflect',tr("접촉 반사"));}
     for(const ball of [a,b]){if(effective(ball)==='charge'&&game.time-ball.battle.lastImpact>.25){ball.battle.energy=Math.min(3,ball.battle.energy+1);ball.battle.lastImpact=game.time;}}
   }
   function obstacleHit(game,ball,previous,object=null,nx=0,ny=0,surfaceVx=0,surfaceVy=0){
@@ -510,22 +511,22 @@
   function caption(ball) {
     if(!ball.battle?.id)return '';
     const a=byId.get(ball.battle.id),copy=ball.battle.borrowId?'→'+ability(ball).name:'';
-    return (ball.battle.reroll&&a.id!=='reroll'?'🎲 변덕→':a.icon+' ')+a.name+copy;
+    return (ball.battle.reroll&&a.id!=='reroll'?tr("🎲 변덕→"):a.icon+' ')+a.name+copy;
   }
   function label(ball) {
     return ball.battle?.id?ball.label+' · '+caption(ball):ball.label;
   }
   function describe(ball,time) {
-    if(!ball.battle?.id)return '#'+ball.id+' '+ball.label+' · 일반 구슬';
+    if(!ball.battle?.id)return '#'+ball.id+' '+ball.label+tr(" · 일반 구슬");
     const a=byId.get(ball.battle.id),s=ball.battle;
-    let state=a.cooldown?'다음 '+Math.max(0,Math.ceil(s.next-time))+'초':a.id==='shortcut'?'2구간 출발 · 추가 효과 없음':'상시';
-    if(s.activeUntil>time)state='발동 중';if(s.shield)state='보호막 준비';
-    if(a.id==='charge')state='충전 '+s.energy+'/3';if(a.id==='reroll')state='다음 구간에서 변경';
-    if(a.id==='slingshot')state=s.next>time?'다음 '+Math.ceil(s.next-time)+'초':'움직이는 장애물 충돌 대기';
-    if(a.id==='revenge')state=s.revengeReadyAt>time?'재준비 '+Math.ceil(s.revengeReadyAt-time)+'초':'피격 대기';
-    if(a.id==='checkpoint')state='다음 구간 통과 대기';
-    if(s.confusedUntil>time)state+=' · 혼란';
-    return '#'+ball.id+' '+label(ball)+' · '+state+(s.reroll?' · 구간마다 재추첨':'')+' — '+a.description;
+    let state=a.cooldown?tr("다음 {0}초",[Math.max(0,Math.ceil(s.next-time))]):a.id==='shortcut'?tr("2구간 출발 · 추가 효과 없음"):tr("상시");
+    if(s.activeUntil>time)state=tr("발동 중");if(s.shield)state=tr("보호막 준비");
+    if(a.id==='charge')state=tr("충전 {0}/3",[s.energy]);if(a.id==='reroll')state=tr("다음 구간에서 변경");
+    if(a.id==='slingshot')state=s.next>time?tr("다음 {0}초",[Math.ceil(s.next-time)]):tr("움직이는 장애물 충돌 대기");
+    if(a.id==='revenge')state=s.revengeReadyAt>time?tr("재준비 {0}초",[Math.ceil(s.revengeReadyAt-time)]):tr("피격 대기");
+    if(a.id==='checkpoint')state=tr("다음 구간 통과 대기");
+    if(s.confusedUntil>time)state+=tr(" · 혼란");
+    return '#'+ball.id+' '+label(ball)+' · '+state+(s.reroll?tr(" · 구간마다 재추첨"):'')+' — '+a.description;
   }
   function drawWorld(ctx,game,camera) {
     if(!game.battle)return;
