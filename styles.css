@@ -265,6 +265,32 @@ body.race-active .race-information .hazard-key { bottom: 55px; }
   body.race-active .canvas-wrap .hazard-key { bottom: 7px; left: 7px; max-width: calc(100% - 14px); padding: 4px 6px; font-size: 8px; white-space: nowrap; }
 }
 
+/* V45: creator/contact footer, with an honest placeholder for future support. */
+.page-footer { margin-top: 24px; padding-top: 14px; border-top: 1px solid #e9ddca; line-height: 1.6; }
+.footer-meta { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 20px; font-size: 12px; }
+.footer-creator { color: #8b7259; }
+.footer-creator strong { margin-left: 4px; color: #795334; font-weight: 700; }
+.footer-contact { display: inline-flex; align-items: center; min-height: 44px; padding: 4px 2px; color: #90613e; text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
+.footer-contact:hover { color: #b96932; }
+.footer-contact:focus-visible { outline: 2px solid #b96932; outline-offset: 4px; border-radius: 3px; }
+.footer-support { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; padding: 6px 11px; border: 1px dashed #dfcdb5; border-radius: 20px; color: #8b7259; background: #fff3df; }
+.footer-support small { font-size: 10px; color: #967f69; }
+.footer-note { margin: 8px 0 0; font-size: 10px; }
+.footer-note span { display: inline-block; }
+body.bean-mode .page-footer { border-color: #71523c; }
+body.bean-mode .footer-creator, body.bean-mode .footer-contact { color: #dfc3a2; }
+body.bean-mode .footer-creator strong { color: #f5dfc2; }
+body.bean-mode .footer-contact:hover { color: #fff0d8; }
+body.bean-mode .footer-contact:focus-visible { outline-color: #e6ad72; }
+body.bean-mode .footer-support { color: #eed6b7; border-color: #a07a54; background: #513624; }
+body.bean-mode .footer-support small { color: #d6b694; }
+@media (max-width: 600px) {
+  .page-footer { margin-top: 20px; }
+  .footer-meta { gap: 2px 12px; }
+  .footer-support { margin-top: 4px; }
+  .footer-note { margin-top: 12px; }
+}
+
 /* Hidden routes sit below the unchanged six-card map grid. */
 .random-map { display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:8px; width:100%; margin:12px 0; padding:12px; border:1px dashed #b8a5cf; border-radius:12px; background:#f6f0fc; color:#71558c; font:inherit; font-size:13px; font-weight:700; cursor:pointer; }
 .random-map span { font-size:11px; font-weight:400; color:#93819e; }

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#fff8eb">
   <title>커피내기 구슬 경주</title>
-  <link rel="stylesheet" href="styles.css?v=44">
+  <link rel="stylesheet" href="styles.css?v=45">
 </head>
 <body>
   <main class="app-shell">
@@ -267,7 +267,14 @@
       </div>
     </section>
 
-    <footer class="page-footer">모든 순위는 실제 구슬이 결승선을 통과한 순서로 정해집니다. <span>· 이 기기에서만 실행돼요.</span></footer>
+    <footer class="page-footer" aria-label="제작자 및 문의 정보">
+      <div class="footer-meta">
+        <span class="footer-creator">제작 <strong>RockCandy</strong></span>
+        <a class="footer-contact" href="mailto:ldh4563@gmail.com">문의 · ldh4563@gmail.com</a>
+        <span class="footer-support"><span aria-hidden="true">☕</span> 제작자 커피 사주기 <small>준비 중</small></span>
+      </div>
+      <p class="footer-note">모든 순위는 실제 구슬이 결승선을 통과한 순서로 정해집니다. <span>이 기기에서만 실행돼요.</span></p>
+    </footer>
   </main>
   <dialog id="battleDialog" class="battle-dialog" aria-labelledby="battleDialogTitle">
     <div class="battle-dialog-heading"><h2 id="battleDialogTitle">내 구슬 능력</h2></div>
