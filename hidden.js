@@ -38,7 +38,7 @@
     return world.exitGates.map(g=>atPath(g.points,y)).reduce((a,b)=>Math.max(a.left-x,0,x-a.right)<=Math.max(b.left-x,0,x-b.right)?a:b);
   }
   function inside(x,y,r,world){const b=laneBounds(x,y,world);return (!b||x-r>=b.left-.01&&x+r<=b.right+.01)&&!(world.riftIslands||[]).some(s=>Math.abs(y-s.y)<s.ry&&Math.abs(x-s.x)<s.rx*(1-Math.abs(y-s.y)/s.ry)+r);}
-  function containStructure(ball,world){for(const s of world.riftIslands||[]){const dy=Math.abs(ball.y-s.y);if(dy>=s.ry)continue;const half=s.rx*(1-dy/s.ry)+ball.r+1;if(Math.abs(ball.x-s.x)<half){const sign=ball.x<s.x?-1:1;ball.x=s.x+sign*half;ball.vx=sign*Math.max(15,Math.abs(ball.vx)*.5);}}}
+  function containStructure(ball,world,onWall){for(const s of world.riftIslands||[]){const dy=Math.abs(ball.y-s.y);if(dy>=s.ry)continue;const half=s.rx*(1-dy/s.ry)+ball.r+1;if(Math.abs(ball.x-s.x)<half){const sign=ball.x<s.x?-1:1,slope=s.rx/s.ry*Math.sign(ball.y-s.y),length=Math.hypot(1,slope);ball.x=s.x+sign*half;if(!onWall?.(ball,sign/length,slope/length))ball.vx=sign*Math.max(15,Math.abs(ball.vx)*.5);}}}
   function finishSegments(world){return world.exitGates.flatMap(g=>['left','right'].flatMap(side=>g.points.slice(1).map((b,i)=>({x1:g.points[i][side]+(side==='left'?-4.5:4.5),y1:g.points[i].y,x2:b[side]+(side==='left'?-4.5:4.5),y2:b.y,radius:4.5,funnel:true}))));}
   function sideWalls(world){return world.sideProfile.slice(1).flatMap((b,i)=>{const a=world.sideProfile[i];return[{x1:a.left-4.5,y1:a.y,x2:b.left-4.5,y2:b.y,radius:4.5,sideWall:true},{x1:a.right+4.5,y1:a.y,x2:b.right+4.5,y2:b.y,radius:4.5,sideWall:true}];});}
   function distance(x,y,s){const dx=s.x2-s.x1,dy=s.y2-s.y1,t=clamp(((x-s.x1)*dx+(y-s.y1)*dy)/(dx*dx+dy*dy||1),0,1);return Math.hypot(x-s.x1-t*dx,y-s.y1-t*dy);}
@@ -66,6 +66,35 @@
         if(features.some(f=>Math.abs(f.y-y)<110&&(['gate'].includes(f.kind)||Math.abs((f.fraction||.5)*1000-x)<190)))continue;
         if(segments.some(s=>distance(x,y,s)<r+55))continue;
         pins.push({x,y,r,section,id:'observatory-pin-'+pins.length,stellar:true,...((row+col)%19===0?{kind:'power',range:0,kick:210}:{}),...((row*7+col+section)%43===0?{kind:'magnet',range:120,strength:420,r:16}:{} )});
+      }
+      if(section===0||section===5){
+        const diameter=2*Math.max(5.2,Math.min(11.2,12.5-.72*Math.sqrt(count)));
+        const addSupport=(x,y,r,power=false)=>{
+          const b=Course.bounds(y,world);
+          if(x-r-b.left<diameter+18||b.right-x-r<diameter+18)return false;
+          if(pins.some(p=>Math.hypot(p.x-x,p.y-y)<p.r+r+diameter+18))return false;
+          if(segments.some(s=>distance(x,y,s)<r+(s.radius||4.5)+diameter+24))return false;
+          if(features.some(f=>{
+            if(f.kind==='gate')return Math.abs(f.y-y)<100;
+            if(f.kind!=='orbit')return false;
+            const bank=Course.bounds(f.y,world),cx=bank.left+(bank.right-bank.left)*f.fraction;
+            return Math.abs(f.y-y)<f.range*.45+r+36&&Math.abs(cx-x)<f.range+r+36;
+          }))return false;
+          pins.push({x,y,r,section,id:'observatory-support-'+pins.length,stellar:true,observatorySupport:true,...(power?{kind:'power',range:0,kick:200}:{})});return true;
+        };
+        let added=0;const rows=section===0?19:17,target=section===0?34:22;
+        for(let step=0;step<rows&&added<target;step++)for(let col=0;col<5&&added<target;col++){
+          const row=step*7%rows;
+          const y=start+90+(span-180)*(row+.3+(col%2)*.2)/rows,b=Course.bounds(y,world);
+          const fraction=[.08,.27,.5,.73,.92][col]+Math.sin(row*1.7+col)*.014,r=8+(row+col)%3*4;
+          if(addSupport(b.left+(b.right-b.left)*fraction,y,r,added%11===4))added++;
+        }
+        // Keep the narrowing approach lively, clear of both defender sweeps and
+        // the final keeper. At least one full marble passage remains on each side.
+        if(section===5)for(const [row,offset]of [65,330,740].entries()){
+          const y=Math.min(world.funnelY+offset,world.finishY-330),b=Course.bounds(y,world),width=b.right-b.left;
+          for(const fraction of width>240?[.27,.73]:[.5])addSupport(b.left+width*fraction,y,10+row*2,row===1&&fraction<.5);
+        }
       }
     });
     starPins(pins);

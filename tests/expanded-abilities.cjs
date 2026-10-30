@@ -10,7 +10,7 @@ function arena(id) {
  game.balls.forEach((b,i)=>{Object.assign(b,{x:450+i*40,y:1000+i*60,vx:0,vy:30,maxY:1000+i*60});battle.assign(game,b,i===0?id:null);b.battle.next=100;});
  return {game,world,a:game.balls[0],b:game.balls[1],c:game.balls[2]};
 }
-let {game,world,a,b,c}=arena('wallride');a.x=course.bounds(a.y,world).left+a.r+4;battle.fire(game,a,'wallride',env);battle.tick(game,.1,env);assert.ok(a.vy>30&&a.vx<0);battle.wallHit(game,a,1);assert.equal(a.vx,12);assert.ok(a.vy>=110);
+let {game,world,a,b,c}=arena('wallride');a.x=course.bounds(a.y,world).left+a.r+3;battle.fire(game,a,'wallride',env);battle.tick(game,.1,env);assert.ok(a.vy>100);assert.equal(battle.rideWall(game,a,1,0),true);assert.ok(Math.abs(a.vx)<.001);assert.ok(a.vy>=280);
 ({game,a}=arena('swing'));const hook={id:'hook',x:a.x-80,y:a.y,r:12};game.static.pins=[hook];assert.equal(battle.fire(game,a,'swing',env),true);battle.tick(game,.1,env);assert.ok(a.vx<0&&a.vy>30);a.x+=300;battle.tick(game,.1,env);assert.equal(a.battle.activeUntil,game.time);
 ({game,a}=arena('springball'));battle.fire(game,a,'springball',env);a.vy=-30;battle.obstacleHit(game,a,{vx:0,vy:120},{},0,-1);assert.ok(a.vy< -100,'elasticity can bounce upward');let vy=a.vy;battle.obstacleHit(game,a,{vx:0,vy:120},{},0,-1);assert.equal(a.vy,vy);
 ({game,a}=arena('crossjump'));let x=a.x,y=a.y;assert.equal(battle.fire(game,a,'crossjump',env),true);assert.ok(a.x>x);assert.equal(a.y,y);assert.equal(a.prevX,a.x);assert.equal(a.prevY,a.y);

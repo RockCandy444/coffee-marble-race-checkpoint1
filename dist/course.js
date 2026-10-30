@@ -57,23 +57,25 @@
     return { left: a.left + (b.left - a.left) * t, right: a.right + (b.right - a.right) * t,
       leftSlope: (b.left - a.left) / (b.y - a.y), rightSlope: (b.right - a.right) / (b.y - a.y) };
   }
-  function contain(ball, world) {
-    window.HiddenCourses?.containStructure(ball,world);
+  function contain(ball, world, onWall) {
+    window.HiddenCourses?.containStructure(ball,world,onWall);
     const b = window.HiddenCourses?.laneBounds(ball.x,ball.y,world)||bounds(ball.y, world);
     const bean=ball.bean&&window.CoffeeBeans,leftLength=Math.hypot(1,b.leftSlope),rightLength=Math.hypot(1,b.rightSlope),leftR=bean?bean.radius(ball,1/leftLength,-b.leftSlope/leftLength)*leftLength:ball.r,rightR=bean?bean.radius(ball,-1/rightLength,b.rightSlope/rightLength)*rightLength:ball.r;
     if (ball.x - leftR < b.left) {
       ball.x = b.left + leftR;
       const length = Math.hypot(1, b.leftSlope), nx = 1 / length, ny = -b.leftSlope / length;
       const toward = ball.vx * nx + ball.vy * ny;
-      if (toward < 0) { ball.vx -= 1.5 * toward * nx; ball.vy -= 1.5 * toward * ny; }
-      if(bean&&toward<0)bean.impact(ball,nx,ny,-1.5*toward);
+      const riding=onWall?.(ball,nx,ny);
+      if (!riding&&toward < 0) { ball.vx -= 1.5 * toward * nx; ball.vy -= 1.5 * toward * ny; }
+      if(!riding&&bean&&toward<0)bean.impact(ball,nx,ny,-1.5*toward);
     }
     if (ball.x + rightR > b.right) {
       ball.x = b.right - rightR;
       const length = Math.hypot(1, b.rightSlope), nx = -1 / length, ny = b.rightSlope / length;
       const toward = ball.vx * nx + ball.vy * ny;
-      if (toward < 0) { ball.vx -= 1.5 * toward * nx; ball.vy -= 1.5 * toward * ny; }
-      if(bean&&toward<0)bean.impact(ball,nx,ny,-1.5*toward);
+      const riding=onWall?.(ball,nx,ny);
+      if (!riding&&toward < 0) { ball.vx -= 1.5 * toward * nx; ball.vy -= 1.5 * toward * ny; }
+      if(!riding&&bean&&toward<0)bean.impact(ball,nx,ny,-1.5*toward);
     }
   }
   function distanceToSegment(x, y, s) {

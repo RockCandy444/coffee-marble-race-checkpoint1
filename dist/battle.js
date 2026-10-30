@@ -390,7 +390,7 @@
       }
       restoreShape(ball,game,env);
       ball.mass=id==='heavy'?1.9:active(ball,'giant',now)&&ball.r>ball.baseR*1.1?2.3:1;
-      ball.gravityScale=id==='heavy'?1.2:1;ball.speedLimit=id==='heavy'?370:340;ball.immuneFields=id==='immune';
+      ball.gravityScale=id==='heavy'?1.2:1;ball.speedLimit=id==='heavy'?370:active(ball,'wallride',now)&&!safe?390:340;ball.immuneFields=id==='immune';
       if(active(ball,'comet',now)&&!safe){
         ball.vy+=110*dt;ball.boostUntil=now+.1;
         state.trail=(state.trail||[]).filter(p=>p.time>now-.7);
@@ -398,7 +398,15 @@
         if(now>=(state.trailNext||0)){state.trail.push({x:ball.x,y:ball.y,time:now});state.trailNext=now+.045;}
       }else if(state.trail)state.trail=[];
       if(!safe){
-        if(active(ball,'wallride',now)){const b=window.MarbleCourse.bounds(ball.y,world);if(Math.min(ball.x-b.left,b.right-ball.x)<ball.r+50){ball.vx=ball.x<(b.left+b.right)/2?-35:35;ball.vy+=90*dt;}}
+        if(active(ball,'wallride',now)){
+          const b=window.HiddenCourses?.laneBounds(ball.x,ball.y,world)||window.MarbleCourse.bounds(ball.y,world);
+          const left=ball.x-b.left<b.right-ball.x,gap=left?ball.x-b.left:b.right-ball.x,slope=left?b.leftSlope:b.rightSlope;
+          if(gap<ball.r+50){
+            const length=Math.hypot(1,slope),direction=left?1:-1,wallRadius=window.MarbleCourse.wallRadius;
+            if(gap<(ball.r+wallRadius)*length-wallRadius+4)rideWall(game,ball,direction/length,-direction*slope/length,dt);
+            else{ball.vy=Math.max(110,ball.vy)+90*dt;ball.vx=slope*ball.vy-direction*35;}
+          }
+        }
         if(active(ball,'swing',now)&&state.hook){
           const pin=game.static.pins.concat(env.pins).find(p=>(p.id||p.machineKey)===state.hook.key)||state.hook;state.hook.x=pin.x;state.hook.y=pin.y;
           const dx=ball.x-pin.x,dy=ball.y-pin.y,d=Math.hypot(dx,dy)||1,rest=Math.max(65,pin.r+ball.r+22),pull=clamp((d-rest)*7,-110,160);
@@ -488,8 +496,16 @@
     if(active(ball,'absorb',game.time)){ball.vx=previous.vx*.6+ball.vx*.4;ball.vy=Math.max(12,previous.vy*.4,ball.vy*.15);}
     if(effective(ball)==='charge'&&game.time-ball.battle.lastImpact>.25){ball.battle.energy=Math.min(3,ball.battle.energy+1);ball.battle.lastImpact=game.time;}
   }
+  function rideWall(game,ball,nx,ny,dt=0) {
+    if(!game?.battle||!ball.battle||!active(ball,'wallride',game.time)||safeZone(ball,game.battle.world)||Math.abs(nx)<.05)return false;
+    // Pick the wall tangent with positive y: reflected/upward velocity must never
+    // turn the power into a climb. No position change or obstacle phasing.
+    const length=Math.hypot(nx,ny),sign=nx>0?1:-1,tx=-ny*sign/length,ty=Math.abs(nx)/length;
+    const speed=clamp(ball.vx*tx+ball.vy*ty+160*dt,280,390);
+    ball.vx=tx*speed;ball.vy=ty*speed;
+    return true;
+  }
   function wallHit(game,ball,direction) {
-    if(active(ball,'wallride',game.time)&&!safeZone(ball,game.battle.world)){ball.vx=direction*12;ball.vy=Math.max(110,ball.vy);}
     if(effective(ball)==='wallkick'&&game.time>=ball.battle.next){ball.vx=direction*170;ball.vy=Math.max(80,ball.vy);ball.battle.next=game.time+3;emit(game,ball,'wallkick');}
   }
   function field(game,ball,source,dt) {
@@ -605,5 +621,5 @@
     if(lit||game.selectedBall===ball.id||game.balls.length<=20||camera.zoom>=1.8){ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=colors[a.group];ctx.fillText(a.icon,ball.x,ball.y-ball.r-12);}
     ctx.restore();
   }
-  window.MarbleBattle={abilities,hiddenAbility,byId,chooseComet,grantComet,init,initGolden,placeShortcuts,assign,tick,fire,hit,spot,clearAt,timeFor,frozen,disabled,skipObstacle,skipPair,contact,obstacleHit,wallHit,field,machineRate,temporarySegments,converted,kick,caption,label,describe,drawWorld,drawBall};
+  window.MarbleBattle={abilities,hiddenAbility,byId,chooseComet,grantComet,init,initGolden,placeShortcuts,assign,tick,fire,hit,spot,clearAt,timeFor,frozen,disabled,skipObstacle,skipPair,contact,obstacleHit,wallHit,rideWall,field,machineRate,temporarySegments,converted,kick,caption,label,describe,drawWorld,drawBall};
 })();

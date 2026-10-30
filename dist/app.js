@@ -684,7 +684,7 @@
       resolveWalls(ball);
       // Pair separation must not push a ball through the narrow gate or keeper.
       for (const segment of dynamicSegments) if (segment.goalkeeper) resolveSegment(ball, segment);
-      Course.contain(ball, WORLD);
+      Course.contain(ball, WORLD, rideWall);
       if (ball.y > ball.maxY + 0.7) {
         ball.maxY = ball.y;
         ball.stallTime = 0;
@@ -747,9 +747,10 @@
     }
   }
 
+  function rideWall(ball,nx,ny){return game?.battle&&Battle.rideWall(game,ball,nx,ny);}
   function resolveWalls(ball) {
     const oldX=ball.x;
-    Course.contain(ball, WORLD);
+    Course.contain(ball, WORLD, rideWall);
     if(game?.battle&&oldX!==ball.x)Battle.wallHit(game,ball,Math.sign(ball.x-oldX));
     const vertical=ball.bean?Beans.radius(ball,0,1):ball.r;
     if (ball.y - vertical < WORLD.top) {
@@ -800,6 +801,7 @@
     if(ball.bean){const beanContact=Beans.segmentContact(ball,segment);if(!beanContact)return;nx=beanContact.nx;ny=beanContact.ny;depth=beanContact.depth;}
     ball.x += nx * depth;
     ball.y += ny * depth;
+    if((segment.sideWall||segment.funnel)&&rideWall(ball,nx,ny))return;
     const surfaceVx = (segment.vx || 0) + (segment.rotating ? -segment.omega * (py - segment.cy) : 0);
     const surfaceVy = (segment.vy || 0) + (segment.rotating ? segment.omega * (px - segment.cx) : 0);
     const toward = (ball.vx - surfaceVx) * nx + (ball.vy - surfaceVy) * ny;
