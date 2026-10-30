@@ -58,7 +58,7 @@
     pending=false;if(!document.createTreeWalker)return;const walker=document.createTreeWalker(document.body,4);let node;
     while(node=walker.nextNode()){if(node.parentElement?.closest('script,style,textarea,input,.roster-list'))continue;const old=textCache.get(node),original=old&&node.data===old.shown?old.original:node.data,shown=words(original);textCache.set(node,{original,shown});if(node.data!==shown)node.data=shown;}
     for(const el of document.querySelectorAll('[aria-label],[title],[placeholder]'))for(const attr of ['aria-label','title','placeholder']){if(el.id==='beanWipe'||!el.hasAttribute(attr))continue;const values=attrCache.get(el)||{},old=values[attr],current=el.getAttribute(attr),original=old&&current===old.shown?old.original:current,shown=words(original);values[attr]={original,shown};attrCache.set(el,values);if(current!==shown)el.setAttribute(attr,shown);}
-    document.title=switcher.enabled?'커피내기 커피콩 경주':'커피내기 구슬 경주';
+    document.title='Coffee Marble 커피마블';
   }
   function queueWords(){if(pending)return;pending=true;queueMicrotask(refresh);}
   function update(){document.body.classList.toggle('bean-mode',switcher.enabled);const wipe=document.querySelector('#beanWipe');if(wipe)wipe.hidden=!switcher.enabled||stage==='race';refresh();}

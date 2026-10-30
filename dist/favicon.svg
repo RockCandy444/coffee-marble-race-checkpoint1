@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs><linearGradient id="roast" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#bd8a5d"/><stop offset=".48" stop-color="#8c5637"/><stop offset="1" stop-color="#523021"/></linearGradient></defs>
+  <ellipse cx="32" cy="32" rx="19" ry="27" transform="rotate(32 32 32)" fill="url(#roast)"/>
+  <path d="M43 10C22 23 41 37 22 54" fill="none" stroke="#44271e" stroke-width="4.5" stroke-linecap="round"/>
+  <path d="M44 12C24 25 43 38 24 53" fill="none" stroke="#d5a171" stroke-opacity=".55" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M24 14C14 20 10 33 16 43" fill="none" stroke="#efc092" stroke-opacity=".35" stroke-width="2.5" stroke-linecap="round"/>
+</svg>
