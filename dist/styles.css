@@ -265,7 +265,7 @@ body.race-active .race-information .hazard-key { bottom: 55px; }
   body.race-active .canvas-wrap .hazard-key { bottom: 7px; left: 7px; max-width: calc(100% - 14px); padding: 4px 6px; font-size: 8px; white-space: nowrap; }
 }
 
-/* V45: creator/contact footer, with an honest placeholder for future support. */
+/* V46: copyright, feedback and coffee support footer. */
 .page-footer { margin-top: 24px; padding-top: 14px; border-top: 1px solid #e9ddca; line-height: 1.6; }
 .footer-meta { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 20px; font-size: 12px; }
 .footer-creator { color: #8b7259; }
@@ -273,17 +273,18 @@ body.race-active .race-information .hazard-key { bottom: 55px; }
 .footer-contact { display: inline-flex; align-items: center; min-height: 44px; padding: 4px 2px; color: #90613e; text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
 .footer-contact:hover { color: #b96932; }
 .footer-contact:focus-visible { outline: 2px solid #b96932; outline-offset: 4px; border-radius: 3px; }
-.footer-support { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; padding: 6px 11px; border: 1px dashed #dfcdb5; border-radius: 20px; color: #8b7259; background: #fff3df; }
-.footer-support small { font-size: 10px; color: #967f69; }
+.footer-support { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 6px 13px; border: 1px solid #dfcdb5; border-radius: 24px; color: #8b7259; background: #fff3df; text-decoration: none; }
+.footer-support:hover { color: #795334; background: #ffe8bd; border-color: #cea77b; }
+.footer-support:focus-visible { outline: 2px solid #b96932; outline-offset: 4px; }
 .footer-note { margin: 8px 0 0; font-size: 10px; }
 .footer-note span { display: inline-block; }
 body.bean-mode .page-footer { border-color: #71523c; }
 body.bean-mode .footer-creator, body.bean-mode .footer-contact { color: #dfc3a2; }
 body.bean-mode .footer-creator strong { color: #f5dfc2; }
 body.bean-mode .footer-contact:hover { color: #fff0d8; }
-body.bean-mode .footer-contact:focus-visible { outline-color: #e6ad72; }
+body.bean-mode .footer-contact:focus-visible, body.bean-mode .footer-support:focus-visible { outline-color: #e6ad72; }
 body.bean-mode .footer-support { color: #eed6b7; border-color: #a07a54; background: #513624; }
-body.bean-mode .footer-support small { color: #d6b694; }
+body.bean-mode .footer-support:hover { color: #fff0d8; border-color: #d0a06d; background: #68452e; }
 @media (max-width: 600px) {
   .page-footer { margin-top: 20px; }
   .footer-meta { gap: 2px 12px; }
