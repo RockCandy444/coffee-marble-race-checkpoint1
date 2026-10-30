@@ -1,5 +1,18 @@
 # GitHub Pages 운영 안내
 
+## 검색 수집 운영
+
+- 대표 주소: https://rockcandy444.github.io/coffeemarble/
+- 사이트맵: https://rockcandy444.github.io/coffeemarble/sitemap.xml
+- Google Search Console에서는 게임 주소 전체를 URL 접두어 속성으로 추가하고 HTML 태그 방식으로 소유권을 확인합니다. 확인 태그는 확인 뒤에도 유지합니다. 사이트맵 제출과 첫 화면 URL 검사의 색인 생성 요청을 사용합니다.
+- 네이버 서치어드바이저에서는 로그인 후 지원하는 등록 범위를 확인하고 소유확인·사이트맵 제출·웹페이지 수집 요청을 진행합니다.
+- GitHub 프로젝트 사이트에서 robots.txt의 유효 위치는 프로젝트 폴더가 아닌 호스트 루트입니다. 프로젝트 아래에 robots.txt를 추가해 전체 호스트에 적용되는 것처럼 운영하지 않습니다. 검색 로봇에 필요한 CSS·JavaScript는 차단하지 않습니다.
+- 사이트맵은 게임 대표 페이지만 포함합니다. 문서, 테스트, dist 사본은 검색 대상 목록에 넣지 않습니다. dist의 HTML도 게임 대표 주소를 canonical로 가리킵니다.
+- IndexNow 소유확인용 텍스트 파일은 프로젝트 루트에 유지합니다. URL 변경 알림을 보낼 때 해당 파일의 전체 주소를 keyLocation으로 지정해 이 프로젝트 범위만 알립니다. 지원 검색엔진의 수신은 실제 색인·노출 완료와 구분합니다. 의미 있는 콘텐츠 변경 시에만 알리고 같은 주소를 반복 제출하지 않습니다.
+- 검색 결과의 노출 여부·순서·설명은 검색엔진이 결정합니다. 수집 요청이 즉시 노출을 보장하지는 않습니다.
+
+공식 안내: [Google 재수집](https://developers.google.com/search/docs/crawling-indexing/ask-google-to-recrawl), [네이버 사이트맵](https://searchadvisor.naver.com/guide/request-feed).
+
 - 게임 주소: https://rockcandy444.github.io/coffeemarble/
 - 저장소: https://github.com/RockCandy444/coffeemarble
 - 저장소 ID:1425209436. 기존 저장소의 이름을 변경했으며 커밋 이력은 유지합니다.
