@@ -6,6 +6,9 @@
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
 
 .brand-mark.brand-coffee { flex:none; width:40px; height:36px; font-size:34px; line-height:1; background:transparent; box-shadow:none; border-radius:0; }
+.brand { font-family:'Jua','Gowun Dodum',sans-serif; font-size:22px; font-weight:400; letter-spacing:.01em; }
+.brand strong { font-weight:inherit; }
+@media(max-width:600px) { .brand { font-size:20px; } }
 .coffee-bean-doodle { flex:none; }
 .coffee-bean-doodle svg { display:block; width:1.25em; height:1.25em; }
 .coffee-bean-doodle { padding:0; border:0; background:none; cursor:pointer; touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
